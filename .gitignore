@@ -1,0 +1,24 @@
+# Secrets: API keys live in .env, never in git
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.ipynb_checkpoints/
+
+# Downloaded datasets and per-run scratch (large; re-fetched by scripts)
+data/raw/
+runs/
+*.log
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

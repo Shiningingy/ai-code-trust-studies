@@ -1,13 +1,14 @@
-# coding-agent-study (working title)
+# AI Code Trust Studies
 
-Empirical studies of when AI-generated code can be trusted.
+Empirical studies of when AI-generated code can be trusted. Each study is written as a short paper, with its limits,
+a reflection and open directions. See the [template](studies/TEMPLATE.md).
 
 > **Status:** work in progress. Studies are added as they are finished.
 
 ## Studies
-| Study | Question | Status |
-|---|---|---|
-| [01: benchmark audit](studies/01-benchmark-audit/README.md) | Does a scam-URL benchmark measure model memory or task pressure? | Done, not peer reviewed |
+| # | Study | Question | Status |
+|---|---|---|---|
+| 01 | [Memory or Task Pressure?](studies/01-benchmark-audit/README.md) | Does a scam-URL benchmark measure model memory or task pressure? | Done, not peer reviewed |
 
 ## How this was built
 Each study states who did what. Code is written with Claude Code under my direction. Commits written with the agent carry a `Co-Authored-By` line.

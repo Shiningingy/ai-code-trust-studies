@@ -1,29 +1,16 @@
 # coding-agent-study (working title)
 
-> **Status:** work in progress. The research question is still being finalized.
+Empirical studies of when AI-generated code can be trusted.
 
-## Research question
-_To be written._
+> **Status:** work in progress. Studies are added as they are finished.
 
-## Why it matters
-_To be written._
-
-## Method
-- **Data:** _to be written_
-- **Models / agents:** _to be written_
-- **Metrics:** _to be written_
-
-## Results so far
-_None yet._
-
-## Limitations and threats to validity
-_To be written._
-
-## Reproduce
-_To be written._
+## Studies
+| Study | Question | Status |
+|---|---|---|
+| [01: benchmark audit](studies/01-benchmark-audit/README.md) | Does a scam-URL benchmark measure model memory or task pressure? | Done, not peer reviewed |
 
 ## How this was built
-I designed the study and made every methodological choice: the question, the metrics, the baselines and the sample sizes. The code was written with Claude Code under my direction, and I reviewed and tested it. Commits written with the agent carry a `Co-Authored-By` line.
+Each study states who did what. Code is written with Claude Code under my direction. Commits written with the agent carry a `Co-Authored-By` line.
 
 ## Author
 Zili Luo, MSc in Computing, Queen's University (2023) · zili.luo@queensu.ca

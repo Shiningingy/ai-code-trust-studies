@@ -83,7 +83,7 @@ so I treated a domain as new only if the Internet Archive holds no capture from 
 **RQ1.** The authors' classification of 41,317 flagged URLs gives URL in prompt 49.7%, platform name in prompt 49.8%, and
 neither 0.5%. My check agrees: the domain's name is spelled in the prompt for 95.7-98.2% of flagged URLs in three audit
 reports, and for 99.5% of 3,441 flagged benchmark outputs. Memory predicts this as well, because prompts were written to
-elicit each site, so RQ1 does not separate the two explanations. It only shows that memory is not needed for these cases.
+elicit each site, so RQ1 does not separate the two explanations. It only shows that memory may not be needed for these cases.
 Detectors also flagged the placeholder `yourdomain[.]com` 18 times.
 
 **RQ2 and RQ3.** Rates are the share of outputs with a concrete brand URL, or for real services a usable answer.

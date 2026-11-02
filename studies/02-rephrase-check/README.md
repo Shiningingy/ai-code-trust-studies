@@ -299,7 +299,7 @@ particular fix, and any check that lacks that fix will struggle to see the diffe
 ## How this was built
 After reading the AssertFlip paper I found its hypothesis convincing: LLMs tend to make things pass, and are better at that than at making them fail
 on purpose. With the insight from MetaQA, I hypothesized that rephrasing an issue might change the actual output, and that comparing the outputs could show
-which tests to distrust. After the initial research questions, I raised RQ4 and the bug effect, then asked whether short reports or the model's understanding
+which tests to distrust. After the initial research questions, I raised the exploratory questions on far tests and the bug effect, then asked whether short reports or the model's understanding
 could explain the result, and proposed that suggested fixes and requirements in a report may lead to different tests. I also decided to report
 the refusal as a finding, to stop at 130 bugs, and to report a negative result as plainly as a positive one.
 
@@ -312,7 +312,7 @@ published code and data.
 the pretest plan and all outputs. `assertflip-changes.diff` lists every change to AssertFlip. Generated tests and raw run logs are not in this repo.
 
 ## References
-1. L. Khatib, N. S. Mathews, M. Nagappan. AssertFlip: Reproducing Bugs via Inversion of LLM-Generated Passing Tests. arXiv:2507.17542, v2, 2026.
+1. L. Khatib, N. S. Mathews, M. Nagappan. AssertFlip: Reproducing Bugs via Inversion of LLM-Generated Passing Tests. ICSE 2026. arXiv:2507.17542, v2.
    Code and data: github.com/uw-swag/AssertFlip.
 2. N. Mündler, M. N. Müller, J. He, M. Vechev. SWT-Bench: Testing and Validating Real-World Bug-Fixes with Code Agents. NeurIPS 2024. arXiv:2406.12952.
 3. Yang, Al Mamun, Zhang, Uddin. Hallucination Detection in Large Language Models with Metamorphic Relations. FSE 2025.

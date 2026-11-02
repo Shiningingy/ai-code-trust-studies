@@ -1,0 +1,118 @@
+no harness result: {'baseline': ['astropy__astropy-8872'], 'paraphrase': ['astropy__astropy-8872'], 'stepwise': ['astropy__astropy-8872'], 'repeat1': ['astropy__astropy-8872'], 'repeat2': ['astropy__astropy-8872']}
+bugs in RQ1-3 128, right 104, wrong 24, precision 0.812
+
+RQ1
+rewrite score: median 0.469; agree [54, 10] precision 0.844; disagree [50, 14] precision 0.781; gap 0.062; Fisher p 4.98e-01
+VERDICT: NO LARGE EFFECT (not 'no effect')
+secondary, repo-stratified: n=128 AUROC 0.517 CI [0.306, 0.725]
+
+RQ2
+rewrite AUROC 0.517, repeat AUROC 0.506, difference 0.011 CI [-0.135, 0.166]
+VERDICT: NOT SHOWN STRONGER
+repeat score: median 0.454; agree [55, 9] precision 0.859; disagree [49, 15] precision 0.766; gap 0.094; Fisher p 2.57e-01
+
+RQ3, discarding the disagree group
+rewrites: precision 0.812 [0.736, 0.871] of 128 -> 0.844 [0.736, 0.913] of 64; correct lost 50 of 104 (48.1%)
+repeats: precision 0.812 [0.736, 0.871] of 128 -> 0.859 [0.754, 0.924] of 64; correct lost 49 of 104 (47.1%)
+text distance: precision 0.812 [0.736, 0.871] of 128 -> 0.828 [0.718, 0.901] of 64; correct lost 51 of 104 (49.0%)
+
+Reported, cannot change a verdict
+text distance: median 0.533; agree [53, 11] precision 0.828; disagree [51, 13] precision 0.797; gap 0.031; Fisher p 8.21e-01
+text distance: n=128 AUROC 0.468 CI [0.261, 0.679]
+   rewrite score minus text distance: 0.049 CI [-0.092, 0.198]
+runtime half: median 0.479; agree [54, 10] precision 0.844; disagree [50, 14] precision 0.781; gap 0.062; Fisher p 4.98e-01
+runtime half: n=128 AUROC 0.533 CI [0.316, 0.737]
+   rewrite score minus runtime half: -0.016 CI [-0.062, 0.020]
+repeat, runtime half: median 0.462; agree [54, 10] precision 0.844; disagree [50, 14] precision 0.781; gap 0.062; Fisher p 4.98e-01
+repeat, silent run as distance 1: n=128 AUROC 0.506 CI [0.308, 0.695]
+repeat only, all bugs: n=129 AUROC 0.499 CI [0.305, 0.685]
+repo x size tercile AUROC 0.518; size alone 0.590
+per-repo AUROC
+   astropy__astropy           n=  4 wrong=  1 AUROC 0.333
+   django__django             n= 64 wrong= 10 AUROC 0.531
+   matplotlib__matplotlib     n= 10 wrong=  1 AUROC 0.000
+   mwaskom__seaborn           n=  1 wrong=  0 AUROC nan
+   psf__requests              n=  1 wrong=  0 AUROC nan
+   pydata__xarray             n=  4 wrong=  2 AUROC 0.750
+   pylint                     n=  2 wrong=  2 AUROC nan
+   pytest                     n=  5 wrong=  2 AUROC 0.500
+   scikit                     n=  7 wrong=  0 AUROC nan
+   sphinx                     n=  8 wrong=  4 AUROC 0.250
+   sympy__sympy               n= 22 wrong=  2 AUROC 0.550
+
+Sensitivity: label is added_f2p > 0
+rewrite score: median 0.469; agree [57, 7] precision 0.891; disagree [53, 11] precision 0.828; gap 0.062; Fisher p 4.46e-01
+Sensitivity: baseline tests with no harness result counted as wrong
+rewrite score: median 0.468; agree [54, 11] precision 0.831; disagree [50, 14] precision 0.781; gap 0.050; Fisher p 5.11e-01
+
+Right rate per arm, descriptive only
+   baseline    105 of 129 (81.4%); no result 1
+   paraphrase  100 of 128 (78.1%); no result 1
+   stepwise    97 of 128 (75.8%); no result 1
+   repeat1     103 of 128 (80.5%); no result 1
+   repeat2     97 of 129 (75.2%); no result 1
+
+hand-read sample {
+ "wrong, agree": [
+  [
+   "django__django-12273",
+   0.176
+  ],
+  [
+   "sympy__sympy-21930",
+   0.24
+  ],
+  [
+   "pydata__xarray-4687",
+   0.403
+  ]
+ ],
+ "right, disagree": [
+  [
+   "django__django-11163",
+   0.488
+  ],
+  [
+   "sympy__sympy-13798",
+   0.567
+  ],
+  [
+   "django__django-11138",
+   0.658
+  ]
+ ],
+ "wrong, disagree": [
+  [
+   "astropy__astropy-14309",
+   0.471
+  ],
+  [
+   "sphinx-doc__sphinx-8551",
+   0.629
+  ],
+  [
+   "django__django-15695",
+   0.498
+  ]
+ ],
+ "right, agree": [
+  [
+   "django__django-15278",
+   0.436
+  ],
+  [
+   "django__django-15572",
+   0.25
+  ],
+  [
+   "django__django-13590",
+   0.403
+  ]
+ ]
+}
+analysis-plan.md 65ca98ded7a27a8c
+pretest/disagreement.py 240514266ec6fc39
+pipeline/failure_values.py 022efd2159071c6d
+pretest/run_pretest.py 154d3a47c2bf7378
+scoring/analyze.py 27e62626d16ffd39
+scoring/build_preds.py 3b9bf62789e6fedc

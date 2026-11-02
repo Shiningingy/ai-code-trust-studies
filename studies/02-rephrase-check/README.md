@@ -32,7 +32,7 @@ The answer here is no. The reasons turned out to be more interesting than the fa
 **AssertFlip.** Two gates decide acceptance. The inverted test must fail, which is mechanical and close to automatic, since a
 flipped passing assertion fails. Then the validator reads the failing test and its error and judges whether the failure
 reveals the bug. If it refuses, a planner reviews the attempt and the pipeline starts again. The authors' no-validation run
-shows the validator matters: precision falls from 58.0% (189 of 326) to 47.6% (167 of 351).
+shows the validator matters: precision falls from 58.0% (189 of 326) to 47.4% (167 of 352).
 
 **Nearby work.** e-Otter++ [5] uses execution feedback to generate and select reproduction tests when the correct code is
 missing, the same constraint as here, by a different route. SWE-Doctor [6] reports that one test often covers one facet of a bug.
@@ -237,6 +237,13 @@ test can follow the report faithfully and still fail after a fix that took anoth
 measures the gap between reports and fixes, and no check that lacks the fix can close it: neither the validator, nor disagreement. Six tests
 cannot say how common it is.
 
+A report may also shape which fix a test fits. Some reports state a requirement, what must hold, while others suggest a fix, how to change
+the code. A test built from a suggested fix may pin that one fix, while a test built from a requirement could accept any fix that meets it.
+`django-12273` states both a means and its purpose: setting the primary key to None "does not work (so that the existing object is
+overwritten on save())". This idea was raised after the results and no data here tests it. We then found Khatib et al. [8], who label 433
+SWE-bench Verified reports, using an LLM with two authors reviewing each label, and find fix suggestions associated with repair success.
+That result concerns repair agents. Whether suggestions narrow a reproduction test remains open.
+
 For a user, the practical answer is simple. On this evidence, do not run AssertFlip three times to filter its output.
 
 ## 9. Threats to validity
@@ -274,6 +281,8 @@ Several directions look worth exploring, and none is a fixed plan.
 - **Rephrasing inside AssertFlip's steps.** This study rephrased only the report, outside the pipeline, and compared finished tests. Using
   rewrites inside a step, such as the planner or the validator, was not tested, and this negative result says nothing about it.
 - **Report and gold differences.** How many wrong labels are tests that follow the report where the fix went elsewhere?
+- **Suggested fixes and requirements.** Do reports that suggest a fix produce tests tied to that fix, and do reports that state a
+  requirement produce tests that accept other fixes?
 - **Changing the information.** Rewrites here kept every fact. Removing or varying the code in a report would show what the model relies on.
 - **Measuring understanding.** Ask for a stated root cause and compare it with the gold patch.
 - **Retry on disagreement.** Does distance mark the bugs where another run can succeed? The hint here is weak.
@@ -291,8 +300,8 @@ particular fix, and any check that lacks that fix will struggle to see the diffe
 After reading the AssertFlip paper I found its hypothesis convincing: LLMs tend to make things pass, and are better at that than at making them fail
 on purpose. With the insight from MetaQA, I hypothesized that rephrasing an issue might change the actual output, and that comparing the outputs could show
 which tests to distrust. After the initial research questions, I raised RQ4 and the bug effect, then asked whether short reports or the model's understanding
-could explain the result. I also decided to report the refusal as a finding, to stop at 130 bugs, and to report a
-negative result as plainly as a positive one.
+could explain the result, and proposed that suggested fixes and requirements in a report may lead to different tests. I also decided to report
+the refusal as a finding, to stop at 130 bugs, and to report a negative result as plainly as a positive one.
 
 Claude Code assisted me in sharpening the research points and in building and running the test environment. It also wrote the code and carried out the
 hand read, and it drafted this report under my direction. I reviewed the results, decided what the report should say and directed the revisions. AssertFlip is the work of Khatib, Mathews and Nagappan, and this study builds on their
@@ -315,3 +324,4 @@ the pretest plan and all outputs. `assertflip-changes.diff` lists every change t
    Reproduction Tests. arXiv:2607.00990, 2026.
 7. Y. Tan, Z. Yang, F. Yang, Y. Yao, Y. Kang, L. Wang, P. Zhao, X. Zhang, X. Ma, Q. Lin, S. Rajmohan, D. Zhang. Beyond Fail-to-Pass: Iterative Hardening of
    Co-Generated Bug Reproduction Tests and Fixes. arXiv:2607.19843, 2026. Read only in part.
+8. L. Khatib, N. S. Mathews, M. Nagappan, P. Nie, T. Zimmermann. What Makes a Good Bug Report for an AI Agent? arXiv:2607.07593, 2026.

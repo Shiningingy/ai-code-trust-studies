@@ -1,0 +1,22 @@
+
+=== rewrites, T1 and T2 = paraphrase and stepwise, median 0.469
+
+Disagree: T0 far from T1 and T2, 64 bugs
+   T0 right: 50 bugs; {'0 of 2 right': 2, '1 of 2 right': 11, '2 of 2 right': 37}; other tests right 85 of 100 (85.0%)
+   T0 wrong: 14 bugs; {'0 of 2 right': 7, '1 of 2 right': 5, '2 of 2 right': 2}; other tests right 9 of 28 (32.1%)
+
+Agree: T0 close to T1 and T2, 64 bugs
+   T0 right: 54 bugs; {'0 of 2 right': 1, '1 of 2 right': 5, '2 of 2 right': 48}; other tests right 101 of 108 (93.5%)
+   T0 wrong: 10 bugs; {'0 of 2 right': 9, '2 of 2 right': 1}; other tests right 2 of 20 (10.0%)
+
+=== repeats, T1 and T2 = repeat1 and repeat2, median 0.454
+
+Disagree: T0 far from T1 and T2, 64 bugs
+   T0 right: 49 bugs; {'0 of 2 right': 6, '1 of 1 right': 1, '1 of 2 right': 4, '2 of 2 right': 38}; other tests right 81 of 97 (83.5%)
+   T0 wrong: 15 bugs; {'0 of 2 right': 7, '1 of 2 right': 5, '2 of 2 right': 3}; other tests right 11 of 30 (36.7%)
+
+Agree: T0 close to T1 and T2, 64 bugs
+   T0 right: 55 bugs; {'0 of 2 right': 1, '1 of 2 right': 4, '2 of 2 right': 50}; other tests right 104 of 110 (94.5%)
+   T0 wrong: 9 bugs; {'0 of 2 right': 8, '2 of 2 right': 1}; other tests right 2 of 18 (11.1%)
+
+EXPLORATORY: not in the frozen plan, no test applied.

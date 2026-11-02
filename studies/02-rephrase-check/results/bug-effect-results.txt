@@ -1,0 +1,16 @@
+bugs with all five results 127; right rate 0.780
+runs right of 5, bugs: {0: 13, 1: 5, 2: 10, 3: 6, 4: 13, 5: 80}
+unanimous 93 of 127; ICC 0.617
+shuffled across all bugs: unanimous mean 36.5, 95% range [30, 43]; ICC mean 0.001; draws at or above observed: unanimous 0, ICC 0 of 10000
+shuffled within repo: unanimous mean 46.0, 95% range [40, 52]; ICC mean 0.113; draws at or above observed: unanimous 0, ICC 0 of 10000
+
+T0 wrong, did another run get it right? median 0.469
+   far   T1 or T2    7 of 14 (50%)
+   far   any of four 8 of 14 (57%)
+   close T1 or T2    1 of 10 (10%)
+   close any of four 3 of 10 (30%)
+   T1 or T2: far vs close, Fisher p 0.079
+   any of four: far vs close, Fisher p 0.240
+   all wrong T0: any of four right 11 of 24
+
+EXPLORATORY: not in the frozen plan, post hoc, small counts.

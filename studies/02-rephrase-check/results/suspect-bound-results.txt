@@ -1,0 +1,14 @@
+matplotlib__matplotlib-26291 0.192 close wrong
+pylint-dev__pylint-6386 0.267 close wrong
+pylint-dev__pylint-7080 0.681 far wrong
+sphinx-doc__sphinx-8551 0.629 far wrong
+sphinx-doc__sphinx-8721 0.9 far wrong
+as labelled: median 0.469; agree [54, 10] precision 0.844; disagree [50, 14] precision 0.781; gap 0.062; Fisher p 4.98e-01
+two crashed counted right: median 0.469; agree [54, 10] precision 0.844; disagree [52, 12] precision 0.812; gap 0.031; Fisher p 8.15e-01
+   AUROC 0.515
+all five counted right: median 0.469; agree [56, 8] precision 0.875; disagree [53, 11] precision 0.828; gap 0.047; Fisher p 6.20e-01
+   AUROC 0.523
+all five dropped: median 0.468; agree [54, 8] precision 0.871; disagree [50, 11] precision 0.820; gap 0.051; Fisher p 4.65e-01
+   AUROC 0.525 bugs 123 wrong 19
+
+EXPLORATORY: not in the frozen plan.

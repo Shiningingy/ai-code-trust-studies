@@ -1,0 +1,111 @@
+baseline tests 326, usable 323, wrong 134, right 189, base precision 0.585
+repos [('django__django', 137), ('sympy__sympy', 60), ('matplotlib__matplotlib', 29), ('scikit', 24), ('sphinx', 19), ('astropy__astropy', 16), ('pydata__xarray', 14), ('pytest', 12), ('pylint', 5), ('psf__requests', 4), ('mwaskom__seaborn', 2), ('pallets__flask', 1)]
+S quartiles [0.21  0.438 0.662]
+
+PRIMARY repo-stratified AUROC 0.688 CI [0.614, 0.759] pairs 5922
+GATE: PASS
+
+1. median split at 0.438: agree [118, 44] precision 0.728; disagree [71, 90] precision 0.441; gap 0.287; Fisher p 1.76e-07
+   discard disagree: precision 0.728 vs 0.585; correct lost 71 of 189
+
+2. unstratified AUROC 0.684
+
+3. single runs (repo-stratified)
+   perfloc  n=295 AUROC 0.637
+   noplan   n=300 AUROC 0.686
+   noval    n=309 AUROC 0.632
+   regen5   n=281 AUROC 0.679
+   p_perfloc_noplan     AUROC 0.673
+   p_perfloc_noval      AUROC 0.655
+   p_perfloc_regen5     AUROC 0.680
+   p_noplan_noval       AUROC 0.675
+   p_noplan_regen5      AUROC 0.704
+   p_noval_regen5       AUROC 0.663
+   mean over six pairs 0.675
+
+4. repo x size tercile (cuts [4. 7.]) AUROC 0.670
+   size alone, repo-stratified 0.587
+
+5. comparators (repo-stratified, all with CI)
+   silent     n=326 AUROC 0.583 CI [0.519, 0.645]
+   S_silent1  n=326 AUROC 0.702 CI [0.626, 0.771]
+   text       n=323 AUROC 0.679 CI [0.601, 0.751]
+   silent count by wrong rate [(0, 85, 241), (1, 36, 61), (2, 11, 17), (3, 2, 4), (4, 3, 3)]
+
+per-repo AUROC
+   django__django               n=137 wrong= 56 AUROC 0.701
+   sympy__sympy                 n= 60 wrong= 25 AUROC 0.620
+   matplotlib__matplotlib       n= 29 wrong= 10 AUROC 0.647
+   scikit                       n= 24 wrong=  8 AUROC 0.855
+   sphinx                       n= 19 wrong= 13 AUROC 0.590
+   astropy__astropy             n= 16 wrong=  3 AUROC 0.615
+   pydata__xarray               n= 14 wrong=  4 AUROC 0.475
+   pytest                       n= 12 wrong=  9 AUROC 0.926
+   pylint                       n=  5 wrong=  2 AUROC 0.833
+   psf__requests                n=  4 wrong=  1 AUROC 0.667
+   mwaskom__seaborn             n=  2 wrong=  2 AUROC nan
+   pallets__flask               n=  1 wrong=  1 AUROC nan
+
+case 2 score 0.544 wrong True percentile 0.591
+
+hand-read sample {
+ "wrong, agreed": [
+  [
+   "django__django-12155",
+   0.125
+  ],
+  [
+   "django__django-13195",
+   0.083
+  ],
+  [
+   "scikit-learn__scikit-learn-13124",
+   0.395
+  ]
+ ],
+ "right, disagreed": [
+  [
+   "django__django-11119",
+   0.95
+  ],
+  [
+   "astropy__astropy-14508",
+   0.869
+  ],
+  [
+   "astropy__astropy-8872",
+   0.575
+  ]
+ ],
+ "wrong, disagreed": [
+  [
+   "sympy__sympy-13877",
+   0.494
+  ],
+  [
+   "django__django-14404",
+   0.467
+  ],
+  [
+   "django__django-15037",
+   0.451
+  ]
+ ],
+ "right, agreed": [
+  [
+   "django__django-15863",
+   0.205
+  ],
+  [
+   "django__django-13023",
+   0.0
+  ],
+  [
+   "django__django-13343",
+   0.19
+  ]
+ ]
+}
+PREREG.md b8e78d5c638a45b8
+disagreement.py d169745ba7202774
+run_pretest.py 154d3a47c2bf7378

@@ -1,0 +1,51 @@
+diff -r --strip-trailing-cr -U2 -x __pycache__ vendor/AssertFlip/assertflip/src/assertFlip/assertFlip.py pipeline/assertflip/src/assertFlip/assertFlip.py
+--- vendor/AssertFlip/assertflip/src/assertFlip/assertFlip.py	2026-11-01 20:48:14.568322400 -0500
++++ pipeline/assertflip/src/assertFlip/assertFlip.py	2026-11-01 20:58:48.994672900 -0500
+@@ -280,5 +280,5 @@
+ 
+         print("Phase A failed after max retries.")
+-        if phase_mode == "phase_a":
++        if phase_mode in ("phase_a", "pass_then_invert"):
+             attempt_log.append({
+                 "phase": "terminating",
+diff -r --strip-trailing-cr -U2 -x __pycache__ vendor/AssertFlip/assertflip/src/assertFlip/prompt/gpt_v2.py pipeline/assertflip/src/assertFlip/prompt/gpt_v2.py
+--- vendor/AssertFlip/assertflip/src/assertFlip/prompt/gpt_v2.py	2026-11-01 20:48:14.569321900 -0500
++++ pipeline/assertflip/src/assertFlip/prompt/gpt_v2.py	2026-11-02 00:02:06.280017100 -0500
+@@ -126,9 +126,9 @@
+ You are an expert senior Python test-driven developer tasked with assisting your junior who is unable to write tests that reveal reported bugs. Your goal is to plan out the creation of one or more test functions that {goal}.
+ You will be provided with a ISSUE TICKET and a set of CODE SNIPPETS which might contain the buggy logic and examples of tests in the project for reference. 
+-You will also be given the THOUGHT PROCESS of your junior who is trying to write the test which was clearly wrong and failed to reproduce the bug. The TEST ATTEMPT they wrote and the error it produced will also be provided.
++You will also be given the PREVIOUS PLAN of your junior who is trying to write the test which was clearly wrong and failed to reproduce the bug. The TEST ATTEMPT they wrote and the error it produced will also be provided.
+ Your task is to analyze the described problem and previous attempt in detail and create a new PLAN for writing the test.
+                        
+ First, carefully read the ISSUE TICKET and inspect the collected CODE SNIPPETS.
+-Review the THOUGHT PROCESS of your junior and identify the mistakes made in the previous plan.
++Review the PREVIOUS PLAN written by your junior and identify the mistakes in it.
+ Analyze the problem reported critically and create a new PLAN from scratch with no reference to the previous one
+ Use the following steps:
+@@ -228,8 +228,8 @@
+ If you need any information that has been trimmed away, you can use the get_info tool function to obtain it.
+ 
+-Here is the THOUGHT PROCESS of your junior who was trying to write the test:
+-<THOUGHT_PROCESS>
++Here is the PREVIOUS PLAN written by your junior who was trying to write the test:
++<PREVIOUS_PLAN>
+ {plan_prev}
+-</THOUGHT_PROCESS>
++</PREVIOUS_PLAN>
+ 
+ Here is the test they wrote:
+@@ -421,13 +421,8 @@
+ If later calls to get_info contradict or simplify the PLAN, discard the PLAN and follow the new evidence instead.
+ Refer to any test files provided for information about how tests are written in this project.
+-Reason about your approach and enclose your thoughts at the beginning of your response with <think> and </think> tags.
+ Output your final completed Python test script as a single block enclosed in backticks, without any additional explanation once you have started writing the test.
+ 
+ Your output must be as follows:
+ 
+-<think>
+-Review the PLAN and reason how to go about writing a test that meets the requirements and constraints.
+-</think>
+-
+ ```python
+ COMPLETE TEST SCRIPT

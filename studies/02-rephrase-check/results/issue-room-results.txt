@@ -1,0 +1,23 @@
+127 bugs. Issue words: median 141, quartiles 82 to 226
+Prose free to reword: median 87 words, quartiles 47 to 144; under 30 words on 17 bugs, under 15 on 4
+Share of issue words free to reword: median 74%
+paraphrase: prose changed, word-level, median 0.43, quartiles 0.33 to 0.56, minimum 0.05
+stepwise: prose changed, word-level, median 0.66, quartiles 0.51 to 0.78, minimum 0.34
+
+Outcome flips against T0 (right on one run, wrong on the other)
+   T0 vs paraphrase 16 of 127
+   T0 vs stepwise   17 of 127
+   T0 vs repeat1    17 of 127
+   T0 vs repeat2    18 of 127
+   repeat1 vs repeat2    13; paraphrase vs stepwise 21
+   mean flip rate rewrites 0.130, repeats 0.138, difference -0.008, 95% CI [-0.051, 0.035]
+
+Room against outcome
+   prose words vs runs right: Spearman -0.029, p 0.750
+   prose words vs mixed bug: Spearman 0.033, p 0.715
+   amount reworded vs flip: Spearman -0.124, p 0.166
+   short  prose (n=43): right rate 77.2%, mixed 27.9%, unanimous wrong 4
+   middle prose (n=43): right rate 74.9%, mixed 20.9%, unanimous wrong 7
+   long   prose (n=41): right rate 82.0%, mixed 31.7%, unanimous wrong 2
+
+EXPLORATORY: not in the frozen plan, post hoc.

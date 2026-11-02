@@ -17,6 +17,9 @@ data/raw/
 runs/
 *.log
 
+# Private working notes, not published
+local/
+
 # Editors / OS
 .vscode/
 .idea/

@@ -20,6 +20,9 @@ runs/
 # Private working notes, not published
 local/
 
+# PDF build helpers (formatting only, not part of any study)
+studies/*/scripts/build_pdf.py
+
 # Editors / OS
 .vscode/
 .idea/

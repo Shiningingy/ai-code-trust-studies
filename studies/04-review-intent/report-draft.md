@@ -164,3 +164,25 @@ Several fixes were made before the runs they affect and are disclosed here. Cont
 ## 8. Reproducibility
 
 The study lives in `studies/04-review-intent` of the public repository github.com/Shiningingy/ai-code-trust-studies. The frozen plan is `plan.md`; it was frozen in commit `21592ab` on 2026-11-07, before the pilot's first agent run, and its Amendments section lists every later change. Selection scripts and outputs are in `selection/` (`pool.py`, `overlap.py`, `langs.py`, `eligible.py`, `draw.py`; outputs `eligible.csv`, `main_walk.csv`, `agents.csv`). The pipeline is in `scripts/`, and `scripts/analyze.py` carries out Section 4.6. The seed for the draw, the order of arms and the bootstrap is 20261107. All model calls ran through `claude -p` on a Claude subscription, with model, flags, Claude Code version and usage logged per run. The AgentReviewChat parquet files come from Hugging Face `Suzhen/AgentReviewChat` and are not copied into the repository.
+
+## Appendix A. Audit of excluded PRs
+
+Every exclusion was checked for whether it came from the PR itself or from this study's setup. A PR excluded because of the setup (a container recipe, a time limit) may be repaired and run. That is a correction, not a replacement, which the plan forbids. The same test applies to all 14 exclusions, and none of them had any agent run, so no result can bias which ones are repaired. Any repair is listed in the plan's Amendments.
+
+| PR | Check failed | Reason | Cause | Repairable |
+|---|---|---|---|---|
+| zeta-chain/node #4153, #4192, #4203, #4330 | 1 | The merge commit's file set differs from the PR's files, so the base commit would not match the PR | PR history | No |
+| getsentry/sentry-python #4873 | 4 | No human-started review conversation to summarise (arm B impossible) | PR | No |
+| pingcap/tidb #60776 | 4 | No human-started review conversation to summarise (arm B impossible) | PR | No |
+| Azure/azure-cli #32115 | 3 | PR tests ran (171 passed on base and merge); none fails before the change | PR | No |
+| ava-labs/avalanchego #4259 | 3 | PR tests ran (96 pass on base and merge); none fails before the change | PR | No |
+| pingcap/tidb #63878 | 3 | PR tests ran (13 pass on base and merge); none fails before the change | PR | No |
+| streamlit/streamlit #12074 | 3 | PR tests ran (56 passed on base and merge); none fails before the change | PR | No |
+| volcano-sh/volcano #4354 | 3 | PR tests ran (24 pass on base and merge); none fails before the change | PR | No |
+| streamlit/streamlit #11690 | 3 | The only changed test is a browser end-to-end test with pixel-exact screenshots (Playwright); pytest collected no tests | Setup, in principle | Not attempted: needs browsers in the container, and pixel-exact screenshots are unlikely to match across machines |
+| Azure/azure-sdk-for-python #40615 | 2 | Tests replay recorded HTTP traffic through the Azure SDK test proxy; without the proxy and recordings every test fails | Setup | To be attempted: fetch the recordings at build time and run the proxy in offline playback |
+| Azure/azure-sdk-for-python #41742 | 2 | Tests need a live Cosmos DB account or emulator (the test setup connects on import) | Setup | Not attempted: needs a full database emulator inside the container |
+
+Not yet decided: Azure/azure-cli #32298 passed the build checks, but its tests run longer than the 30-minute stage-1 limit. The plan is to run it with a longer limit for that PR only.
+
+[RESULT: outcome of the repair attempts for #40615 and #32298.]

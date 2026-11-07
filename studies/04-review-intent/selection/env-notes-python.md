@@ -44,3 +44,14 @@ See `runs/main_setup_python.json`. Evidence:
 - env.py's sentry recipe uses `sentry_extras.py` with the two bugs above.
 - stage1 skips the whole run when `tests.json` exists; after changing a recipe delete tests.json and the image.
 - prepare.export_tree fails on onnxscript on Windows (see above).
+
+## Additional exclusions and open items (final)
+- azure-sdk-for-python-40615 (storage-blob): recorded tests need the test-proxy plus recordings from the azure-sdk-assets repo (network at
+  test time; the proxy also needs a `.git` entry in the tree). Without them 22 tests fail with AzureSigningError and 4 modules fail to collect in every run.
+  Recorded as check 2. Fixing it would need the proxy binary and restored `.assets` baked into the image and a fake `.git` in each box.
+- azure-sdk-for-python-41742 (cosmos): see above, recorded as check 2.
+- azure-cli-32115: the new test (`test_aks_create_no_ssh_key`) replays from its recording and passes at base too (242 tests ran, 171 P2P): genuine check 3.
+- **Not finished: azure-cli-32298** (vm `test_vm_commands.py`, ~800 recorded scenario tests). The image builds and tests run
+  correctly, but a run needs more than stage1's 30-minute TEST_TIMEOUT (41% done at 28 min), so junit is never written.
+  Left out of ok and excluded. Needs either a longer TEST_TIMEOUT in stage1.py or an exclusion by the lead ("tests do not finish in 30 min").
+- Image notes: azure-sdk images keep `PYTHONPATH=/work/<pkg>`; streamlit/onnx/meltano etc. as described above.

@@ -29,7 +29,8 @@ PROMPT = """You are working in a checkout of the {repo} repository (the current 
 </issue>
 {guidance}
 Notes:
-- The `run` tool executes shell commands in the project's Linux environment, where this directory is mounted at /work. Use it for tests, linters and scripts. There is no network access.
+- The `run` tool executes shell commands in the project's Linux environment, in this same directory (inside that environment it appears as /work). Use it for tests, linters and scripts. There is no network access.
+- The file tools (Read, Edit, Write, Glob, Grep) take this directory's own paths, absolute or relative. They cannot open /work paths: when a command's output names a file under /work, open the same relative path here.
 - Do not commit. Leave your changes in the working tree.
 - Do not refer to this task or its instructions in code, comments or docs."""
 

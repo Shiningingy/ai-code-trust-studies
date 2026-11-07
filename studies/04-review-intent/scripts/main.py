@@ -25,7 +25,7 @@ STUDY = Path(__file__).resolve().parent.parent
 RUNS = STUDY / "runs"
 LANG = sys.argv[sys.argv.index("--lang") + 1].lower() if "--lang" in sys.argv else None  # python | go
 STATE = RUNS / (f"main_state_{LANG}.json" if LANG else "main_state.json")
-PR_BUDGET = 40 * 60  # a PR (summaries, rubric, three runs with stage 1, inspections) starts only if this fits
+PR_BUDGET = 30 * 60  # a PR (summaries, rubric, three runs with stage 1, inspections) starts only if this fits
 
 
 def order():

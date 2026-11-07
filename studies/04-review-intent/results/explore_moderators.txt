@@ -1,0 +1,19 @@
+EXPLORATORY, not in the plan. 18 correlations below; no correction for multiple tests.
+Feature ranges (min / median / max): src_lines 13/114/1521; src_files 1/3/43; items 6/7/8; human_comments 1/4/143; agent_comments 1/2/13; issue_words 3/140/3183
+
+src_lines: BA rho -0.12 p 0.361 | BC rho +0.04 p 0.762 | CA rho -0.14 p 0.303 | median split (<= 114 / >): BA +0.206/+0.111, BC +0.067/+0.065 (n 29/27)
+src_files: BA rho -0.17 p 0.210 | BC rho -0.02 p 0.888 | CA rho -0.17 p 0.198 | median split (<= 3 / >): BA +0.233/+0.070, BC +0.080/+0.048 (n 31/25)
+items: BA rho -0.29 p 0.032 | BC rho -0.06 p 0.650 | CA rho -0.19 p 0.157 | median split (<= 7 / >): BA +0.203/+0.019, BC +0.086/+0.000 (n 43/13)
+human_comments: BA rho +0.14 p 0.288 | BC rho +0.36 p 0.007 | CA rho -0.29 p 0.028 | median split (<= 4 / >): BA +0.190/+0.123, BC -0.010/+0.160 (n 31/25)
+agent_comments: BA rho -0.07 p 0.605 | BC rho -0.03 p 0.822 | CA rho +0.04 p 0.773 | median split (<= 2 / >): BA +0.166/+0.152, BC +0.084/+0.044 (n 31/25)
+issue_words: BA rho -0.18 p 0.178 | BC rho -0.02 p 0.858 | CA rho -0.12 p 0.365 | median split (<= 140 / >): BA +0.209/+0.111, BC +0.110/+0.021 (n 28/28)
+
+human_comments vs BC within Go: rho +0.41 p 0.032 (n 27)
+human_comments vs BC within Python: rho +0.28 p 0.144 (n 29)
+
+By task type (n, mean BA, mean CA, mean BC):
+   bug fix: n 25, BA +0.237, CA +0.200, BC +0.036
+   enhancement of existing behaviour: n 8, BA +0.013, CA +0.114, BC -0.100
+   new feature: n 22, BA +0.120, CA -0.004, BC +0.124
+   refactor or maintenance: n 1, BA +0.286, CA -0.571, BC +0.857
+Kruskal-Wallis across types: BA p 0.477, BC p 0.161, CA p 0.062

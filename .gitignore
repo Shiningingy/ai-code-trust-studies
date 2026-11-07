@@ -28,3 +28,6 @@ studies/*/scripts/build_pdf.py
 .idea/
 .DS_Store
 Thumbs.db
+
+# Study 04: raw GitHub dump from eligible.py (8 MB; regenerate with the script)
+studies/04-review-intent/selection/out/prs.jsonl

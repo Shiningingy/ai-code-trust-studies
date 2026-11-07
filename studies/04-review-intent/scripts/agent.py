@@ -52,6 +52,9 @@ def build_prompt(pid, arm):
         if not s.get("text"):
             raise RuntimeError(f"{pid}: no summary for {arm}")
         guidance = GUIDANCE.format(summary=s["text"])
+    elif arm == "O":  # follow-up 6.2 (oracle, calibration only): the rubric's behaviour items, same block
+        items = json.loads((d / "rubric.json").read_text(encoding="utf-8"))["items"]
+        guidance = GUIDANCE.format(summary="\n".join(f"- {i['behaviour']}" for i in items))
     return meta, PROMPT.format(repo=meta["repo"], issue=issue_text(meta), guidance=guidance)
 
 

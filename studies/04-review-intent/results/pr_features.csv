@@ -1,0 +1,57 @@
+pr,lang,type,src_lines,src_files,items,human_comments,agent_comments,issue_words,BA,BC,CA
+Azure__azure-cli-32298,Python,enhancement of existing behaviour,1521,5,7,6,2,152,-0.5714285714285714,-0.5714285714285714,0.0
+Azure__azure-sdk-for-go-24702,Go,bug fix,114,2,7,1,4,34,0.5714285714285714,0.1428571428571429,0.42857142857142855
+Azure__azure-sdk-for-go-24864,Go,bug fix,258,12,7,3,1,80,0.7142857142857143,0.5714285714285714,0.14285714285714285
+Azure__azure-sdk-for-go-24962,Go,new feature,1104,14,8,4,12,96,-0.125,0.0,-0.125
+Azure__azure-sdk-for-go-25115,Go,bug fix,27,2,7,4,1,109,0.1428571428571428,0.1428571428571428,0.0
+Azure__azure-sdk-for-go-25193,Go,new feature,303,8,8,12,7,93,0.125,0.125,0.0
+Azure__azure-sdk-for-python-41610,Python,new feature,89,4,8,6,4,74,-0.125,0.125,-0.25
+Azure__azure-sdk-for-python-41675,Python,bug fix,20,2,6,2,1,35,0.16666666666666674,0.0,0.16666666666666674
+Azure__azure-sdk-for-python-41822,Python,new feature,688,12,8,2,2,56,0.0,0.0,0.0
+Azure__azure-sdk-for-python-43201,Python,bug fix,63,6,7,1,1,33,0.0,-0.14285714285714285,0.14285714285714285
+WeblateOrg__weblate-16322,Python,enhancement of existing behaviour,88,2,6,8,3,92,0.0,0.0,0.0
+WeblateOrg__weblate-16381,Python,new feature,78,13,7,4,2,67,0.0,-0.28571428571428575,0.28571428571428575
+WeblateOrg__weblate-16568,Python,bug fix,128,3,7,7,2,753,-0.14285714285714285,-0.14285714285714285,0.0
+apache__superset-34694,Python,bug fix,49,1,6,2,3,221,1.0,0.16666666666666663,0.8333333333333334
+apache__superset-34763,Python,enhancement of existing behaviour,229,3,8,6,3,193,-0.25,-0.5,0.25
+ava-labs__avalanchego-4135,Go,new feature,240,3,7,26,5,3,0.42857142857142855,-0.14285714285714285,0.5714285714285714
+ava-labs__avalanchego-4147,Go,refactor or maintenance,334,3,7,143,4,3,0.2857142857142857,0.8571428571428571,-0.5714285714285714
+ava-labs__avalanchego-4201,Go,enhancement of existing behaviour,318,3,8,7,2,84,0.0,0.125,-0.125
+celestiaorg__celestia-app-4628,Go,new feature,90,1,8,63,9,523,0.0,0.25,-0.25
+cloudposse__atmos-1225,Go,bug fix,312,2,6,2,8,94,0.6666666666666667,0.16666666666666663,0.5
+cosmos__cosmos-sdk-24583,Go,bug fix,160,7,7,13,3,556,0.1428571428571429,0.4285714285714286,-0.2857142857142857
+cosmos__cosmos-sdk-24720,Go,new feature,180,19,8,7,2,478,-0.25,-0.25,0.0
+getsentry__sentry-python-4733,Python,new feature,53,1,7,3,4,24,0.1428571428571428,0.0,0.1428571428571428
+getsentry__sentry-python-4804,Python,bug fix,13,1,6,2,1,513,0.8333333333333334,0.33333333333333337,0.5
+getsentry__sentry-python-4902,Python,new feature,132,5,7,1,5,111,-0.1428571428571429,-0.1428571428571429,0.0
+googleapis__google-cloud-go-13189,Go,bug fix,59,2,6,2,1,232,0.5,-0.5,1.0
+googleapis__google-cloud-go-13290,Go,new feature,590,13,7,4,5,48,0.7142857142857143,0.0,0.7142857142857143
+grafana__mimir-12752,Go,new feature,357,13,8,4,3,117,0.0,0.0,0.0
+gruntwork-io__terragrunt-4794,Go,bug fix,187,6,7,1,12,253,-0.5714285714285714,-0.7142857142857143,0.1428571428571429
+gruntwork-io__terragrunt-5037,Go,bug fix,591,8,8,1,2,243,0.375,0.375,0.0
+home-assistant__core-148699,Python,enhancement of existing behaviour,40,2,7,10,2,239,0.42857142857142855,0.1428571428571428,0.28571428571428575
+home-assistant__core-150364,Python,bug fix,44,2,6,7,2,198,0.5,0.5,0.0
+home-assistant__core-151411,Python,new feature,80,1,7,1,3,147,0.0,0.0,0.0
+home-assistant__core-151909,Python,bug fix,36,2,6,2,1,114,1.0,0.0,1.0
+home-assistant__core-152712,Python,new feature,42,2,6,14,1,269,0.16666666666666663,0.33333333333333337,-0.16666666666666674
+home-assistant__core-155537,Python,bug fix,93,2,8,1,3,191,-0.125,-0.375,0.25
+home-assistant__supervisor-5862,Python,bug fix,78,6,6,2,1,378,-0.33333333333333337,-0.16666666666666663,-0.16666666666666674
+home-assistant__supervisor-5999,Python,bug fix,100,3,8,12,2,3183,0.625,0.125,0.5
+meltano__meltano-8810,Python,bug fix,86,2,6,1,2,196,0.0,0.16666666666666663,-0.16666666666666663
+meltano__meltano-9394,Python,bug fix,22,1,6,2,2,114,-0.16666666666666663,0.0,-0.16666666666666663
+microsoft__onnxscript-2307,Python,new feature,32,2,7,4,1,107,0.0,0.1428571428571429,-0.1428571428571429
+microsoft__onnxscript-2396,Python,bug fix,742,2,6,5,1,187,0.0,0.16666666666666663,-0.16666666666666663
+pingcap__tidb-61187,Go,bug fix,24,2,6,2,2,224,0.0,-0.16666666666666663,0.16666666666666663
+pingcap__tidb-62968,Go,bug fix,116,1,6,2,2,132,0.16666666666666669,-0.16666666666666663,0.3333333333333333
+pingcap__tidb-63160,Go,enhancement of existing behaviour,104,5,6,4,3,156,0.5,0.0,0.5
+pingcap__tidb-63519,Go,enhancement of existing behaviour,109,3,7,2,3,87,0.0,0.0,0.0
+streamlit__streamlit-11532,Python,new feature,343,43,7,49,13,156,0.1428571428571429,0.1428571428571429,0.0
+streamlit__streamlit-11796,Python,new feature,363,13,7,11,2,91,0.2857142857142857,0.2857142857142857,0.0
+streamlit__streamlit-12034,Python,new feature,292,8,8,2,5,305,0.0,0.0,0.0
+streamlit__streamlit-12313,Python,new feature,114,5,7,1,1,94,-0.1428571428571428,0.1428571428571429,-0.2857142857142857
+volcano-sh__volcano-4345,Go,new feature,146,5,7,15,2,74,0.5714285714285714,0.7142857142857143,-0.14285714285714285
+volcano-sh__volcano-4517,Go,bug fix,180,1,7,7,1,550,0.0,-0.1428571428571428,0.1428571428571428
+volcano-sh__volcano-4661,Go,new feature,59,3,7,10,1,318,0.2857142857142857,0.8571428571428572,-0.5714285714285714
+zeta-chain__node-3734,Go,new feature,1051,38,7,53,12,72,0.5714285714285714,0.42857142857142855,0.14285714285714285
+zeta-chain__node-4291,Go,bug fix,498,22,7,21,6,519,-0.14285714285714285,0.14285714285714285,-0.2857142857142857
+zitadel__zitadel-10384,Go,enhancement of existing behaviour,48,5,6,8,1,182,0.0,0.0,0.0

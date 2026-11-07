@@ -214,13 +214,27 @@ In Go (n = 27), rubric scores were Baseline 0.398, +HumanReview 0.608, +AgentRev
 
 With human-review intent the agent did more: the median +HumanReview run used 51% more tokens than the median Baseline run, with more turns and more time. +HumanReview and +AgentReview do not differ clearly.
 
+### 4.7 Exploratory: what goes with larger gains
+
+This analysis was not in the plan. For each PR it takes six features from the run files (non-test lines and files changed in the merged diff, number of rubric items, number of human and of agent review comments, issue length) and a task type labelled by one Sonnet 5.5 call from the issue and PR title (25 bug fixes, 22 new features, 8 enhancements of existing behaviour, 1 refactor; the labels were not checked by hand). It relates them to the per-PR rubric differences with Spearman correlations and median splits (`scripts/explore_moderators.py`; `results/explore_moderators.txt`). With 18 correlations and no correction, about one p-value below 0.05 is expected by chance, so these are leads for a later study, not findings. Baseline's own score is not used as a difficulty measure, since it is part of the +HumanReview − Baseline difference.
+
+| Feature | Split | +HumanReview − Baseline | +HumanReview − +AgentReview |
+|---|---|---|---|
+| Human review comments | ≤ 4 (31 PRs) / > 4 (25 PRs) | +0.190 / +0.123 | −0.010 / **+0.160** |
+| Rubric items | ≤ 7 (43) / 8 (13) | +0.203 / +0.019 | +0.086 / +0.000 |
+| Source files changed | ≤ 3 (31) / > 3 (25) | +0.233 / +0.070 | +0.080 / +0.048 |
+| Source lines changed | ≤ 114 (29) / > 114 (27) | +0.206 / +0.111 | +0.067 / +0.065 |
+| Task type | bug fix (25) / new feature (22) | +0.237 / +0.120 | +0.036 / +0.124 |
+
+Two patterns stand out. First, the more human review comments a PR had, the more +HumanReview gained over +AgentReview (Spearman ρ = +0.36, p = 0.007), in both languages (Go ρ = +0.41, p = 0.032; Python ρ = +0.28, p = 0.144). With little human review the two summaries did equally well; with more, the human summary carried something the agent summary did not. Go PRs had slightly more human comments (median 4 against 3), so this may also account for part of the language difference in Section 4.5. Second, by task type, both kinds of review helped bug fixes about equally (+HumanReview +0.237 and +AgentReview +0.200 over Baseline), while for new features only human review helped (+0.120 against −0.004); the differences between types are not significant (Kruskal-Wallis p = 0.48 for +HumanReview − Baseline, 0.16 for +HumanReview − +AgentReview). Smaller changes and rubrics with fewer items tended to gain more from human review; only the rubric-item correlation reaches p < 0.05 (ρ = −0.29, p = 0.032), and items vary only from 6 to 8.
+
 ## 5. Discussion
 
 H1 holds and H2 does not: on these 56 PRs, a summary of human review given before the agent starts raised its score on a model-written rubric of the merged PR's behaviour by 0.16 on average (Opus inspector; 0.19 with the Sonnet inspector). Of the patterns fixed before the data were read (Section 3.7), the third occurred, and the data also fit the second.
 
 ### 5.1 Human versus agent review
 
-Human-review intent was not shown to beat agent-review intent; the difference was 0.07 and its interval includes zero. +AgentReview's own gain over Baseline (+0.09, secondary) sits between the two, so the data also fit the second pattern, where any statement of intent helps and its source matters less. The language split points the same way: the gap between human and agent review is +0.12 in Go and near zero in Python (Section 4.5, exploratory), so the overall H2 result may mix a real difference in some projects with none in others. The H2 verdict, No large effect, says any overall difference is modest; it does not say there is none. A study with more PRs per language, more languages, or one that varies the AI review agent could tell these apart. Whether the gap between human and agent review is real but small, or depends on which review agent wrote the comments, is the clearest open question; Section 7.3 plans a first look at it.
+Human-review intent was not shown to beat agent-review intent; the difference was 0.07 and its interval includes zero. +AgentReview's own gain over Baseline (+0.09, secondary) sits between the two, so the data also fit the second pattern, where any statement of intent helps and its source matters less. The language split points the same way: the gap between human and agent review is +0.12 in Go and near zero in Python (Section 4.5, exploratory), so the overall H2 result may mix a real difference in some projects with none in others. The H2 verdict, No large effect, says any overall difference is modest; it does not say there is none. The exploratory features in Section 4.7 suggest a simpler account: the gap grows with the amount of human review (−0.01 with four or fewer human comments, +0.16 with more), and for new features only human review helped. A study with more PRs per language, more languages, or one that varies the AI review agent could tell these apart. Whether the gap between human and agent review is real but small, or depends on which review agent wrote the comments, is the clearest open question; Section 7.3 plans a first look at it.
 
 ### 5.2 Uneven gains
 
@@ -286,7 +300,7 @@ Two questions about the inspector are open. First, given the golden (merged) pat
 
 ### 7.5 Beyond these follow-ups
 
-A wider human check of rubric items and item ratings (10-15 PRs, blind to arm) and a hand audit of a sample of summaries for where-to-work content would test the measures directly. Other agents and models would test how far the results carry. More PRs per language and more languages would test whether the gap between human and agent review is real in some settings, as the Go PRs suggest (+0.12, exploratory), and absent in others, as in Python; this needs a design with language as a planned factor and several repositories per language, so that language and project can be separated. Varying the AI review agent behind +AgentReview would test whether the gap depends on which agent wrote the comments.
+A wider human check of rubric items and item ratings (10-15 PRs, blind to arm) and a hand audit of a sample of summaries for where-to-work content would test the measures directly. Other agents and models would test how far the results carry. More PRs per language and more languages would test whether the gap between human and agent review is real in some settings, as the Go PRs suggest (+0.12, exploratory), and absent in others, as in Python; this needs a design with language as a planned factor and several repositories per language, so that language and project can be separated. Varying the AI review agent behind +AgentReview would test whether the gap depends on which agent wrote the comments. The leads in Section 4.7 (the gap grows with the number of human review comments; for new features only human review helped) can be tested directly by sampling PRs across those strata, with the strata fixed before the runs.
 
 ## 8. Reproducibility
 

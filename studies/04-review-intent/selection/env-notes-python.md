@@ -55,3 +55,33 @@ See `runs/main_setup_python.json`. Evidence:
   correctly, but a run needs more than stage1's 30-minute TEST_TIMEOUT (41% done at 28 min), so junit is never written.
   Left out of ok and excluded. Needs either a longer TEST_TIMEOUT in stage1.py or an exclusion by the lead ("tests do not finish in 30 min").
 - Image notes: azure-sdk images keep `PYTHONPATH=/work/<pkg>`; streamlit/onnx/meltano etc. as described above.
+
+## 40615 repair (2026-11-07): playback works, still no F2P
+- Recipe: `azure_sdk_playback` in recipes_python.py, used only for ids in `PLAYBACK_PRS` (= 40615); `env.recipe` output for
+  41610/41675/41742/41822/43201 compared as JSON before and after: unchanged.
+- Build (network on): all three storage packages installed (dev requirements, then copies; code via PYTHONPATH of all three);
+  standalone test-proxy at the tree's `eng/common/testproxy/target_version.txt` (1.0.0-dev.20250501.1; the file has CRLF,
+  strip it) in `/opt/test-proxy`; the azure-sdk-assets tags from the packages' assets.json fetched, full history, into
+  `/opt/assets-mirror.git` (3 MB), and `git config --system url.file:///opt/assets-mirror.git.insteadOf
+  https://github.com/Azure/azure-sdk-assets`, so the proxy's own restore (clone + checkout of the tag) runs offline.
+  A shallow (`--depth 1`) mirror does not work: the proxy's `--filter=tree:0` clone from it hangs.
+- Recordings are the merge's: the PR moved the blob tag (e1b13301f6 -> 2bfcc41daa); in the mirror the base tag name points
+  at the merge commit, so base, merge and agent trees all play back the same set. The merge tag only adds the 4 recordings
+  of the new test_transports*.py tests; every other recording is byte-identical to the base tag.
+- Box start (`prepare`): `mkdir /work/.git` if absent (devtools_testutils and the proxy find the repo root by a `.git`
+  entry), proxy started on http://localhost:5000 with `--storage-location=/work`. Image env: `AZURE_TEST_RUN_LIVE=false`,
+  `PROXY_URL=http://localhost:5000`, `PROXY_MANUAL_START=true`. `.assets`, `.certificate`, `.proxy` are git-ignored.
+- pytest runs once per package (`env_helpers/py_pytest_per_package.py`, junit merged, `--rootdir=/work` keeps the ids):
+  the packages' test folders share `test_helpers_async` and `settings.testcase`, so one session failed to collect the
+  file-share and datalake modules ("import file mismatch", `FileSharePreparer` not found).
+- Result: tests really play back (proxy log "Played Back: ~1000" per run; 541 results per run: 457 pass, 82 skip
+  "live test only", 2 fail). All three runs identical, 0 flaky, **0 F2P, 457 P2P**. The 2 failures
+  (`test_copy_from_file_to_blob_with_oauth`, sync + async) build a file-share client outside the recording transport and
+  try to resolve storagename.file.core.windows.net; they fail in every run and never count.
+- Why no F2P: the bug (issue #40217) needs a transport whose responses lack the legacy `load_body()`
+  (AsyncioRequestsTransport). The tests that use it, `test_asyncio_transport` and
+  `test_asyncio_transport_content_validation` (blob, async), are `@pytest.mark.live_test_only` and have no recordings.
+  The recorded and mock "legacy transport" tests return legacy responses that have `load_body()`, so they pass at base
+  too (checked: base runs import /work's base `_download_async.py`, which still calls `load_body()`).
+  So the exclusion stays, now as **check 3** (no fail-to-pass test offline; the PR's discriminating tests are
+  live-only), not check 2.

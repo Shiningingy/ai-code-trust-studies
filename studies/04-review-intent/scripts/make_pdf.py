@@ -23,17 +23,35 @@ code { font-family: Consolas, monospace; font-size: 9pt; background: #f2f2f2; pa
 pre { background: #f6f6f6; border: 1px solid #e2e2e2; padding: 6pt; font-size: 8pt; white-space: pre-wrap; word-wrap: break-word; }
 pre code { background: none; }
 img { max-width: 100%; display: block; margin: 8pt auto; }
-table { border-collapse: collapse; margin: 8pt 0; font-size: 9.5pt; width: 100%; page-break-inside: avoid; }
+table { border-collapse: collapse; margin: 8pt 0; font-size: 9.5pt; width: 100%; }
+thead { display: table-header-group; }
 th, td { border: 1px solid #bbb; padding: 3pt 5pt; vertical-align: top; text-align: left; }
 th { background: #eef1f4; }
 tr { page-break-inside: avoid; }
+h2.appendix { break-before: page; page-break-before: always; }
+.keep { break-inside: avoid; page-break-inside: avoid; }
 """
+
+
+def keep_together(body):
+    """Wrap each figure (image paragraph + its caption) and each table (+ a caption right after it) so that the pair is
+    never split across pages; start every appendix on a new page."""
+    import re
+    body = body.replace("<h2>Appendix", '<h2 class="appendix">Appendix')
+    cap = r"(?:\s*<p><em>[^<]*(?:<[^>]+>[^<]*)*?</em></p>)?"
+    body = re.sub(r"(<p><img [^>]*/?></p>" + cap + ")", r'<div class="keep">\1</div>', body)
+    def wrap_short(m):  # short tables stay whole; long ones may break between rows (the header row repeats)
+        return f'<div class="keep">{m.group(1)}</div>' if m.group(1).count("<tr>") <= 9 else m.group(1)
+
+    body = re.sub(r"(<table>.*?</table>" + cap + ")", wrap_short, body, flags=re.S)
+    return body
 
 
 def main():
     md = (STUDY / "report-draft.md").read_text(encoding="utf-8")
     body = markdown.markdown(md, extensions=["tables", "fenced_code", "sane_lists"])
     body = body.replace('src="figures/', f'src="{(STUDY / "figures").as_uri()}/')  # the HTML is written to results/
+    body = keep_together(body)
     html = (f"<!doctype html><html><head><meta charset='utf-8'><title>Study 04 report</title>"
             f"<style>{CSS}</style></head><body>{body}</body></html>")
     src = STUDY / "results" / "report-draft.html"

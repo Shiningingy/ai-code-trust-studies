@@ -1,0 +1,14 @@
+# report build sources and intermediates (kept locally; the published report is report.pdf)
+report-draft.md
+figures/
+scripts/make_pdf.py
+scripts/figures.py
+results/appendix_d.md
+results/example.md
+results/robustness_table.md
+results/*.html
+results/*.tmp.pdf
+# follow-up test outputs and hand-check sheets (published with the follow-up report, if any)
+results/followup_*.txt
+results/*handcheck.md
+spot-check/

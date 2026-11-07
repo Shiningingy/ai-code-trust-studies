@@ -4,14 +4,7 @@ Zili (Allen) Luo · Independent study, November 2026 · Not peer reviewed · Dra
 
 ## Abstract
 
-Does human code-review intent, given to a coding agent before it writes anything, move its fix closer to what the project accepted? Merged pull requests (PRs) from AgentReviewChat are replayed three times from their base commit with Claude Sonnet 5.5 in Claude Code: with the linked issue only (Baseline), plus a summary of the human review (+HumanReview), or plus the same kind of summary of AI-agent review (+AgentReview). The primary outcome is a behaviour rubric written from the issue and the merged PR, never from review, and checked by two blind model inspectors; the PR's own fail-to-pass tests are secondary. On 56 PRs from 22 repositories (29 Python, 27 Go), mean rubric scores were 0.47 (Baseline), 0.63 (+HumanReview) and 0.56 (+AgentReview). +HumanReview beat Baseline by +0.16 (95% bootstrap CI +0.07 to +0.25; Holm-adjusted p = 0.003), a pre-registered significant difference that holds with a second inspector and repository-clustered intervals. The gain is uneven: 27 PRs scored higher, 16 the same and 13 lower; the median change is 0. +HumanReview against +AgentReview differed by +0.07 (CI -0.02 to +0.15; adjusted p = 0.15), and +AgentReview gained +0.09 over Baseline (secondary). Few runs passed the PR's own tests (5, 8 and 8 of 56): in 87 of 147 unresolved runs the tests did not compile or import. The median +HumanReview run used 51% more tokens than the median Baseline run.
-
-> **Key findings**
->
-> - On 56 merged PRs (22 repositories, Python and Go), giving the agent a 150-word summary of the human review before it started raised its rubric score from 0.47 to 0.63 (+0.16, 95% CI +0.07 to +0.25). The result holds with a second inspector and with repository-clustered intervals.
-> - The gain is uneven: 27 PRs gained, 16 tied and 13 lost; the median change is zero.
-> - Human-review intent was not shown to beat a summary of AI-agent review (+0.07, CI −0.02 to +0.15), and agent-review intent itself gained +0.09 over the issue alone. The study was sized to detect larger effects than this.
-> - The PRs' own tests rarely pass (5-8 of 56 per arm). In most failures (87 of 147) the tests do not compile or import, because they call internal names only the merged PR introduced, not because the behaviour is wrong.
+Does human code-review intent, given to a coding agent before it writes anything, move its fix closer to what the project accepted? Merged pull requests (PRs) from AgentReviewChat are replayed three times from their base commit with Claude Sonnet 5.5 in Claude Code: with the linked issue only (Baseline), plus a summary of the human review (+HumanReview), or plus the same kind of summary of AI-agent review (+AgentReview). The primary outcome is a behaviour rubric written from the issue and the merged PR, never from review, and checked by two blind model inspectors; the PR's own fail-to-pass tests are secondary. On 56 PRs from 22 repositories (29 Python, 27 Go), mean rubric scores were 0.47 (Baseline), 0.63 (+HumanReview) and 0.56 (+AgentReview). +HumanReview beat Baseline by +0.16 (95% bootstrap CI +0.07 to +0.25; Holm-adjusted p = 0.003), a pre-registered significant difference that holds with a second inspector and repository-clustered intervals. The gain is uneven: 27 PRs scored higher, 16 the same and 13 lower; the median change is 0. +HumanReview against +AgentReview differed by +0.07 (CI -0.02 to +0.15; adjusted p = 0.15); the gap was +0.12 in Go and near zero in Python (exploratory), and +AgentReview gained +0.09 over Baseline (secondary). Few runs passed the PR's own tests (5, 8 and 8 of 56): in 87 of 147 unresolved runs the tests did not compile or import. The median +HumanReview run used 51% more tokens than the median Baseline run.
 
 ## 1. Introduction
 
@@ -27,6 +20,8 @@ The primary outcome is the rubric score from the Opus inspector (Section 3.5). T
 Secondary questions (Section 3.7) are the stage-1 resolved rate, +AgentReview against Baseline, inspector agreement, and token efficiency.
 
 The contribution is a three-arm replay design on real merged PRs, a scoring scheme that never builds its checklist from the review text, and a result, whichever way it comes out. A negative result is a result. The study is small and pre-registered: the plan was committed to a public repository before the pilot's first agent run, later changes are listed as dated amendments, and every model call ran on a personal Claude subscription rather than a funded API budget. It supports claims about these 22 repositories, these two languages and this agent, and no wider claims.
+
+The key findings of this mini-study are as follows. On 56 merged PRs from 22 repositories, giving the agent a 150-word summary of the human review before it started raised its rubric score from 0.47 to 0.63 (+0.16, 95% CI +0.07 to +0.25), and the result holds with a second inspector and with repository-clustered intervals. The gain is uneven: 27 PRs gained, 16 tied and 13 lost, so the median change is zero. Human-review intent was not shown to beat a summary of AI-agent review overall (+0.07, CI -0.02 to +0.15), but the gap differs by language: it is +0.12 in Go and close to zero in Python (exploratory; Section 4.5), and the study was sized for larger effects than either. Agent-review intent itself gained +0.09 over the issue alone. Finally, the PRs' own tests rarely pass (5-8 of 56 per arm): in most failures (87 of 147) the tests do not compile or import, because they call internal names only the merged PR introduced, not because the behaviour is wrong.
 
 ## 2. Related work
 
@@ -203,7 +198,7 @@ Most stage-1 failures are not about behaviour. In 87 of the 147 unresolved runs 
 
 ### 4.5 By language (descriptive)
 
-In Go (n = 27), rubric scores were Baseline 0.398, +HumanReview 0.608, +AgentReview 0.488; in Python (n = 29), Baseline 0.528, +HumanReview 0.642, +AgentReview 0.626. +HumanReview is above Baseline in both languages. Descriptively, with no test and about 28 PRs per language, +AgentReview was close to +HumanReview in Python and lower in Go.
+In Go (n = 27), rubric scores were Baseline 0.398, +HumanReview 0.608, +AgentReview 0.488; in Python (n = 29), Baseline 0.528, +HumanReview 0.642, +AgentReview 0.626. +HumanReview is above Baseline in both languages. +AgentReview was close to +HumanReview in Python and lower in Go. Exploratory tests within each language (not part of the plan): in Go, +HumanReview against +AgentReview is +0.120 (bootstrap CI -0.012 to +0.260; Wilcoxon p = 0.139; 14 PRs higher, 6 the same, 7 lower); in Python it is +0.015 (CI -0.073 to +0.100; p = 0.626). +HumanReview against Baseline is +0.210 in Go (CI +0.091 to +0.330; p = 0.004) and +0.114 in Python (CI -0.012 to +0.252; p = 0.150). Whether the human-versus-agent gap really differs between the languages cannot be decided with these PRs: a test of the per-PR differences between Go and Python gives Mann-Whitney p = 0.41. Language is also tied to repository (12 Go and 10 Python repositories), and so to which AI review agents were active, so a difference here may come from the projects rather than the language.
 
 ![Mean rubric score by arm and language](figures/fig5_language.svg)
 
@@ -225,7 +220,7 @@ H1 holds and H2 does not: on these 56 PRs, a summary of human review given befor
 
 ### 5.1 Human versus agent review
 
-Human-review intent was not shown to beat agent-review intent; the difference was 0.07 and its interval includes zero. +AgentReview's own gain over Baseline (+0.09, secondary) sits between the two, so the data also fit the second pattern, where any statement of intent helps and its source matters less. A study with more PRs, or one that varies the AI review agent, could tell these apart. Whether the gap between human and agent review is real but small, or depends on which review agent wrote the comments, is the clearest open question; Section 7.3 plans a first look at it.
+Human-review intent was not shown to beat agent-review intent; the difference was 0.07 and its interval includes zero. +AgentReview's own gain over Baseline (+0.09, secondary) sits between the two, so the data also fit the second pattern, where any statement of intent helps and its source matters less. The language split points the same way: the gap between human and agent review is +0.12 in Go and near zero in Python (Section 4.5, exploratory), so the overall H2 result may mix a real difference in some projects with none in others. The H2 verdict, No large effect, says any overall difference is modest; it does not say there is none. A study with more PRs per language, more languages, or one that varies the AI review agent could tell these apart. Whether the gap between human and agent review is real but small, or depends on which review agent wrote the comments, is the clearest open question; Section 7.3 plans a first look at it.
 
 ### 5.2 Uneven gains
 
@@ -259,7 +254,7 @@ The study cannot show why intent helps or not. The agent may have seen these rep
 
 ### 6.3 External validity
 
-Every agent run used one model (Sonnet 5.5 at medium effort) in one harness (Claude Code, run through `claude -p`). No other model, effort level or agent harness was tried, so the results may not hold for other coding agents; an agent that reads guidance differently, or explores the code more or less, could gain more or less from review.
+Language and repository are confounded: each language's PRs come from its own 10-12 repositories, with their own review cultures and AI review agents, so language differences in this study (Section 4.5) cannot be attributed to the language itself. Every agent run used one model (Sonnet 5.5 at medium effort) in one harness (Claude Code, run through `claude -p`). No other model, effort level or agent harness was tried, so the results may not hold for other coding agents; an agent that reads guidance differently, or explores the code more or less, could gain more or less from review.
 
 Of 70 drawn PRs, 14 were excluded and none was replaced (Section 4.1, Appendix A). Most exclusions come from the PR rather than the setup: five PRs whose tests do not detect the change, four whose merge commit does not match the PR, two with no human review to summarise, and one whose bug tests can only run against live services. Two were setup limits: a browser screenshot test and a live database. Excluded PRs are not a random subset; they lean toward PRs without a sharp fail-to-pass test, and the eligibility rules already require a linked issue, a runnable test file and a commit after review. Results describe PRs of that kind, from 22 repositories in two languages, with review from the agents in one dataset, and may not carry to other projects or review agents.
 
@@ -291,7 +286,7 @@ Two questions about the inspector are open. First, given the golden (merged) pat
 
 ### 7.5 Beyond these follow-ups
 
-A wider human check of rubric items and item ratings (10-15 PRs, blind to arm) and a hand audit of a sample of summaries for where-to-work content would test the measures directly. Other agents and models, more PRs per language, and varying the AI review agent behind +AgentReview would test how far the results carry.
+A wider human check of rubric items and item ratings (10-15 PRs, blind to arm) and a hand audit of a sample of summaries for where-to-work content would test the measures directly. Other agents and models would test how far the results carry. More PRs per language and more languages would test whether the gap between human and agent review is real in some settings, as the Go PRs suggest (+0.12, exploratory), and absent in others, as in Python; this needs a design with language as a planned factor and several repositories per language, so that language and project can be separated. Varying the AI review agent behind +AgentReview would test whether the gap depends on which agent wrote the comments.
 
 ## 8. Reproducibility
 

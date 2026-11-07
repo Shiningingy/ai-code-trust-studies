@@ -8,6 +8,7 @@ skips and absences all count as not passed.
 Usage: python -I stage1.py <pr id> [...]   (builds the image if needed, then writes tests.json)
 """
 import json
+import re
 import shutil
 import sys
 import xml.etree.ElementTree as ET
@@ -40,8 +41,24 @@ def command(meta):
                 f"-o cache_dir=/tmp/pc --junitxml=/tmp/junit.xml -q {files} > /tmp/out.txt 2>&1; "
                 "echo \"EXIT=$?\"; tail -c 3000 /tmp/out.txt; echo '@@JUNIT@@'; cat /tmp/junit.xml 2>/dev/null")
     pkgs = sorted({"./" + str(Path(f).parent).replace("\\", "/") for f in meta["runnable_tests"]})
-    return (f"go test -json -count=1 -timeout 25m {' '.join(pkgs)} > /tmp/out.json 2>/tmp/err.txt; echo \"EXIT=$?\"; "
-            "tail -c 3000 /tmp/err.txt; echo '@@JSON@@'; cat /tmp/out.json")
+    names = go_test_names(meta)
+    run = f"-run '^({'|'.join(names)})$' " if names else ""
+    return (f"go test -json -count=1 -timeout 25m {run}{' '.join(pkgs)} > /tmp/out.json 2>/tmp/err.txt; "
+            "echo \"EXIT=$?\"; tail -c 3000 /tmp/err.txt; echo '@@JSON@@'; cat /tmp/out.json")
+
+
+GO_TEST_FUNC = re.compile(r"^func (Test\w+)\(", re.M)
+
+
+def go_test_names(meta):
+    """Test functions defined in the PR's changed test files (merge versions): the Go analogue of running
+    only the changed test files in Python. Integration packages hold hundreds of unrelated tests."""
+    names = set()
+    for f in meta["runnable_tests"]:
+        p = SNAP / meta["id"] / "merge" / f
+        if p.is_file():
+            names |= set(GO_TEST_FUNC.findall(p.read_text(encoding="utf-8", errors="replace")))
+    return sorted(names)
 
 
 def parse(meta, out):
@@ -138,6 +155,25 @@ def score_agent(pid, tag, work):
     (arm / "stage1.json").write_text(json.dumps(rec, indent=1), encoding="utf-8")
     (arm / "stage1.log").write_text(out[:200000], encoding="utf-8")
     return rec
+
+
+def rescore(pid, tag):
+    """Stage 1 again for a finished run, on a tree rebuilt from the base tree, the saved after/ files
+    and the deletions in agent.diff (used when the test environment was fixed after the run)."""
+    d = PRS / pid / "arms" / tag
+    run = json.loads((d / "run.json").read_text(encoding="utf-8"))
+    work = eval_copy(pid, "base")
+    for f in run.get("changed_files") or []:
+        src, dst = d / "after" / f, Path(work) / f
+        if src.is_file():
+            dst.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(src, dst)
+        elif dst.exists():
+            dst.unlink()
+    try:
+        return score_agent(pid, tag, work)
+    finally:
+        shutil.rmtree(EVAL / pid, ignore_errors=True)
 
 
 if __name__ == "__main__":

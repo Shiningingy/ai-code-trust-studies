@@ -62,14 +62,67 @@ def classify(code, result, stderr, timed_out):
     return "ok"
 
 
+RATE = RUNS / "ratelimit.json"
+PAUSE_AT = float(os.environ.get("STUDY_PAUSE_AT", "0.80"))  # five-hour utilization that pauses new calls
+
+
+def note_rate(events):
+    """Keep the latest five-hour / seven-day utilization reported by the CLI (rate_limit_event)."""
+    infos = [e.get("rate_limit_info") or {} for e in events if e.get("type") == "rate_limit_event"]
+    if not infos:
+        return
+    w = infos[-1].get("unifiedWindows") or {}
+    rec = {"t": time.time(), "five_hour": (w.get("five_hour") or {}).get("utilization"),
+           "five_hour_resets": (w.get("five_hour") or {}).get("resetsAt"),
+           "seven_day": (w.get("seven_day") or {}).get("utilization"), "status": infos[-1].get("status")}
+    RUNS.mkdir(parents=True, exist_ok=True)
+    RATE.write_text(json.dumps(rec), encoding="utf-8")
+
+
+def wait_for_room():
+    """Before a call: if the last reading is at or above PAUSE_AT, sleep until the window resets."""
+    if not RATE.exists():
+        return
+    r = json.loads(RATE.read_text(encoding="utf-8"))
+    if (r.get("five_hour") or 0) >= PAUSE_AT and r.get("five_hour_resets"):
+        wake = r["five_hour_resets"] + 120
+        while time.time() < wake:
+            print(f"[pause] five-hour utilization {r['five_hour']:.2f}; sleeping until "
+                  f"{time.strftime('%H:%M', time.localtime(wake))}", flush=True)
+            time.sleep(min(600, max(5, wake - time.time())))
+        RATE.unlink(missing_ok=True)
+
+
+def pause_after_limit():
+    """A call was cut off by a limit: wait for the window's reset (or 30 minutes if unknown)."""
+    r = json.loads(RATE.read_text(encoding="utf-8")) if RATE.exists() else {}
+    resets = r.get("five_hour_resets") or 0
+    if resets < time.time():
+        resets = time.time() + 1800
+    RATE.write_text(json.dumps({"t": time.time(), "five_hour": 1.0, "five_hour_resets": resets,
+                                "status": "limit hit"}), encoding="utf-8")
+    wait_for_room()
+
+
 def ledger(row):
     RUNS.mkdir(parents=True, exist_ok=True)
     with open(LEDGER, "a", encoding="utf-8") as f:
         f.write(json.dumps(row) + "\n")
 
 
-def call(prompt, *, role, pr, model, effort="medium", schema=None, system=None, cwd=None, extra=(),
-         timeout=900, transcript=None, tag=None):
+def call(prompt, *, retry_on_limit=True, **kw):
+    """Run one `claude -p` (see _call). A call cut off by a usage limit waits for the reset and is
+    repeated, up to three times; agent runs pass retry_on_limit=False and restart from a fresh tree."""
+    for _ in range(3):
+        r = _call(prompt, **kw)
+        if r["status"] != "limit" or not retry_on_limit:
+            return r
+        pause_after_limit()
+    return r
+
+
+def _call(prompt, *, role, pr, model, effort="medium", schema=None, system=None, cwd=None, extra=(),
+          timeout=900, transcript=None, tag=None):
     """Run one `claude -p`. Returns dict(status, result, structured, usage, init, seconds)."""
     cmd = base_cmd(model, effort) + list(extra)
     if not extra:
@@ -80,6 +133,7 @@ def call(prompt, *, role, pr, model, effort="medium", schema=None, system=None, 
         cmd += ["--append-system-prompt", system]
     cwd = Path(cwd or NEUTRAL)
     cwd.mkdir(parents=True, exist_ok=True)
+    wait_for_room()
     started = time.time()
     timed_out = False
     try:
@@ -91,6 +145,7 @@ def call(prompt, *, role, pr, model, effort="medium", schema=None, system=None, 
         code, out, err = -1, (e.stdout or b"").decode("utf-8", "replace"), (e.stderr or b"").decode("utf-8", "replace")
     seconds = round(time.time() - started, 1)
     events, init, result = parse_stream(out)
+    note_rate(events)
     status = classify(code, result, err, timed_out)
     if transcript:
         Path(transcript).parent.mkdir(parents=True, exist_ok=True)
@@ -103,7 +158,8 @@ def call(prompt, *, role, pr, model, effort="medium", schema=None, system=None, 
            "modelUsage": result.get("modelUsage"), "duration_api_ms": result.get("duration_api_ms"),
            "init_model": init.get("model"), "cc_version": init.get("claude_code_version"),
            "init_tools": init.get("tools"), "init_plugins": init.get("plugins"),
-           "init_memory_paths": init.get("memory_paths"), "permission_mode": init.get("permissionMode")}
+           "init_memory_paths": init.get("memory_paths"), "permission_mode": init.get("permissionMode"),
+           "rate": json.loads(RATE.read_text(encoding="utf-8")) if RATE.exists() else None}
     if status != "ok":
         row["stderr"] = err[-2000:]
         row["result_text"] = str(result.get("result"))[:2000]

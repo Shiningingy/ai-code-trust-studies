@@ -1,4 +1,4 @@
-"""MCP server (stdio) with one tool, `run`, that executes a shell command inside the
+﻿"""MCP server (stdio) with one tool, `run`, that executes a shell command inside the
 task's Docker container. The agent's file tools work on the host checkout, which is
 bind-mounted into the container at /work, so edits show up on both sides. The container
 has no network, and the host never runs repository code.
@@ -39,7 +39,7 @@ def log(row):
 def run(command, timeout):
     timeout = max(1, min(int(timeout or DEFAULT_TIMEOUT), MAX_TIMEOUT))
     started = time.time()
-    cmd = ["docker", "exec", "-w", "/work", CONTAINER, "timeout", "-k", "5", str(timeout), "bash", "-lc", command]
+    cmd = ["docker", "exec", "-w", "/work", CONTAINER, "timeout", "-k", "5", str(timeout), "bash", "-c", command]
     try:
         p = subprocess.run(cmd, capture_output=True, timeout=timeout + 30)
         code, out = p.returncode, (p.stdout + p.stderr).decode("utf-8", "replace")

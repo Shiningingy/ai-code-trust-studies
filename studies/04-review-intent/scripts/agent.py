@@ -54,7 +54,8 @@ def build_prompt(pid, arm):
 
 
 def git(work, *args, check=True):
-    p = subprocess.run(["git", "-c", "core.autocrlf=false", "-c", "core.safecrlf=false", *args], cwd=work,
+    p = subprocess.run(["git", "-c", "core.autocrlf=false", "-c", "core.safecrlf=false", "-c", "gc.auto=0",
+                        "-c", "maintenance.auto=false", "-c", "core.fsmonitor=false", *args], cwd=work,
                        capture_output=True)
     if check and p.returncode != 0:
         raise RuntimeError(f"git {args[:3]}: {p.stderr.decode('utf-8', 'replace')[-800:]}")
@@ -100,9 +101,13 @@ def run(pid, arm, model=llm.SONNET):
     out.mkdir(parents=True, exist_ok=True)
     meta, prompt = build_prompt(pid, arm)
     (out / "prompt.txt").write_text(prompt, encoding="utf-8")
-    for attempt in range(1, ATTEMPTS + 1):
+    attempt, limits = 0, 0
+    while attempt < ATTEMPTS:
+        attempt += 1
         work = fresh_checkout(pid, meta)
-        box = env.start_box(pid, work, name=f"box-{tag}")
+        box = env.start_box(pid, work, name=f"box-{tag}")  # runs the recipe's prepare (generated files)
+        git(work, "add", "-A")  # generated files that are not git-ignored join the baseline, not the diff
+        git(work, "commit", "-q", "--allow-empty", "-m", "generated")
         try:
             mcp = {"mcpServers": {"box": {"command": sys.executable,
                                           "args": [str(Path(__file__).parent / "box_mcp.py"), box,
@@ -110,17 +115,23 @@ def run(pid, arm, model=llm.SONNET):
             extra = ["--tools", "Read,Edit,Write,Glob,Grep", "--mcp-config", json.dumps(mcp), "--strict-mcp-config",
                      "--allowedTools", "mcp__box__run", "--permission-mode", "acceptEdits",
                      "--permission-prompts", "none"]
-            r = llm.call(prompt, role="agent", pr=pid, tag=tag, model=model, effort="medium", cwd=work,
-                         extra=extra, timeout=TIME_LIMIT, transcript=out / "transcript.jsonl")
+            r = llm.call(prompt, retry_on_limit=False, role="agent", pr=pid, tag=tag, model=model, effort="medium",
+                         cwd=work, extra=extra, timeout=TIME_LIMIT, transcript=out / "transcript.jsonl")
         finally:
             env.stop_box(box)
         rec = {"pr": pid, "arm": arm, "tag": tag, "model": model, "effort": "medium", "attempt": attempt,
                "status": r["status"], "seconds": r["seconds"], "num_turns": r["num_turns"], "usage": r["usage"],
                "total_tokens": llm.total_tokens(r["usage"]), "init_model": r["init"].get("model"),
                "init_tools": r["init"].get("tools"), "cc_version": r["init"].get("claude_code_version")}
-        if r["status"] == "limit":
-            (out / "run.json").write_text(json.dumps(rec, indent=1), encoding="utf-8")
-            raise SystemExit(f"usage limit hit on {pid} {tag}; resume later")
+        if r["status"] == "limit":  # discarded; rerun from a fresh tree after the reset, not counted
+            limits += 1
+            with open(out / "limit_hits.jsonl", "a", encoding="utf-8") as f:
+                f.write(json.dumps(rec) + "\n")
+            if limits > 3:
+                raise SystemExit(f"usage limit hit 4 times on {pid} {tag}; stopping")
+            attempt -= 1
+            llm.pause_after_limit()
+            continue
         if r["status"] == "error" and attempt < ATTEMPTS:
             continue
         rec["changed_files"] = capture(work, out, meta)

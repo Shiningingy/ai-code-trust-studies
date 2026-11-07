@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 640" width="960" height="640" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 700" width="960" height="700" font-family="Segoe UI, Helvetica, Arial, sans-serif">
   <defs>
     <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
       <path d="M0,0 L10,5 L0,10 z" fill="#555"/>
@@ -8,11 +8,12 @@
       .s { font-size: 11.5px; fill: #333; }
       .band { font-size: 12px; font-weight: 700; fill: #6b7580; letter-spacing: 1px; }
       .edge { stroke: #555; stroke-width: 1.4; fill: none; marker-end: url(#ah); }
+      .line { stroke: #555; stroke-width: 1.4; fill: none; }
       .dash { stroke: #777; stroke-width: 1.3; fill: none; stroke-dasharray: 5 4; marker-end: url(#ah); }
       .note { font-size: 11px; fill: #555; font-style: italic; }
     </style>
   </defs>
-  <rect x="0" y="0" width="960" height="640" fill="#ffffff"/>
+  <rect x="0" y="0" width="960" height="700" fill="#ffffff"/>
 
   <!-- Band 1: selection -->
   <text x="20" y="24" class="band">1  SELECT PULL REQUESTS</text>
@@ -35,10 +36,10 @@
     <text x="512" y="92" class="s">at most 6 per repository</text>
 
     <rect x="725" y="36" width="215" height="78" rx="6" fill="#ffffff" stroke="#6b7580"/>
-    <text x="737" y="58" class="t">Build checks</text>
-    <text x="737" y="76" class="s">environment builds, at least one</text>
+    <text x="737" y="58" class="t">Build checks 1-4</text>
+    <text x="737" y="76" class="s">same files, environment builds,</text>
     <text x="737" y="92" class="s">fail-to-pass test, both summaries</text>
-    <text x="737" y="108" class="s" font-weight="600">→ 56 PRs from 22 repositories</text>
+    <text x="737" y="108" class="s" font-weight="600">70 → 56 PRs (14 excluded), 22 repos</text>
 
     <path d="M225,75 H253" class="edge"/>
     <path d="M470,75 H498" class="edge"/>
@@ -48,7 +49,6 @@
   <!-- Band 2: replay -->
   <text x="20" y="160" class="band">2  REPLAY EACH PR FROM ITS BASE COMMIT, THREE TIMES</text>
   <g>
-    <!-- sources -->
     <rect x="20" y="176" width="180" height="56" rx="6" fill="#ffffff" stroke="#6b7580"/>
     <text x="32" y="199" class="t">Linked issue</text>
     <text x="32" y="217" class="s">given to every arm</text>
@@ -61,29 +61,27 @@
     <text x="32" y="351" class="t">AI-agent review</text>
     <text x="32" y="369" class="s">inline comments on the PR</text>
 
-    <!-- summariser -->
-    <rect x="230" y="252" width="190" height="132" rx="6" fill="#ffffff" stroke="#6b7580"/>
-    <text x="242" y="276" class="t">Summary (Opus 5.5)</text>
-    <text x="242" y="296" class="s">what the change should do</text>
-    <text x="242" y="312" class="s">and why; no code or new</text>
-    <text x="242" y="328" class="s">names; at most 150 words;</text>
-    <text x="242" y="344" class="s">leak check, one retry</text>
-    <text x="242" y="368" class="note">same procedure for both</text>
+    <rect x="230" y="252" width="185" height="132" rx="6" fill="#ffffff" stroke="#6b7580"/>
+    <text x="242" y="274" class="t">Summariser (Opus 5.5)</text>
+    <text x="242" y="292" class="s">what the change should do</text>
+    <text x="242" y="307" class="s">and why; no code or new</text>
+    <text x="242" y="322" class="s">names; at most 150 words;</text>
+    <text x="242" y="337" class="s">leak check, one retry;</text>
+    <text x="242" y="352" class="s">reads the issue for context</text>
+    <text x="242" y="374" class="note">same procedure for both</text>
 
-    <!-- arms -->
-    <rect x="450" y="176" width="230" height="56" rx="6" fill="#eef0f2" stroke="#8a939b" stroke-width="1.5"/>
-    <text x="462" y="199" class="t">Baseline</text>
-    <text x="462" y="217" class="s">issue only</text>
+    <rect x="455" y="176" width="225" height="56" rx="6" fill="#eef0f2" stroke="#8a939b" stroke-width="1.5"/>
+    <text x="467" y="199" class="t">Baseline</text>
+    <text x="467" y="217" class="s">issue only</text>
 
-    <rect x="450" y="252" width="230" height="56" rx="6" fill="#e3eefb" stroke="#3b78c4" stroke-width="1.5"/>
-    <text x="462" y="275" class="t">+HumanReview</text>
-    <text x="462" y="293" class="s">issue + human-review summary</text>
+    <rect x="455" y="252" width="225" height="56" rx="6" fill="#e3eefb" stroke="#3b78c4" stroke-width="1.5"/>
+    <text x="467" y="275" class="t">+HumanReview</text>
+    <text x="467" y="293" class="s">issue + human-review summary</text>
 
-    <rect x="450" y="328" width="230" height="56" rx="6" fill="#fdf0e2" stroke="#d58a2c" stroke-width="1.5"/>
-    <text x="462" y="351" class="t">+AgentReview</text>
-    <text x="462" y="369" class="s">issue + agent-review summary</text>
+    <rect x="455" y="328" width="225" height="56" rx="6" fill="#fdf0e2" stroke="#d58a2c" stroke-width="1.5"/>
+    <text x="467" y="351" class="t">+AgentReview</text>
+    <text x="467" y="369" class="s">issue + agent-review summary</text>
 
-    <!-- agent -->
     <rect x="710" y="190" width="230" height="180" rx="6" fill="#ffffff" stroke="#6b7580" stroke-width="1.5"/>
     <text x="722" y="214" class="t">Coding agent</text>
     <text x="722" y="234" class="s">Claude Sonnet 5.5 in Claude Code,</text>
@@ -94,12 +92,17 @@
     <text x="722" y="330" class="s">environment, no network</text>
     <text x="722" y="356" class="s" font-weight="600">output: the agent's diff</text>
 
-    <!-- edges -->
-    <path d="M200,204 H448" class="edge"/>
+    <!-- issue to all three arms (bracket) -->
+    <path d="M200,204 H453" class="edge"/>
+    <path d="M437,204 V375" class="line"/>
+    <path d="M437,298 H453" class="edge"/>
+    <path d="M437,375 H453" class="edge"/>
+    <!-- review to summariser to arms -->
     <path d="M200,280 H228" class="edge"/>
     <path d="M200,356 H228" class="edge"/>
-    <path d="M420,280 H448" class="edge" stroke="#3b78c4"/>
-    <path d="M420,356 H448" class="edge" stroke="#d58a2c"/>
+    <path d="M415,272 H453" class="edge" stroke="#3b78c4"/>
+    <path d="M415,346 H453" class="edge" stroke="#d58a2c"/>
+    <!-- arms to agent -->
     <path d="M680,204 H708" class="edge"/>
     <path d="M680,280 H708" class="edge"/>
     <path d="M680,356 H708" class="edge"/>
@@ -109,17 +112,17 @@
   <text x="20" y="430" class="band">3  SCORE AND ANALYSE</text>
   <g>
     <rect x="20" y="446" width="205" height="96" rx="6" fill="#ffffff" stroke="#6b7580"/>
-    <text x="32" y="469" class="t">Stage 1: PR's own tests</text>
+    <text x="32" y="469" class="t">Secondary: PR's own tests</text>
     <text x="32" y="489" class="s">fail-to-pass and pass-to-pass</text>
     <text x="32" y="505" class="s">tests in the container</text>
     <text x="32" y="529" class="note">reported, cannot change a verdict</text>
 
     <rect x="255" y="446" width="215" height="96" rx="6" fill="#e9f5ec" stroke="#3f8f57"/>
     <text x="267" y="469" class="t">Rubric (Opus 5.5)</text>
-    <text x="267" y="489" class="s">3-8 behaviour items, written</text>
-    <text x="267" y="505" class="s">from the issue + merged PR,</text>
-    <text x="267" y="521" class="s">never from review; no names</text>
-    <text x="267" y="537" class="s">or structure required</text>
+    <text x="267" y="489" class="s">3-8 behaviour items, one rubric</text>
+    <text x="267" y="505" class="s">per PR, written once; never</text>
+    <text x="267" y="521" class="s">from review; no names or</text>
+    <text x="267" y="537" class="s">structure required</text>
 
     <rect x="500" y="446" width="205" height="96" rx="6" fill="#e9f5ec" stroke="#3f8f57"/>
     <text x="512" y="469" class="t">Two blind inspectors</text>
@@ -135,15 +138,21 @@
     <text x="747" y="521" class="s">      +AgentReview</text>
     <text x="747" y="537" class="s">paired Wilcoxon, Holm</text>
 
-    <!-- diff goes down to stage 1 and inspectors -->
+    <!-- answer key, hidden from the agent -->
+    <rect x="255" y="574" width="215" height="58" rx="6" fill="#ffffff" stroke="#3f8f57" stroke-dasharray="5 4"/>
+    <text x="267" y="596" class="t">Merged PR (the answer key)</text>
+    <text x="267" y="614" class="s">issue + final diff; never</text>
+    <text x="267" y="628" class="s">shown to the agent</text>
+    <path d="M362,574 V544" class="edge"/>
+
     <path d="M825,370 V400 H205 V444" class="edge"/>
     <path d="M602,400 V444" class="edge"/>
     <path d="M470,494 H498" class="edge"/>
     <path d="M705,494 H733" class="edge"/>
-    <path d="M122,542 V575 H837 V544" class="dash"/>
-    <text x="300" y="592" class="note">stage-1 result is shown to the inspectors and reported beside the rubric score</text>
+    <path d="M122,542 V652 H837 V544" class="dash"/>
+    <text x="490" y="646" class="note">stage-1 result is shown to the inspectors and reported beside the rubric score</text>
     <text x="640" y="394" class="note">agent's diff, for each arm</text>
   </g>
 
-  <text x="20" y="626" class="note">Arms are labelled A (Baseline), B (+HumanReview) and C (+AgentReview) in the data files. A pilot of 10 other PRs came first; the plan was frozen before any agent run.</text>
+  <text x="20" y="688" class="note">Arms are labelled A (Baseline), B (+HumanReview) and C (+AgentReview) in the data files. A pilot of 10 other PRs came first; the plan was frozen before any agent run.</text>
 </svg>

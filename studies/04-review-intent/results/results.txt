@@ -1,37 +1,37 @@
-Study 04 results. Complete PRs (all three arms scored): 12; repositories: 10; Python 4, Go 8.
+Study 04 results. Complete PRs (all three arms scored): 56; repositories: 22; Python 29, Go 27.
 
 == Primary: rubric score (Opus inspector), share of items met ==
-Mean per arm: A 0.494, B 0.720, C 0.564
-H1 B vs A: mean diff +0.226 (95% bootstrap CI +0.087 to +0.385); Wilcoxon p=0.0156 (non-zero pairs 7), Holm-adjusted p=0.0312 -> Inconclusive (fewer than 30 complete PRs)
-H2 B vs C: mean diff +0.156 (95% bootstrap CI +0.017 to +0.327); Wilcoxon p=0.0625 (non-zero pairs 8), Holm-adjusted p=0.0625 -> Inconclusive (fewer than 30 complete PRs)
+Mean per arm: A 0.465, B 0.626, C 0.560
+H1 B vs A: mean diff +0.160 (95% bootstrap CI +0.070 to +0.252); Wilcoxon p=0.0015 (non-zero pairs 40), Holm-adjusted p=0.0030 -> Signal (B higher)
+H2 B vs C: mean diff +0.066 (95% bootstrap CI -0.015 to +0.147); Wilcoxon p=0.1536 (non-zero pairs 42), Holm-adjusted p=0.1536 -> No large effect (not 'no effect'; see power note)
 Power note (plan): with ~55 PRs a standardised paired effect of about 0.4 is detected ~80% of the time at the Holm-adjusted level; smaller effects often are not.
 
 == Reported, cannot change a verdict ==
-1. Stage 1 resolved rate: A 0.083 (1/12), B 0.000 (0/12), C 0.167 (2/12)
-   McNemar exact B vs A: B-only 0, A-only 1, p=1.0000
-   McNemar exact B vs C: B-only 0, C-only 2, p=0.5000
-2. C vs A: mean diff +0.070 (CI -0.127 to +0.274), Wilcoxon p=0.5703
-3. Inspector agreement, item level (n=246): kappa 2-class 0.950, 3-class 0.889
-   On Sonnet scores, H1 B vs A: mean diff +0.238, Holm p=0.0625 -> Inconclusive (fewer than 30 complete PRs)
-   On Sonnet scores, H2 B vs C: mean diff +0.140, Holm p=0.1953 -> Inconclusive (fewer than 30 complete PRs)
-4. H1 B vs A, CI clustered by repository: +0.088 to +0.409
-4. H2 B vs C, CI clustered by repository: +0.015 to +0.356
-5. Rubric score without can't-tell items: A 0.509, B 0.724, C 0.582; B-A +0.215, B-C +0.143
+1. Stage 1 resolved rate: A 0.089 (5/56), B 0.143 (8/56), C 0.143 (8/56)
+   McNemar exact B vs A: B-only 4, A-only 1, p=0.3750
+   McNemar exact B vs C: B-only 3, C-only 3, p=1.0000
+2. C vs A: mean diff +0.094 (CI +0.010 to +0.183), Wilcoxon p=0.0797
+3. Inspector agreement, item level (n=1164): kappa 2-class 0.861, 3-class 0.814
+   On Sonnet scores, H1 B vs A: mean diff +0.189, Holm p=0.0002 -> Signal (B higher)
+   On Sonnet scores, H2 B vs C: mean diff +0.057, Holm p=0.1565 -> No large effect (not 'no effect'; see power note)
+4. H1 B vs A, CI clustered by repository: +0.075 to +0.236
+4. H2 B vs C, CI clustered by repository: -0.014 to +0.142
+5. Rubric score without can't-tell items: A 0.469, B 0.633, C 0.569; B-A +0.164, B-C +0.064
 6. Token efficiency (secondary):
-   tokens: median A 85,488, B 170,596, C 97,972; Wilcoxon B vs A p=0.1294, B vs C p=0.6221
-   turns: median A 14, B 18, C 14; Wilcoxon B vs A p=0.3223, B vs C p=0.3672
-   seconds: median A 50, B 103, C 50; Wilcoxon B vs A p=0.6221, B vs C p=0.7334
+   tokens: median A 85,488, B 129,164, C 110,858; Wilcoxon B vs A p=0.0000, B vs C p=0.1731
+   turns: median A 12, B 16, C 14; Wilcoxon B vs A p=0.0023, B vs C p=0.5003
+   seconds: median A 43, B 68, C 63; Wilcoxon B vs A p=0.0053, B vs C p=0.3399
 7. By language (descriptive):
-   Go (n=8): rubric A 0.476, B 0.795, C 0.585; resolved A 0.000, B 0.000, C 0.125
-   Python (n=4): rubric A 0.530, B 0.571, C 0.524; resolved A 0.250, B 0.000, C 0.250
+   Go (n=27): rubric A 0.398, B 0.608, C 0.488; resolved A 0.037, B 0.074, C 0.074
+   Python (n=29): rubric A 0.528, B 0.642, C 0.626; resolved A 0.138, B 0.207, C 0.207
 8. Per arm: summary words (median), leak on first answer, rule break on first answer, cut, scrubs, timeouts, refusals
    A: words -, leak_first 0, rule_break_first 0, cut 0, scrubbed lines 0, timeouts 0, refusals 0
-   B: words 143.5, leak_first 1, rule_break_first 5, cut 3, scrubbed lines 2, timeouts 0, refusals 0
-   C: words 137.5, leak_first 0, rule_break_first 4, cut 2, scrubbed lines 0, timeouts 0, refusals 0
+   B: words 142.0, leak_first 8, rule_break_first 32, cut 25, scrubbed lines 2, timeouts 0, refusals 0
+   C: words 139.5, leak_first 6, rule_break_first 21, cut 16, scrubbed lines 0, timeouts 0, refusals 0
 
 Excluded PRs (14):
    Azure__azure-cli-32115: check 3: no fail-to-pass test
-   Azure__azure-sdk-for-python-40615: check 2: environment did not build: recorded tests need the azure-sdk test-proxy and recordings from the assets repo (network at test time); without them every storage test fails (AzureSigningError)
+   Azure__azure-sdk-for-python-40615: check 3: no fail-to-pass test offline. Repaired environment replays the recorded tests (test-proxy playback; 457 pass-to-pass, 0 flaky), but the only tests that exercise the bug (test_asyncio_transport*, AsyncioRequestsTransport) are live-test-only with no recordings; the recorded legacy-transport tests pass at base.
    Azure__azure-sdk-for-python-41742: check 2: environment did not build: tests need a live Cosmos DB emulator/account (conftest connects at import; 0 tests collected)
    ava-labs__avalanchego-4259: check 3: no fail-to-pass test
    getsentry__sentry-python-4873: check 4: B=0 C=6 comments

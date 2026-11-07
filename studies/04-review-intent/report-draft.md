@@ -1,12 +1,12 @@
 # Does human review intent help a coding agent? A three-arm replay on merged pull requests
 
-> **Status: partial draft (2026-11-07).** The main run stopped on schedule after 12 of the 55 runnable PRs. The plan gives no verdict below 30 complete PRs, so every result here is reported as *Inconclusive*, and numbers will change as the run continues. Items marked [check] still need verifying before release.
+> **Status: draft with final results (2026-11-07).** All 56 runnable PRs are complete. One item marked [check] waits on the author's spot-check of two PRs.
 
 Zili (Allen) Luo · Independent study, November 2026 · Not peer reviewed · DRAFT: results sections are placeholders
 
 ## Abstract
 
-Coding agents are usually judged by tests that confirm what was built, not what was asked. Human code review often says what a change should do and why. This study asks whether that intent, given to a coding agent before it writes anything, moves its fix closer to what the project accepted. Each merged pull request (PR) from the AgentReviewChat dataset is replayed from the commit just before it, three times, with Claude Sonnet 5.5 in Claude Code: with the linked issue only (A), with the issue plus a summary of the human review (B), and with the issue plus the same kind of summary of AI-agent review (C). Results are scored by the PR's own fail-to-pass tests and by a behaviour rubric written from the issue and the merged PR, never from the review, and checked by two blind model inspectors. The analysis plan was frozen before any agent run. In this partial report, on 12 complete PRs from 10 repositories, the mean rubric score was 0.49 in arm A, 0.72 in arm B and 0.56 in arm C. B against A differed by +0.23 (95% bootstrap CI +0.09 to +0.39; Holm-adjusted p = 0.031), and B against C by +0.16 (CI +0.02 to +0.33; adjusted p = 0.063). The plan needs 30 complete PRs before giving a verdict, so both comparisons are inconclusive for now. Few runs passed the PR's own tests (1, 0 and 2 of 12), mostly because the tests call internal names the issue never gives. Arm B used a median of 171k tokens per run, against 85k in A and 98k in C.
+Coding agents are usually judged by tests that confirm what was built, not what was asked. Human code review often says what a change should do and why. This study asks whether that intent, given to a coding agent before it writes anything, moves its fix closer to what the project accepted. Each merged pull request (PR) from the AgentReviewChat dataset is replayed from the commit just before it, three times, with Claude Sonnet 5.5 in Claude Code: with the linked issue only (A), with the issue plus a summary of the human review (B), and with the issue plus the same kind of summary of AI-agent review (C). Results are scored by the PR's own fail-to-pass tests and by a behaviour rubric written from the issue and the merged PR, never from the review, and checked by two blind model inspectors. The analysis plan was frozen before any agent run. On 56 PRs from 22 repositories (29 Python, 27 Go), the mean rubric score was 0.47 in arm A, 0.63 in arm B and 0.56 in arm C. Arm B scored higher than arm A by +0.16 (95% bootstrap CI +0.07 to +0.25; Holm-adjusted p = 0.003), the pre-registered "Signal" verdict, and the result holds with the second inspector and with repository-clustered intervals. Arm B against arm C differed by +0.07 (CI -0.02 to +0.15; adjusted p = 0.15): no large effect. Few runs passed the PR's own tests (5, 8 and 8 of 56), mostly because the tests call internal names the issue never gives. Arm B's runs used a median of 51% more tokens than arm A's.
 
 ## 1. Introduction
 
@@ -18,15 +18,17 @@ The contribution is a three-arm replay design on real merged PRs, a scoring sche
 
 ## 2. Related work
 
-The nearest published work found is c-CRAB, a code review agent benchmark (arXiv 2603.23448; authors [check]). Review tools comment on a PR patch, and Claude Code (Sonnet 4.6) revises the patch from the PR head; hidden tests built from human review score the revision. Tools pass 20.1-32.1% of the tests, and human review passes all by construction. This study differs in three ways: it starts from the base commit, not the PR patch; review is up-front intent, not revision input; and it has an issue-only arm.
+The nearest published work found is c-CRAB, a code review agent benchmark (Zhang et al., arXiv 2603.23448). Review tools comment on a PR's patch, and Claude Code (Sonnet 4.6) then revises the patch, starting from the PR head. Hidden tests written from the human review score the revision. Revisions guided by the tools pass 20.1-32.1% of the tests (Table 5), and the human review's own fix passes all of them, which follows from how the tests were validated. This study differs in three ways: it starts from the base commit, not from an existing patch; review is given as intent before any code is written, not as input to a revision; and it has an issue-only arm.
 
-SWE-Review (arXiv 2607.06065; [check] details) feeds AI reviewer feedback to one revision and ablates no review, a bare reject and full feedback. It covers AI review only, and only after a patch exists. The closest precedent for "human discussion helps" is the MASAI ablation (arXiv 2406.11638), whose Table 1 reports that OpenDevin on SWE-bench Lite resolves 25.00% of tasks with the benchmark's `hints_text` and 16.00% without [check: figures from a background read, not re-verified]. Those hints are issue-thread comments, not review.
+The closest work on what an agent is told up front is "What Makes a Good Bug Report for an AI Agent?" (Khatib et al., arXiv 2607.07593). It removes parts of the problem statement (suggested fixes, localization, expected behaviour) on SWE-bench Pro and measures the effect. That content comes from the issue, not from review, and it has no human-versus-AI comparison. "Intention is All You Need" (Guo et al., arXiv 2502.08172) extracts a reviewer's intent from review comments, but uses it to refine existing code rather than to write the change from the base commit.
 
-Leakage is a standing risk when human text is given to an agent. SWE-Bench+ (arXiv 2410.06992) reports that 32.67% of resolved instances had the fix spelled out in the issue or its comments [check]. This study answers with a leak check on every summary (Section 4.2) and a rubric that avoids required names and structure.
+SWE-Review (Wang et al., arXiv 2607.06065) has a reviewer agent judge an AI-generated patch on SWE-bench Verified and send feedback for one revision. Its Table 1(b) compares no review, a decision only, a teacher review and an oracle review (3%, 8%, 21% and 32% resolved after revision, on 100 instances). It covers AI review only, and only after a patch exists. The closest precedent for "human discussion helps" is a pair of baseline rows in MASAI's Table 1 (Arora et al., arXiv 2406.11638): OpenDevin resolves 25.00% of SWE-bench Lite with the benchmark's `hints_text` and 16.00% without. These rows appear to be different OpenDevin versions, so the gap is not a clean ablation. Those hints are issue-thread comments, not review.
 
-Work on missing intent in coding tasks is related background: Ambig-SWE (arXiv 2502.13069; reported at ICLR 2026 [check]) and the clarification papers "Ask or Assume?" (2603.26233) and CLARITI (2604.14624). They study an agent asking for what the task leaves out. Here the missing information is supplied up front from review. For scoring, Google's work on rubric judging (arXiv 2511.10865) uses LLM-drafted, human-refined rubrics; it reports 96% of patches passing reproduction tests against 80% judged valid by the rubric [check: what each figure measures]. The rubrics here are model-drafted and not human-refined, which Section 7 states as a limit.
+Leakage is a standing risk when human text is given to an agent. SWE-Bench+ (Aleithan et al., arXiv 2410.06992) reports that in 32.67% of SWE-Agent + GPT-4's successful patches the solution was given directly in the issue report or its comments. This study answers with a leak check on every summary (Section 4.2) and a rubric that avoids required names and structure.
 
-The data come from "Human-AI Synergy in Agentic Code Review" (arXiv 2603.15911 v2), which published AgentReviewChat (Hugging Face `Suzhen/AgentReviewChat`, MIT): inline review conversations on GitHub PRs, each started by a human or by an AI review agent. That paper is observational. A search on 2026-11-07 found no published study with this three-arm design (issue; issue plus human-review intent; issue plus agent-review intent) on merged PRs from the base commit. The search was short and read abstracts, so "not found" is the claim. [check: re-search before release; c-CRAB and SWE-Review are recent.]
+Work on missing intent in coding tasks is related background: Ambig-SWE (Vijayvargiya et al., arXiv 2502.13069; accepted at ICLR 2026), "Ask or Assume?" (Edwards and Schuster, arXiv 2603.26233) and CLARITI (Vijayvargiya et al., arXiv 2604.14624). They study an agent asking for what an underspecified task leaves out. Here the missing information is supplied up front, from review. For scoring, Shi et al. (arXiv 2511.10865) have an LLM draft a rubric per bug, which developers then refine. They report that at k=20, 96% of patches passed reproduction tests while 80% were judged valid by the rubric-based LLM judge, and that of 504 patches that passed reproduction tests, the judge rated 219 (43.5%) invalid. The rubrics here are model-drafted and not human-refined, which Section 7 states as a limit.
+
+The data come from "Human-AI Synergy in Agentic Code Review" (Zhong et al., arXiv 2603.15911 v2), whose dataset is on Hugging Face as AgentReviewChat (`Suzhen/AgentReviewChat`, MIT): 278,790 inline review conversations on GitHub PRs, each labelled by whether a human or an AI review agent made the first comment. That paper is observational. A search on 2026-11-07 found no published study with this three-arm design (issue; issue plus human-review intent; issue plus agent-review intent) on merged PRs replayed from the base commit. The search was short and read abstracts, so "not found" is the claim.
 
 ## 3. Research questions and hypotheses
 
@@ -94,7 +96,7 @@ The following are reported and cannot change a verdict.
 7. Each result split by language, descriptive only.
 8. Summary lengths, leak-check hits, scrubs, timeouts and refusals per arm.
 
-Anything else is exploratory and labelled so. Rubrics and inspections were not validated against human labels; two were spot-checked by the author. [check: confirm this sentence still holds when the report is finalised.]
+Anything else is exploratory and labelled so. Rubrics and inspections were not validated against human labels. [check: the author's spot-check of two PRs is pending; update this sentence and Section 7 when it is done.]
 
 ### 4.7 Pilot
 
@@ -103,63 +105,69 @@ A pilot of ten PRs, not counted in the results and removed from the main draw, w
 ## 5. Results
 
 ### 5.1 Selection and exclusions
-Of the 70 drawn PRs, 14 were excluded at the build checks. Four failed check 1 (the merge commit's file set differs from the PR's; all four from zeta-chain/node). Two failed check 2 (environment): their tests need network services at test time (the Azure SDK test proxy with its recordings, and a live Cosmos DB emulator). Six failed check 3 (no fail-to-pass test). Two failed check 4 (no human review conversation left to summarise). One PR, Azure/azure-cli #32298, is undecided: its tests run longer than the 30-minute stage-1 limit. That left 55 runnable PRs (28 Python, 27 Go).
 
-The run was paced to stop before a fixed time and stopped after 12 complete PRs (4 Python, 8 Go) from 10 repositories. No PR was left with an incomplete set of arms. No run hit a usage limit, timed out or was refused. The 12 are the first ready PRs in draw order in each language, so they are not a random subset of the 55. Go is over-represented because its environments were ready sooner.
+Of the 70 drawn PRs, 14 were excluded at the build checks. Four failed check 1: the merge commit's file set differs from the PR's (all four from zeta-chain/node). One failed check 2 (environment): its tests need a live Cosmos DB database. Seven failed check 3 (no fail-to-pass test); for six of them the PR's tests ran and passed both before and after the change, and one has only a browser screenshot test. Two failed check 4: no human-started review conversation to summarise. Appendix A lists each exclusion with its cause. Two PRs were repaired after a setup fault, as Appendix A describes: azure-cli #32298, whose tests ran past the 30-minute limit until the same tests were run in eight parallel workers, joined the run; azure-sdk-for-python #40615 moved from check 2 to check 3 once its recorded tests replayed offline. That left 56 complete PRs (29 Python, 27 Go) from 22 repositories (10 Python, 12 Go). No PR has an incomplete set of arms. No run hit a usage limit, timed out or was refused.
 
 ### 5.2 Primary: rubric score
+
 | | A | B | C |
 |---|---|---|---|
-| Mean rubric score (Opus inspector), n = 12 | 0.494 | 0.720 | 0.564 |
+| Mean rubric score (Opus inspector), n = 56 | 0.465 | 0.626 | 0.560 |
 
 | Comparison | Mean paired difference | 95% bootstrap CI | Wilcoxon p (non-zero pairs) | Holm-adjusted p | Verdict |
 |---|---|---|---|---|---|
-| H1: B vs A | +0.226 | +0.087 to +0.385 | 0.016 (7) | 0.031 | Inconclusive (fewer than 30 PRs) |
-| H2: B vs C | +0.156 | +0.017 to +0.327 | 0.063 (8) | 0.063 | Inconclusive (fewer than 30 PRs) |
+| H1: B vs A | +0.160 | +0.070 to +0.252 | 0.0015 (40) | 0.0030 | Signal (B higher) |
+| H2: B vs C | +0.066 | -0.015 to +0.147 | 0.154 (42) | 0.154 | No large effect |
 
-B never scored below A on any PR. Five of the 12 PRs scored the same in A and B. The gain over A comes from seven PRs, four of them by more than 0.25: google-cloud-go #13290 (+0.71), atmos #1225 (+0.67), azure-sdk-for-go #24702 (+0.57) and avalanchego #4147 (+0.29). In google-cloud-go, arm A changed a different file from the one the PR changed, and arms B and C both changed the same area as the PR.
+B scored higher than A on 27 PRs, lower on 13 and the same on 16. The median paired difference is zero: the mean gain comes from PRs where B helped a lot, not from a small gain on every PR. B scored higher than C on 27 PRs, lower on 15 and the same on 14. Arm A was far from the ceiling (mean 0.465, 5 of 56 resolved), so the ceiling rule from the pilot did not apply.
 
 ### 5.3 Stage 1: tests
+
 | | A | B | C |
 |---|---|---|---|
-| Resolved (all F2P pass, no P2P breaks) | 1/12 | 0/12 | 2/12 |
+| Resolved (all F2P pass, no P2P breaks) | 5/56 | 8/56 | 8/56 |
 
-Exact McNemar: B against A, 0 B-only and 1 A-only (p = 1.0); B against C, 0 B-only and 2 C-only (p = 0.5).
+Exact McNemar: B against A, 4 B-only and 1 A-only (p = 0.375); B against C, 3 B-only and 3 C-only (p = 1.0).
 
-Most stage-1 failures are not about behaviour. In 24 of the 33 unresolved runs, the PR's tests did not compile or import against the agent's code. They call names that only the merged PR introduced: unexported Go identifiers (`undefined: docURL`), private attributes (`_sync_credential`) and new constants (`CONF_SITE`). An agent that does not happen to pick the same internal names fails every F2P test in that file, whatever its fix does. This affects 8 of the 12 PRs and every arm alike. Stage 1 here mostly measures whether the agent guessed the project's internal names, which is why the plan made the rubric the primary outcome. In the one PR where B was the only unresolved arm (Weblate #16322), B broke one pass-to-pass test.
+Most stage-1 failures are not about behaviour. In 87 of the 147 unresolved runs (31 of the 56 PRs), the PR's tests did not compile or import against the agent's code. They call names that only the merged PR introduced: unexported Go identifiers (`undefined: docURL`), private attributes (`_sync_credential`) and new constants (`CONF_SITE`). An agent that does not pick the same internal names fails every F2P test in that file, whatever its fix does. This affects every arm alike. Stage 1 here mostly measures whether the agent guessed the project's internal names, which is why the plan made the rubric the primary outcome. Adapting the tests to the agent's names with a model was considered and not done: it would add a third model step that could bend the tests, for an outcome that cannot change a verdict.
 
 ### 5.4 Inspector agreement and robustness
-The two inspectors agreed closely on the 246 rubric items: Cohen's kappa 0.950 with two classes (met vs not) and 0.889 with three. On Sonnet's scores, H1 is +0.238 (Holm-adjusted p = 0.063) and H2 +0.140 (p = 0.195). Both are still inconclusive, so no verdict depends on the inspector. Intervals clustered by repository are +0.088 to +0.409 for H1 and +0.015 to +0.356 for H2. With can't-tell items left out, the scores are A 0.509, B 0.724 and C 0.582 (B-A +0.215, B-C +0.143).
+
+The two inspectors agreed closely on the 1,164 rubric items: Cohen's kappa 0.861 with two classes (met vs not) and 0.814 with three. On Sonnet's scores, H1 is +0.189 (Holm-adjusted p = 0.0002, Signal) and H2 +0.057 (p = 0.157, no large effect), so neither verdict depends on the inspector. Intervals clustered by repository are +0.075 to +0.236 for H1 and -0.014 to +0.142 for H2. With can't-tell items left out, the scores are A 0.469, B 0.633 and C 0.569 (B-A +0.164, B-C +0.064).
 
 ### 5.5 Token efficiency
+
 | Median per run | A | B | C | Wilcoxon B vs A | B vs C |
 |---|---|---|---|---|---|
-| Total tokens | 85,488 | 170,596 | 97,972 | p = 0.13 | p = 0.62 |
-| Turns | 14 | 18 | 14 | p = 0.32 | p = 0.37 |
-| Seconds | 50 | 103 | 50 | p = 0.62 | p = 0.73 |
+| Total tokens | 85,488 | 129,164 | 110,858 | p < 0.001 | p = 0.17 |
+| Turns | 12 | 16 | 14 | p = 0.002 | p = 0.50 |
+| Seconds | 43 | 68 | 63 | p = 0.005 | p = 0.34 |
 
-Arm B's median run used about twice the tokens of A, but on 12 PRs the difference is not distinguishable from noise.
+With human-review intent the agent did more: a median of 51% more tokens than with the issue alone, more turns and more time. B and C do not differ clearly.
 
 ### 5.6 Other reported items
-C against A: +0.070 (CI -0.127 to +0.274; Wilcoxon p = 0.57).
 
-By language (descriptive): in Go (n = 8), rubric scores were A 0.476, B 0.795, C 0.585. In Python (n = 4), they were A 0.530, B 0.571, C 0.524. Nearly all of the B-A gain so far is in Go PRs.
+C against A: +0.094 (bootstrap CI +0.010 to +0.183; Wilcoxon p = 0.080). Agent-review intent may also help, but the evidence is weaker than for human review, and this comparison was reported, not tested.
 
-Summaries: the median length was 144 words for B and 138 for C. The leak check fired on one first answer (B). The rule check (code spans or length) fired on 5 first answers in B and 4 in C. After regeneration, 3 B and 2 C summaries were cut to 150 words. The comment scrub removed 2 lines, both in arm B. There were no timeouts and no refusals.
+By language (descriptive): in Go (n = 27), rubric scores were A 0.398, B 0.608, C 0.488; in Python (n = 29), A 0.528, B 0.642, C 0.626. B is above A in both languages. Agent-review intent comes close to human-review intent in Python but not in Go.
+
+Summaries: the median length was 142 words for B and 140 for C. The leak check fired on 8 first answers in B and 6 in C. The rule check (code spans or length) fired on 32 first answers in B and 21 in C; after the one regeneration, 25 B and 16 C summaries were cut to 150 words. B summaries broke the rules and were cut more often than C summaries; both sides followed the same procedure. The comment scrub removed 2 lines, both in arm B. There were no timeouts and no refusals.
 
 ## 6. Discussion
 
-With 12 of the planned 30 or more PRs, neither hypothesis has a verdict. H1 (B beats A) has the clearer pattern so far: B was never below A, its interval excludes zero, and it passes the Holm threshold, though the plan does not allow a verdict yet. H2 (B beats C) is weaker: B was above C on six PRs and below on two, and the adjusted p is 0.063. The numbers are given as a progress report, not as findings.
+H1 holds: on these 56 PRs, a summary of human review given before the agent starts moved its fix closer to what the project merged, by 0.16 of the rubric on average, under both inspectors. H2 does not: human-review intent was not shown to beat agent-review intent; the difference was 0.07 and its interval includes zero.
 
-What each outcome would mean is stated here before the data are read. If B beats A and B beats C, the intent in human review carries something that the issue and AI review do not, on these PRs and for this agent. If B beats A and C does too, with B and C close, the gain may come from any added statement of intent or from added text, and this design cannot separate the two. If B beats A but not C, human review is not shown to differ from agent review as a source of intent. If neither B nor C beats A, a summary of review given up front does not help this agent on these tasks, at a size this study can detect. If B scores lower than A, the summary may mislead or distract, and the paired differences will show which PRs drive it. In every case a null result rules out a large effect, not a modest one (Section 4.6). No case can be named yet. So far the data look most like the first case (B beats both A and C), driven by Go PRs. The Python PRs show almost no difference between arms. With 4 Python PRs, that may be noise, or it may be a real difference between languages or repositories. The remaining 43 runnable PRs will decide which.
+What each outcome would mean was stated before the data were read. If B beats A and B beats C, the intent in human review carries something that the issue and AI review do not, on these PRs and for this agent. If B beats A and C does too, with B and C close, the gain may come from any added statement of intent or from added text, and this design cannot separate the two. If B beats A but not C, human review is not shown to differ from agent review as a source of intent. If neither B nor C beats A, a summary of review given up front does not help this agent on these tasks, at a size this study can detect. If B scores lower than A, the summary may mislead or distract, and the paired differences will show which PRs drive it. In every case a null result rules out a large effect, not a modest one (Section 4.6).
+
+The third case occurred: B beats A, and B is not shown to beat C. C's own gain over A (+0.09, reported only) sits between the two, so the data also fit the second case, where any statement of intent helps and its source matters less. A study with more PRs, or one that varies the AI review agent, could tell these apart. The gain is uneven: about half the PRs gain, and nearly a third score the same in A and B. Which PRs gain, and why, is not analysed here. The cost is real: the agent spent about half again as many tokens with human-review intent. Whether the gap between human and agent review is real but small, or depends on which review agent wrote the comments, is the clearest open question.
 
 ## 7. Threats to validity
 
-The study cannot show why intent helps or not. It measures closeness to what the project accepted, not code quality in general. The rubric comes from the merged PR, so "closer to what was accepted" is the outcome by definition, and a different good fix can still lose items. Rubrics and inspections are model-made and were not validated against human labels; the author spot-checked two. The agent may have seen these repositories, or these PRs, in training. That affects all three arms alike, but it can lift every score and leave less room for B to differ.
+The study cannot show why intent helps or not. It measures closeness to what the project accepted, not code quality in general. The rubric comes from the merged PR, so "closer to what was accepted" is the outcome by definition, and a different good fix can still lose items. Rubrics and inspections are model-made and were not validated against human labels. The agent may have seen these repositories, or these PRs, in training. That affects all three arms alike, but it can lift every score and leave less room for B to differ.
 
 Review is summarised once by one model, and a different summariser may carry different intent. Only inline review conversations are in the data; top-level PR comments and discussion elsewhere are not. Review comments respond to a draft the agent never sees, so some intent arrives as advice about code that does not exist in the agent's run. Issues are fetched now and may have been edited after the PR. Each PR has one run per arm, so run-to-run noise is in the comparisons and is not measured separately. The study covers two languages, 22 repositories, and AI review from the agents in one dataset, and results may not carry to other projects or agents. The summary and leak rules reduce the risk that a summary hands the agent the answer, but they do not remove it, and Amendment 1 shows that the first rules missed a code fragment.
 
-Several fixes were made before the runs they affect and are disclosed here. Container recipes (not part of the plan) were fixed during pilot setup: Python dependencies resolved as of the PR's merge time with the project's own constraints, generated files that projects keep out of git (Home Assistant translations, zitadel's protobuf code) produced in every container, and OpenTofu installed for terragrunt. Amendment 2 limited Go stage 1 to the PR's changed test functions. The eligibility rule differs from the earlier sampled checks in two ways, both fixed before any agent run: it now needs a runnable test file, and regex escapes that a copied script had lost were restored. Amendment 3, made after the pilot and before any main-run agent run, changed one line of the agent prompt so the file tools are given the checkout's own paths rather than /work paths (Section 4.7).
+Operational events during the main run are disclosed here. Each language ran as one process, paused overnight by a planned stop and resumed in the morning. Three further restarts happened: the Go process after Windows briefly locked a work folder and two PRs were skipped before any of their runs; the Python process to load the fix for that lock, while one PR's summaries were being written and before any of its arms ran; and the Python process again to load the repaired recipe for azure-cli #32298. No agent run was cut short, and the skipped PRs were run after the restart. Several fixes were made before the runs they affect. Container recipes (not part of the plan) were fixed during pilot setup: Python dependencies resolved as of the PR's merge time with the project's own constraints, generated files that projects keep out of git (Home Assistant translations, zitadel's protobuf code) produced in every container, and OpenTofu installed for terragrunt. Amendment 2 limited Go stage 1 to the PR's changed test functions. The eligibility rule differs from the earlier sampled checks in two ways, both fixed before any agent run: it now needs a runnable test file, and regex escapes that a copied script had lost were restored. Amendment 3, made after the pilot and before any main-run agent run, changed one line of the agent prompt so the file tools are given the checkout's own paths rather than /work paths (Section 4.7).
 
 ## 8. Reproducibility
 
@@ -180,9 +188,9 @@ Every exclusion was checked for whether it came from the PR itself or from this 
 | streamlit/streamlit #12074 | 3 | PR tests ran (56 passed on base and merge); none fails before the change | PR | No |
 | volcano-sh/volcano #4354 | 3 | PR tests ran (24 pass on base and merge); none fails before the change | PR | No |
 | streamlit/streamlit #11690 | 3 | The only changed test is a browser end-to-end test with pixel-exact screenshots (Playwright); pytest collected no tests | Setup, in principle | Not attempted: needs browsers in the container, and pixel-exact screenshots are unlikely to match across machines |
-| Azure/azure-sdk-for-python #40615 | 2 | Tests replay recorded HTTP traffic through the Azure SDK test proxy; without the proxy and recordings every test fails | Setup | To be attempted: fetch the recordings at build time and run the proxy in offline playback |
+| Azure/azure-sdk-for-python #40615 | 2, then 3 | Tests replay recorded HTTP traffic through the Azure SDK test proxy; without the proxy every test failed. Repaired: the recordings now replay offline, but the tests that exercise the bug are live-test-only | Setup, then PR | Repaired; still excluded (no fail-to-pass test offline) |
 | Azure/azure-sdk-for-python #41742 | 2 | Tests need a live Cosmos DB account or emulator (the test setup connects on import) | Setup | Not attempted: needs a full database emulator inside the container |
 
-Not yet decided: Azure/azure-cli #32298 passed the build checks, but its tests run longer than the 30-minute stage-1 limit. The plan is to run it with a longer limit for that PR only.
+Azure/azure-cli #32298 passed the build checks, but its tests ran longer than the 30-minute stage-1 limit (a setup cause).
 
-[RESULT: outcome of the repair attempts for #40615 and #32298.]
+Outcome: #32298 was repaired by running the same tests in eight parallel workers (pytest-xdist); one pass then took about 6 minutes, and the PR yielded 9 fail-to-pass and 284 pass-to-pass tests and joined the run. #40615's recorded tests now replay offline through the test proxy (457 pass-to-pass, none flaky), but the only tests that exercise the bug are marked live-test-only and have no recordings, so it moved from check 2 to check 3 and stays excluded. Neither repair changed any other PR's environment.

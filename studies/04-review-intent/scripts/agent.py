@@ -10,6 +10,7 @@ import json
 import shutil
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 import env
@@ -65,8 +66,16 @@ def git(work, *args, check=True):
 
 def fresh_checkout(pid, meta):
     work = DEVWORK / meta["repo"].split("/", 1)[1]
+    for wait in (0, 5, 15, 30, 60):  # Windows can hold a just-emptied folder briefly (indexer, antivirus)
+        if not work.exists():
+            break
+        time.sleep(wait)
+        try:
+            shutil.rmtree(work, onerror=lambda f, p, e: (Path(p).chmod(0o666), f(p)))
+        except PermissionError:
+            continue
     if work.exists():
-        shutil.rmtree(work, onerror=lambda f, p, e: (Path(p).chmod(0o666), f(p)))
+        raise RuntimeError(f"could not remove {work}")
     shutil.copytree(SNAP / pid / "base", work, ignore=shutil.ignore_patterns(".tree-ok"))
     git(work, "init", "-q")
     git(work, "config", "user.name", "dev")

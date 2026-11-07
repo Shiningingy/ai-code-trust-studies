@@ -234,17 +234,21 @@ H1 holds and H2 does not: on these 56 PRs, a summary of human review given befor
 
 ### 5.1 Human versus agent review
 
-Human-review intent was not shown to beat agent-review intent; the difference was 0.07 and its interval includes zero. +AgentReview's own gain over Baseline (+0.09, secondary) sits between the two, so the data also fit the second pattern, where any statement of intent helps and its source matters less. The language split points the same way: the gap between human and agent review is +0.12 in Go and near zero in Python (Section 4.5, exploratory), so the overall H2 result may mix a real difference in some projects with none in others. The H2 verdict, No large effect, says any overall difference is modest; it does not say there is none. The exploratory features in Section 4.7 suggest a simpler account: the gap grows with the amount of human review (−0.01 with four or fewer human comments, +0.16 with more), and for new features only human review helped. A study with more PRs per language, more languages, or one that varies the AI review agent could tell these apart. Whether the gap between human and agent review is real but small, or depends on which review agent wrote the comments, is the clearest open question; Section 7.3 plans a first look at it.
+Human-review intent was not shown to beat agent-review intent; the difference was 0.07 and its interval includes zero. +AgentReview's own gain over Baseline (+0.09, secondary) sits between the two, so the data also fit the second pattern, where any statement of intent helps and its source matters less. The language split points the same way: the gap between human and agent review is +0.12 in Go and near zero in Python (Section 4.5, exploratory), so the overall H2 result may mix a real difference in some projects with none in others. The H2 verdict, No large effect, says any overall difference is modest; it does not say there is none. The exploratory features in Section 4.7 suggest a simpler account: the gap grows with the amount of human review (−0.01 with four or fewer human comments, +0.16 with more), and for new features only human review helped (Section 5.2). A study with more PRs per language, more languages, or one that varies the AI review agent could tell these apart. Whether the gap between human and agent review is real but small, or depends on which review agent wrote the comments, is the clearest open question; Section 7.3 plans a first look at it.
 
-### 5.2 Uneven gains
+### 5.2 Changing existing code versus adding a feature
+
+The task types in Section 4.7 suggest where human review matters most. When the change modified existing behaviour, agent review did about as well as human review: for bug fixes, mean rubric scores were 0.41 in Baseline, 0.64 in +HumanReview and 0.61 in +AgentReview, and for enhancements of existing behaviour 0.56, 0.57 and 0.67. When the change added a new feature, only human review helped: 0.49, 0.61 and 0.49. One reading is that for changes to existing code, the expected behaviour is anchored in that code and its tests, and a review agent that reads the diff can point out defects as well as a person can; a new feature involves design decisions that the issue leaves open, such as what the interface looks like and how edge cases behave, and human reviewers are the ones who state those decisions. This is exploratory: the type labels come from one model call per PR and were not checked by hand, the groups are small (8 enhancements), and the differences between types are not significant. It is a hypothesis to test with PRs sampled by task type.
+
+### 5.3 Uneven gains
 
 The gain is uneven: about half the PRs gain, nearly a third score the same in Baseline and +HumanReview, and about a quarter (13) score lower (Figure 3). Which PRs gain, and why, is not analysed here. The worked example in Appendix E is one of the 13; it illustrates how a review summary can steer the agent toward the reviewers' concerns rather than the issue's.
 
-### 5.3 Tests as a yardstick for agent fixes
+### 5.4 Tests as a yardstick for agent fixes
 
 The most transferable lesson concerns the yardstick rather than review. In 87 of the 147 unresolved runs, the PR's own tests did not compile or import against the agent's code, because they call internal names that only the merged PR introduced (Section 4.4). Tests written alongside a fix check the fix's own choices as well as the requested behaviour, so a resolved rate from such tests here mostly measures whether the agent picked the project's internal names, whatever its fix does. This is why the rubric, not the tests, is the primary outcome.
 
-### 5.4 Cost
+### 5.5 Cost
 
 The cost is real: the agent spent about half again as many tokens with human-review intent, with more turns and more time (Section 4.6); +HumanReview and +AgentReview do not differ clearly.
 

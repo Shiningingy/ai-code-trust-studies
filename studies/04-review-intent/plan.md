@@ -150,4 +150,4 @@ None yet.
 
 ## Launch log
 
-- Plan frozen: commit `<hash>` (2026-11-07).
+- Plan frozen: commit `21592ab` (2026-11-07), pushed before the pilot's first agent run.

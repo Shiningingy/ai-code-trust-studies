@@ -143,7 +143,7 @@ The two inspectors agreed closely on the 1,164 rubric items: Cohen's kappa 0.861
 | Turns | 12 | 16 | 14 | p = 0.002 | p = 0.50 |
 | Seconds | 43 | 68 | 63 | p = 0.005 | p = 0.34 |
 
-With human-review intent the agent did more: a median of 51% more tokens than with the issue alone, more turns and more time. B and C do not differ clearly.
+With human-review intent the agent did more: the median B run used 51% more tokens than the median A run, with more turns and more time. B and C do not differ clearly.
 
 ### 5.6 Other reported items
 

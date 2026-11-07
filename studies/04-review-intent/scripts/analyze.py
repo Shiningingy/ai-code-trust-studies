@@ -22,7 +22,9 @@ def load(path):
 
 
 def collect():
-    done = (load(STUDY / "runs" / "main_state.json") or {}).get("done", [])
+    done = []
+    for name in ("main_state.json", "main_state_python.json", "main_state_go.json"):
+        done += (load(STUDY / "runs" / name) or {}).get("done", [])
     rows, items = [], []
     for pid in done:
         d = PRS / pid
@@ -200,7 +202,9 @@ def main():
           f"rule_break_first {int(g.rule_break_first.fillna(False).sum())}, cut {int(g.cut.fillna(False).sum())}, "
           f"scrubbed lines {int(g.scrubs.fillna(0).sum())}, timeouts {int((g.status == 'timeout').sum())}, "
           f"refusals {int((g.status == 'refusal').sum())}")
-    ex = (load(STUDY / "runs" / "main_state.json") or {}).get("excluded", {})
+    ex = {}
+    for name in ("main_state.json", "main_state_python.json", "main_state_go.json"):
+        ex.update((load(STUDY / "runs" / name) or {}).get("excluded", {}))
     for lang in ("python", "go"):
         s = load(STUDY / "runs" / f"main_setup_{lang}.json") or {}
         ex.update(s.get("excluded", {}))

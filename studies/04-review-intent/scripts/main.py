@@ -4,7 +4,8 @@ finishes before the next starts, so a run stopped early leaves complete units. P
 the environment build marks them ok (runs/main_setup_<lang>.json); the driver waits for the rest.
 Usage-limit pacing is in llm.py (pauses at STUDY_PAUSE_AT five-hour utilization, default 0.80).
 
-Usage: python main.py [--max-prs N]
+Usage: python main.py [--lang python|go] [--max-prs N]   (one process per language can run in parallel:
+the two languages share no repository, so their work folders never collide)
 """
 import json
 import sys
@@ -15,13 +16,16 @@ import pandas as pd
 
 import agent
 import judge
+import llm
 import summarise
 from pilot import arm_order
 from prepare import PRS, pr_id
 
 STUDY = Path(__file__).resolve().parent.parent
 RUNS = STUDY / "runs"
-STATE = RUNS / "main_state.json"
+LANG = sys.argv[sys.argv.index("--lang") + 1].lower() if "--lang" in sys.argv else None  # python | go
+STATE = RUNS / (f"main_state_{LANG}.json" if LANG else "main_state.json")
+PR_BUDGET = 40 * 60  # a PR (summaries, rubric, three runs with stage 1, inspections) starts only if this fits
 
 
 def order():
@@ -29,6 +33,10 @@ def order():
     w = w[w.drawn].sort_values("rank")
     py, go = [pr_id(r.repo, r.pr) for r in w[w.language == "Python"].itertuples()], \
              [pr_id(r.repo, r.pr) for r in w[w.language == "Go"].itertuples()]
+    if LANG == "python":
+        return py
+    if LANG == "go":
+        return go
     out = []
     for i in range(max(len(py), len(go))):
         out += ([py[i]] if i < len(py) else []) + ([go[i]] if i < len(go) else [])
@@ -83,6 +91,11 @@ def main(max_prs=None):
                 continue
             if pid not in ok:
                 continue
+            if llm.STOP_AT and time.time() + PR_BUDGET > llm.STOP_AT:
+                print(time.strftime("%H:%M"), "STOP: not enough time to finish another PR before the stop time",
+                      flush=True)
+                save(s)
+                return
             try:
                 if process(pid, s):
                     s["done"].append(pid)

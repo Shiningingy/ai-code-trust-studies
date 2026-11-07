@@ -64,6 +64,7 @@ def classify(code, result, stderr, timed_out):
 
 RATE = RUNS / "ratelimit.json"
 PAUSE_AT = float(os.environ.get("STUDY_PAUSE_AT", "0.80"))  # five-hour utilization that pauses new calls
+WEEK_STOP = float(os.environ.get("STUDY_WEEK_STOP", "0.75"))  # seven-day utilization that stops the run
 STOP_AT = float(os.environ.get("STUDY_STOP_AT", "0"))  # epoch seconds; nothing may still run after this (0 = none)
 
 
@@ -85,6 +86,8 @@ def wait_for_room():
     if not RATE.exists():
         return
     r = json.loads(RATE.read_text(encoding="utf-8"))
+    if (r.get("seven_day") or 0) >= WEEK_STOP:  # leave the rest of the week for the owner's other work
+        raise SystemExit(f"[stop] seven-day utilization {r['seven_day']:.2f} >= {WEEK_STOP}; stopping cleanly")
     if (r.get("five_hour") or 0) >= PAUSE_AT and r.get("five_hour_resets"):
         wake = r["five_hour_resets"] + 120
         if STOP_AT and wake > STOP_AT:

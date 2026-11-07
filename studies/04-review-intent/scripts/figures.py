@@ -60,31 +60,43 @@ def fig2(df):
             rows.append((g, "can't-tell items left out", dn.mean(), *boot_ci(dn.values, rng2), False, col))
             de = d.loc[keep]
             rows.append((g, "without the 2 empty-diff PRs", de.mean(), *boot_ci(de.values, rng2), False, col))
-    fig, ax = plt.subplots(figsize=(7.6, 5.6))
-    ypos, y, labels, groups = [], 0, [], []
-    for i, r in enumerate(rows):
-        if i == 0 or r[0] != rows[i - 1][0]:
-            y += 0.9
-            groups.append((y - 0.45, r[0]))
-        ypos.append(y)
-        labels.append(r[1])
-        y += 1
-    ypos = -np.array(ypos)
-    for (g, lab, m, lo, hi, prim, col), yy in zip(rows, ypos):
-        ax.plot([lo, hi], [yy, yy], color=col if prim else MUTED, lw=2.4 if prim else 1.6, solid_capstyle="round")
-        ax.plot(m, yy, "o", ms=8 if prim else 6, color=col if prim else "white", mec=col if prim else MUTED, mew=1.6)
-        ax.text(hi + 0.012, yy, f"{m:+.3f} [{lo:+.3f}, {hi:+.3f}]", va="center", fontsize=8.5, color=INK2)
-    for gy, g in groups:
-        ax.text(-0.12, -gy + 0.05, g, fontsize=10, fontweight="bold", color=INK, va="bottom")
-    ax.axvline(0, color=INK2, lw=1, ls=(0, (4, 3)))
-    ax.set_yticks(ypos, labels, fontsize=9)
-    ax.tick_params(axis="y", length=0)
-    ax.set_xlim(-0.12, 0.42)
-    ax.set_ylim(ypos.min() - 0.8, 0.6)
-    ax.xaxis.grid(True, color=GRID, lw=0.8)
+    # robustness table (Markdown), bold where the 95% CI excludes zero
+    cell = lambda m, lo, hi: (f"**{m:+.3f} [{lo:+.3f}, {hi:+.3f}]**" if lo > 0 or hi < 0  # noqa: E731
+                              else f"{m:+.3f} [{lo:+.3f}, {hi:+.3f}]")
+    by = {(r[0][:2], r[1]): r for r in rows}
+    T = ["| Check | +HumanReview − Baseline (H1) | +HumanReview − +AgentReview (H2) |", "|---|---|---|"]
+    for lab in ("Opus inspector (primary)", "clustered by repository", "Sonnet inspector", "can't-tell items left out",
+                "without the 2 empty-diff PRs"):
+        a, b = by[("H1", lab)], by[("H2", lab)]
+        T.append(f"| {lab[0].upper() + lab[1:]} | {cell(*a[2:5])} | {cell(*b[2:5])} |")
+    (STUDY / "results" / "robustness_table.md").write_text("\n".join(T) + "\n", encoding="utf-8")
+
+    # Figure 2: mean rubric score per arm with 95% bootstrap CIs and the two planned comparisons
+    rng3 = np.random.default_rng(SEED + 2)
+    means, errs = [], []
+    for a in "ABC":
+        v = W[a].values
+        lo, hi = np.percentile(v[rng3.integers(0, len(v), (BOOT, len(v)))].mean(axis=1), [2.5, 97.5])
+        means.append(v.mean())
+        errs.append((v.mean() - lo, hi - v.mean()))
+    fig, ax = plt.subplots(figsize=(5.8, 3.9))
+    xs = np.arange(3)
+    ax.bar(xs, means, width=0.58, color=[BASE, HUMAN, AGENT], edgecolor="white", linewidth=2)
+    ax.errorbar(xs, means, yerr=np.array(errs).T, fmt="none", ecolor=INK2, elinewidth=1.4, capsize=5)
+    for x_, m in zip(xs, means):
+        ax.text(x_, 0.03, f"{m:.2f}", ha="center", va="bottom", fontsize=11, fontweight="bold", color="white")
+
+    def bracket(x1, x2, y, text):
+        ax.plot([x1, x1, x2, x2], [y - 0.015, y, y, y - 0.015], color=INK2, lw=1.2)
+        ax.text((x1 + x2) / 2, y + 0.012, text, ha="center", va="bottom", fontsize=9, color=INK)
+
+    bracket(0, 1, 0.80, f"H1: {means[1] - means[0]:+.2f}, Holm p = 0.003")
+    bracket(1, 2, 0.92, f"H2: {means[1] - means[2]:+.2f}, Holm p = 0.15 (n.s.)")
+    ax.set_xticks(xs, [NAME[a] for a in "ABC"])
+    ax.set_ylim(0, 1.02)
+    ax.set_ylabel("Mean rubric score (Opus inspector)")
+    ax.yaxis.grid(True, color=GRID, lw=0.8)
     ax.set_axisbelow(True)
-    ax.spines["left"].set_visible(False)
-    ax.set_xlabel("Mean paired difference in rubric score (95% bootstrap CI)")
     fig.tight_layout()
     fig.savefig(FIG / "fig2_effects.svg")
     plt.close(fig)

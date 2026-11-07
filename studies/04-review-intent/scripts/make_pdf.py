@@ -2,6 +2,7 @@
 
 Usage: python make_pdf.py
 """
+import os
 import subprocess
 from pathlib import Path
 
@@ -38,8 +39,20 @@ def main():
     src = STUDY / "results" / "report-draft.html"
     src.write_text(html, encoding="utf-8")
     out = STUDY / "report-draft.pdf"
-    subprocess.run([EDGE, "--headless=new", "--disable-gpu", f"--user-data-dir={Path(__import__('tempfile').gettempdir()) / 'edge-pdf-profile'}", "--no-pdf-header-footer",
-                    f"--print-to-pdf={out}", src.as_uri()], check=True, capture_output=True, timeout=120)
+    tmp = STUDY / "results" / "report-draft.tmp.pdf"
+    tmp.unlink(missing_ok=True)
+    subprocess.run([EDGE, "--headless=new", "--disable-gpu", f"--user-data-dir={__import__('tempfile').mkdtemp(prefix='edge-pdf-')}", "--no-pdf-header-footer",
+                    f"--print-to-pdf={tmp}", src.as_uri()], check=True, capture_output=True, timeout=120)
+    for _ in range(40):  # Edge can return before the file is written
+        if tmp.exists() and tmp.stat().st_size > 0:
+            break
+        __import__('time').sleep(0.5)
+    if not tmp.exists():
+        raise SystemExit("Edge wrote no PDF")
+    try:
+        os.replace(tmp, out)  # fails if a viewer holds report-draft.pdf open
+    except PermissionError:
+        raise SystemExit(f"{out} is open in a viewer and could not be replaced; close it and rerun (new PDF kept at {tmp})")
     print(out, out.stat().st_size // 1024, "KB")
 
 

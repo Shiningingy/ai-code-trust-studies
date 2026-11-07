@@ -164,9 +164,9 @@ Of the 70 drawn PRs, 14 were excluded at the build checks and none was replaced,
 | H2: +HumanReview vs +AgentReview | +0.066 | -0.015 to +0.147 | 0.154 (42) | 0.154 | No large effect |
 | +AgentReview vs Baseline (secondary) | +0.094 | +0.010 to +0.183 | 0.080 | — | — |
 
-![Paired differences in rubric score with 95% confidence intervals](figures/fig2_effects.svg)
+![Mean rubric score per arm with 95% confidence intervals](figures/fig2_effects.svg)
 
-*Figure 2. Mean paired difference in rubric score (95% bootstrap CI) for each comparison, with robustness checks. Dashed line: no difference.*
+*Figure 2. Mean rubric score per arm (Opus inspector, n = 56), with 95% bootstrap confidence intervals. Brackets give the two pre-registered comparisons (paired Wilcoxon, Holm-adjusted); robustness checks are in Section 4.3.*
 
 Agent-review intent may also help, but the evidence is weaker than for human review, and the +AgentReview against Baseline comparison is secondary.
 
@@ -177,6 +177,18 @@ Agent-review intent may also help, but the evidence is weaker than for human rev
 *Figure 3. Rubric-score difference for each of the 56 PRs, sorted. Most PRs tie or move little; the mean gain comes from a subset.*
 
 ### 4.3 Robustness
+
+The table below repeats both pre-registered comparisons under each check: mean paired difference with its 95% bootstrap confidence interval, in **bold** where the interval excludes zero. Every check gives the same picture: the gain over Baseline is clear, and the gap between +HumanReview and +AgentReview is not.
+
+| Check | +HumanReview − Baseline (H1) | +HumanReview − +AgentReview (H2) |
+|---|---|---|
+| Opus inspector (primary) | **+0.160 [+0.070, +0.252]** | +0.066 [-0.015, +0.147] |
+| Clustered by repository | **+0.160 [+0.075, +0.236]** | +0.066 [-0.014, +0.142] |
+| Sonnet inspector | **+0.189 [+0.105, +0.276]** | +0.057 [-0.028, +0.144] |
+| Can't-tell items left out | **+0.164 [+0.076, +0.255]** | +0.064 [-0.016, +0.146] |
+| Without the 2 empty-diff PRs | **+0.161 [+0.067, +0.258]** | +0.052 [-0.025, +0.131] |
+
+*Robustness of the two pre-registered comparisons. Bold: 95% bootstrap CI excludes zero.*
 
 The two inspectors agreed closely on the 1,164 rubric items: Cohen's kappa 0.861 with two classes (met vs not met) and 0.814 with three. On Sonnet's scores, H1 is +0.189 (Holm-adjusted p = 0.0002, Signal) and H2 +0.057 (p = 0.157, No large effect), so neither verdict changed between the two inspectors. Both are Claude models and neither was checked against human labels, so this is agreement, not validity (Section 6.1). Intervals clustered by repository are +0.075 to +0.236 for H1 and -0.014 to +0.142 for H2. With can't-tell items left out, the scores are Baseline 0.469, +HumanReview 0.633 and +AgentReview 0.569 (+HumanReview is +0.164 above Baseline and +0.064 above +AgentReview).
 

@@ -3,6 +3,7 @@
 Writes results/results.txt and results/per_pr.csv. Usage: python analyze.py
 """
 import json
+import re
 from pathlib import Path
 
 import numpy as np
@@ -202,6 +203,20 @@ def main():
           f"rule_break_first {int(g.rule_break_first.fillna(False).sum())}, cut {int(g.cut.fillna(False).sum())}, "
           f"scrubbed lines {int(g.scrubs.fillna(0).sum())}, timeouts {int((g.status == 'timeout').sum())}, "
           f"refusals {int((g.status == 'refusal').sum())}")
+    p("9. Paired rubric differences, per PR (higher / lower / same):")
+    for x, y in (("B", "A"), ("B", "C"), ("C", "A")):
+        d = W[x] - W[y]
+        p(f"   {x} vs {y}: {x} higher {(d > 0).sum()}, lower {(d < 0).sum()}, same {(d == 0).sum()}; "
+          f"median difference {d.median():+.3f}")
+    p("10. Per arm: empty diffs (scored 0 by rule) and unresolved runs whose PR tests did not compile or import")
+    bad = re.compile(r'"Action":"build-fail"|undefined: |ImportError|has no attribute|cannot import name')
+    for a in ARMS:
+        g = df[df.arm == a]
+        empty = sum((PRS / r.pr / "arms" / a / "agent.diff").stat().st_size == 0 for r in g.itertuples())
+        unres = g[~g.resolved]
+        comp = sum(bool(bad.search((PRS / r.pr / "arms" / a / "stage1.log").read_text(encoding="utf-8", errors="replace")))
+                   for r in unres.itertuples())
+        p(f"   {a}: empty diffs {empty}; unresolved {len(unres)}, of which tests did not compile/import {comp}")
     ex = {}
     for name in ("main_state.json", "main_state_python.json", "main_state_go.json"):
         ex.update((load(STUDY / "runs" / name) or {}).get("excluded", {}))

@@ -28,6 +28,14 @@ Power note (plan): with ~55 PRs a standardised paired effect of about 0.4 is det
    A: words -, leak_first 0, rule_break_first 0, cut 0, scrubbed lines 0, timeouts 0, refusals 0
    B: words 142.0, leak_first 8, rule_break_first 32, cut 25, scrubbed lines 2, timeouts 0, refusals 0
    C: words 139.5, leak_first 6, rule_break_first 21, cut 16, scrubbed lines 0, timeouts 0, refusals 0
+9. Paired rubric differences, per PR (higher / lower / same):
+   B vs A: B higher 27, lower 13, same 16; median difference +0.000
+   B vs C: B higher 27, lower 15, same 14; median difference +0.000
+   C vs A: C higher 23, lower 16, same 17; median difference +0.000
+10. Per arm: empty diffs (scored 0 by rule) and unresolved runs whose PR tests did not compile or import
+   A: empty diffs 1; unresolved 51, of which tests did not compile/import 30
+   B: empty diffs 0; unresolved 48, of which tests did not compile/import 28
+   C: empty diffs 2; unresolved 48, of which tests did not compile/import 29
 
 Excluded PRs (14):
    Azure__azure-cli-32115: check 3: no fail-to-pass test

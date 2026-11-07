@@ -171,6 +171,15 @@ This follow-up is written down before it is run; its results, if run, will go in
 
 If B still beats A on the pre-review items, the gain is not only "the agent did what the reviewer asked". If the gain disappears, the main result mostly measures uptake of review requests, which is still a finding about review as guidance, but a narrower one.
 
+### 6.2 Planned follow-up: an oracle arm (issue plus rubric)
+
+A rubric is, in effect, a full description of the task: what a complete issue would have said. In the main study no arm sees it, because it is the answer key. A fourth arm, O, would give the agent the issue plus the rubric's behaviour items, on the same 56 PRs and with the same harness and inspectors. Arm O is not a fair comparison with A, B or C: it is scored against the text it was given. It is a calibration run with two uses.
+
+1. Feasibility of the rubric. If arm O scores low, items are too strict or cannot be judged from the code, which bears on the measure's validity without human labels.
+2. Scale of the effect. Arm O sets a practical ceiling, so B's gain can be stated as a share of the gap between issue-only and full description: (B - A) / (O - A).
+
+Results would go in the follow-up report, labelled exploratory. A related but separate design would give every arm the full description and treat review as information about errors to avoid along the way, measured by the defects reviewers caught; that is closer to c-CRAB (Section 2) and is left for future work.
+
 ## 7. Threats to validity
 
 The rubric may favour arm B through the review itself. Eligibility requires a commit pushed after the first human review, so the merged PR, from which the rubric is written, contains changes the reviewers asked for, and arm B is told about those requests. Part of B's gain may therefore be "the agent did what the reviewer asked", which is close to what the rubric measures, even though the rubric writer never sees review text. A sensitivity analysis on rubric items already present before the first review would test this; it is planned (Section 6.1) and not done here. The same path applies to arm C wherever agent review was acted on. The summaries can also carry where to work, not only what and why: the leak check catches names new in the merged PR, not existing file or function names, and no main-run summaries were audited by hand. There is no length-matched or placebo text arm, so "intent helps" cannot be fully separated from "more task-relevant text helps". The study cannot show why intent helps or not. It measures closeness to what the project accepted, not code quality in general. The rubric comes from the merged PR, so "closer to what was accepted" is the outcome by definition, and a different good fix can still lose items. Rubrics and inspections are model-made and were not validated against human labels. The agent may have seen these repositories, or these PRs, in training. It may not affect the arms alike: a review summary could cue recall of the merged PR more than the issue alone does.

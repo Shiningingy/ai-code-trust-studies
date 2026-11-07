@@ -1,0 +1,46 @@
+Study 04 results. Complete PRs (all three arms scored): 12; repositories: 10; Python 4, Go 8.
+
+== Primary: rubric score (Opus inspector), share of items met ==
+Mean per arm: A 0.494, B 0.720, C 0.564
+H1 B vs A: mean diff +0.226 (95% bootstrap CI +0.087 to +0.385); Wilcoxon p=0.0156 (non-zero pairs 7), Holm-adjusted p=0.0312 -> Inconclusive (fewer than 30 complete PRs)
+H2 B vs C: mean diff +0.156 (95% bootstrap CI +0.017 to +0.327); Wilcoxon p=0.0625 (non-zero pairs 8), Holm-adjusted p=0.0625 -> Inconclusive (fewer than 30 complete PRs)
+Power note (plan): with ~55 PRs a standardised paired effect of about 0.4 is detected ~80% of the time at the Holm-adjusted level; smaller effects often are not.
+
+== Reported, cannot change a verdict ==
+1. Stage 1 resolved rate: A 0.083 (1/12), B 0.000 (0/12), C 0.167 (2/12)
+   McNemar exact B vs A: B-only 0, A-only 1, p=1.0000
+   McNemar exact B vs C: B-only 0, C-only 2, p=0.5000
+2. C vs A: mean diff +0.070 (CI -0.127 to +0.274), Wilcoxon p=0.5703
+3. Inspector agreement, item level (n=246): kappa 2-class 0.950, 3-class 0.889
+   On Sonnet scores, H1 B vs A: mean diff +0.238, Holm p=0.0625 -> Inconclusive (fewer than 30 complete PRs)
+   On Sonnet scores, H2 B vs C: mean diff +0.140, Holm p=0.1953 -> Inconclusive (fewer than 30 complete PRs)
+4. H1 B vs A, CI clustered by repository: +0.088 to +0.409
+4. H2 B vs C, CI clustered by repository: +0.015 to +0.356
+5. Rubric score without can't-tell items: A 0.509, B 0.724, C 0.582; B-A +0.215, B-C +0.143
+6. Token efficiency (secondary):
+   tokens: median A 85,488, B 170,596, C 97,972; Wilcoxon B vs A p=0.1294, B vs C p=0.6221
+   turns: median A 14, B 18, C 14; Wilcoxon B vs A p=0.3223, B vs C p=0.3672
+   seconds: median A 50, B 103, C 50; Wilcoxon B vs A p=0.6221, B vs C p=0.7334
+7. By language (descriptive):
+   Go (n=8): rubric A 0.476, B 0.795, C 0.585; resolved A 0.000, B 0.000, C 0.125
+   Python (n=4): rubric A 0.530, B 0.571, C 0.524; resolved A 0.250, B 0.000, C 0.250
+8. Per arm: summary words (median), leak on first answer, rule break on first answer, cut, scrubs, timeouts, refusals
+   A: words -, leak_first 0, rule_break_first 0, cut 0, scrubbed lines 0, timeouts 0, refusals 0
+   B: words 143.5, leak_first 1, rule_break_first 5, cut 3, scrubbed lines 2, timeouts 0, refusals 0
+   C: words 137.5, leak_first 0, rule_break_first 4, cut 2, scrubbed lines 0, timeouts 0, refusals 0
+
+Excluded PRs (14):
+   Azure__azure-cli-32115: check 3: no fail-to-pass test
+   Azure__azure-sdk-for-python-40615: check 2: environment did not build: recorded tests need the azure-sdk test-proxy and recordings from the assets repo (network at test time); without them every storage test fails (AzureSigningError)
+   Azure__azure-sdk-for-python-41742: check 2: environment did not build: tests need a live Cosmos DB emulator/account (conftest connects at import; 0 tests collected)
+   ava-labs__avalanchego-4259: check 3: no fail-to-pass test
+   getsentry__sentry-python-4873: check 4: B=0 C=6 comments
+   pingcap__tidb-60776: check 4: B comments 0, C comments 1
+   pingcap__tidb-63878: check 3: no fail-to-pass test
+   streamlit__streamlit-11690: check 3: no fail-to-pass test
+   streamlit__streamlit-12074: check 3: no fail-to-pass test
+   volcano-sh__volcano-4354: check 3: no fail-to-pass test
+   zeta-chain__node-4153: check 1: merge-commit file set differs from the PR's files
+   zeta-chain__node-4192: check 1: merge-commit file set differs from the PR's files
+   zeta-chain__node-4203: check 1: merge-commit file set differs from the PR's files
+   zeta-chain__node-4330: check 1: merge-commit file set differs from the PR's files

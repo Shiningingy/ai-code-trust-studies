@@ -1,10 +1,12 @@
 # Does human review intent help a coding agent? A three-arm replay on merged pull requests
 
+> **Status: partial draft (2026-11-07).** The main run stopped on schedule after 12 of the 55 runnable PRs. The plan gives no verdict below 30 complete PRs, so every result here is reported as *Inconclusive*, and numbers will change as the run continues. Items marked [check] still need verifying before release.
+
 Zili (Allen) Luo · Independent study, November 2026 · Not peer reviewed · DRAFT: results sections are placeholders
 
 ## Abstract
 
-Coding agents are usually judged by tests that confirm what was built, not what was asked. Human code review often says what a change should do and why. This study asks whether that intent, given to a coding agent before it writes anything, moves its fix closer to what the project accepted. Each merged pull request (PR) from the AgentReviewChat dataset is replayed from the commit just before it, three times, with Claude Sonnet 5.5 in Claude Code: with the linked issue only (A), with the issue plus a summary of the human review (B), and with the issue plus the same kind of summary of AI-agent review (C). Results are scored by the PR's own fail-to-pass tests and by a behaviour rubric written from the issue and the merged PR, never from the review, and checked by two blind model inspectors. The analysis plan was frozen before any agent run. On [RESULT: number of complete PRs] PRs from [RESULT: number of repositories] repositories, the mean rubric score was [RESULT: A] in arm A, [RESULT: B] in arm B and [RESULT: C] in arm C. B against A differed by [RESULT: mean difference, 95% CI, adjusted p]; B against C differed by [RESULT: mean difference, 95% CI, adjusted p]. [RESULT: one sentence on stage-1 resolved rates and one on token efficiency.]
+Coding agents are usually judged by tests that confirm what was built, not what was asked. Human code review often says what a change should do and why. This study asks whether that intent, given to a coding agent before it writes anything, moves its fix closer to what the project accepted. Each merged pull request (PR) from the AgentReviewChat dataset is replayed from the commit just before it, three times, with Claude Sonnet 5.5 in Claude Code: with the linked issue only (A), with the issue plus a summary of the human review (B), and with the issue plus the same kind of summary of AI-agent review (C). Results are scored by the PR's own fail-to-pass tests and by a behaviour rubric written from the issue and the merged PR, never from the review, and checked by two blind model inspectors. The analysis plan was frozen before any agent run. In this partial report, on 12 complete PRs from 10 repositories, the mean rubric score was 0.49 in arm A, 0.72 in arm B and 0.56 in arm C. B against A differed by +0.23 (95% bootstrap CI +0.09 to +0.39; Holm-adjusted p = 0.031), and B against C by +0.16 (CI +0.02 to +0.33; adjusted p = 0.063). The plan needs 30 complete PRs before giving a verdict, so both comparisons are inconclusive for now. Few runs passed the PR's own tests (1, 0 and 2 of 12), mostly because the tests call internal names the issue never gives. Arm B used a median of 171k tokens per run, against 85k in A and 98k in C.
 
 ## 1. Introduction
 
@@ -96,33 +98,60 @@ Anything else is exploratory and labelled so. Rubrics and inspections were not v
 
 ### 4.7 Pilot
 
-A pilot of ten PRs, not counted in the results and removed from the main draw, was drawn with seed 20261107 from the eligible PRs of four repositories: three from home-assistant/core, two from getsentry/sentry-python, three from gruntwork-io/terragrunt and two from zitadel/zitadel. It ran all three arms with Sonnet 5.5, and arm A once more with Opus 5.5 at medium effort as the agent. The pilot looked at whether each PR builds and has F2P tests, at plumbing (empty runs, crashes, timeouts, leak hits, scrubs), at every summary read by hand for how-level content, and at usage per role and model, which set the main run's pace. For the ceiling check it looked at arm A alone, Sonnet against Opus. Scores for arms B and C were computed to test the pipeline but not printed or read, and no comparison between arms was made on pilot data. The ceiling rule said that if Sonnet in arm A resolved at least 8 of 10 PRs with a mean rubric score of at least 0.9, the selection would be tightened before the main draw. [RESULT: pilot outcome, build failures, whether the ceiling rule fired, and any amendments made after the pilot.]
+A pilot of ten PRs, not counted in the results and removed from the main draw, was drawn with seed 20261107 from the eligible PRs of four repositories: three from home-assistant/core, two from getsentry/sentry-python, three from gruntwork-io/terragrunt and two from zitadel/zitadel. It ran all three arms with Sonnet 5.5, and arm A once more with Opus 5.5 at medium effort as the agent. The pilot looked at whether each PR builds and has F2P tests, at plumbing (empty runs, crashes, timeouts, leak hits, scrubs), at every summary read by hand for how-level content, and at usage per role and model, which set the main run's pace. For the ceiling check it looked at arm A alone, Sonnet against Opus. Scores for arms B and C were computed to test the pipeline but not printed or read, and no comparison between arms was made on pilot data. The ceiling rule said that if Sonnet in arm A resolved at least 8 of 10 PRs with a mean rubric score of at least 0.9, the selection would be tightened before the main draw. Nine of the ten pilot PRs got runs; zitadel #11009 got none because of an orchestration error (two processes ran it into one folder). The pilot found one harness fault: the prompt said the checkout "is mounted at /work", and in 21 of 36 pilot runs the agent passed /work paths to its file tools at least once. Those calls were denied, and several runs then stopped without changing anything. Amendment 3 changed the wording before any main-run agent run, the same in every arm, and a check run after the change had no denials. The ceiling rule did not fire: in arm A, Sonnet resolved 1 of 9 piloted PRs with a mean rubric score of 0.48, and Opus resolved 3 of 9 with 0.76. Both figures are depressed by the /work fault, so Section 5 also reports arm A's resolved rate against the rule. Usage per run set the main run's pace: Sonnet agent runs used about 2.2 million tokens over 27 calls, and the main run paused new calls when the five-hour usage window passed 80%.
 
 ## 5. Results
 
 ### 5.1 Selection and exclusions
-[RESULT: flow from 70 drawn PRs to complete PRs, with the count excluded at each build check (diff file set, environment build, no F2P test, missing summary) and for incomplete runs; number of repositories and PRs per language among the complete PRs.]
+Of the 70 drawn PRs, 14 were excluded at the build checks. Four failed check 1 (the merge commit's file set differs from the PR's; all four from zeta-chain/node). Two failed check 2 (environment): their tests need network services at test time (the Azure SDK test proxy with its recordings, and a live Cosmos DB emulator). Six failed check 3 (no fail-to-pass test). Two failed check 4 (no human review conversation left to summarise). One PR, Azure/azure-cli #32298, is undecided: its tests run longer than the 30-minute stage-1 limit. That left 55 runnable PRs (28 Python, 27 Go).
+
+The run was paced to stop before a fixed time and stopped after 12 complete PRs (4 Python, 8 Go) from 10 repositories. No PR was left with an incomplete set of arms. No run hit a usage limit, timed out or was refused. The 12 are the first ready PRs in draw order in each language, so they are not a random subset of the 55. Go is over-represented because its environments were ready sooner.
 
 ### 5.2 Primary: rubric score
-[RESULT: table of mean rubric score per arm (A, B, C) from the Opus inspector; H1 and H2 rows with mean paired difference, 95% bootstrap interval, raw p, Holm-adjusted p and the verdict label from Section 4.6.]
+| | A | B | C |
+|---|---|---|---|
+| Mean rubric score (Opus inspector), n = 12 | 0.494 | 0.720 | 0.564 |
+
+| Comparison | Mean paired difference | 95% bootstrap CI | Wilcoxon p (non-zero pairs) | Holm-adjusted p | Verdict |
+|---|---|---|---|---|---|
+| H1: B vs A | +0.226 | +0.087 to +0.385 | 0.016 (7) | 0.031 | Inconclusive (fewer than 30 PRs) |
+| H2: B vs C | +0.156 | +0.017 to +0.327 | 0.063 (8) | 0.063 | Inconclusive (fewer than 30 PRs) |
+
+B never scored below A on any PR. Five of the 12 PRs scored the same in A and B. The gain over A comes from seven PRs, four of them by more than 0.25: google-cloud-go #13290 (+0.71), atmos #1225 (+0.67), azure-sdk-for-go #24702 (+0.57) and avalanchego #4147 (+0.29). In google-cloud-go, arm A changed a different file from the one the PR changed, and arms B and C both changed the same area as the PR.
 
 ### 5.3 Stage 1: tests
-[RESULT: table of resolved rate per arm; exact McNemar results for B against A and B against C; counts of discordant pairs.]
+| | A | B | C |
+|---|---|---|---|
+| Resolved (all F2P pass, no P2P breaks) | 1/12 | 0/12 | 2/12 |
+
+Exact McNemar: B against A, 0 B-only and 1 A-only (p = 1.0); B against C, 0 B-only and 2 C-only (p = 0.5).
+
+Most stage-1 failures are not about behaviour. In 24 of the 33 unresolved runs, the PR's tests did not compile or import against the agent's code. They call names that only the merged PR introduced: unexported Go identifiers (`undefined: docURL`), private attributes (`_sync_credential`) and new constants (`CONF_SITE`). An agent that does not happen to pick the same internal names fails every F2P test in that file, whatever its fix does. This affects 8 of the 12 PRs and every arm alike. Stage 1 here mostly measures whether the agent guessed the project's internal names, which is why the plan made the rubric the primary outcome. In the one PR where B was the only unresolved arm (Weblate #16322), B broke one pass-to-pass test.
 
 ### 5.4 Inspector agreement and robustness
-[RESULT: item-level kappa and 3-class kappa between Opus and Sonnet; H1 and H2 on Sonnet's scores and whether either verdict changed; repository-clustered intervals; scores with can't-tell items left out.]
+The two inspectors agreed closely on the 246 rubric items: Cohen's kappa 0.950 with two classes (met vs not) and 0.889 with three. On Sonnet's scores, H1 is +0.238 (Holm-adjusted p = 0.063) and H2 +0.140 (p = 0.195). Both are still inconclusive, so no verdict depends on the inspector. Intervals clustered by repository are +0.088 to +0.409 for H1 and +0.015 to +0.356 for H2. With can't-tell items left out, the scores are A 0.509, B 0.724 and C 0.582 (B-A +0.215, B-C +0.143).
 
 ### 5.5 Token efficiency
-[RESULT: median total tokens, turns and wall-clock time per arm; Wilcoxon results for B against A and B against C.]
+| Median per run | A | B | C | Wilcoxon B vs A | B vs C |
+|---|---|---|---|---|---|
+| Total tokens | 85,488 | 170,596 | 97,972 | p = 0.13 | p = 0.62 |
+| Turns | 14 | 18 | 14 | p = 0.32 | p = 0.37 |
+| Seconds | 50 | 103 | 50 | p = 0.62 | p = 0.73 |
+
+Arm B's median run used about twice the tokens of A, but on 12 PRs the difference is not distinguishable from noise.
 
 ### 5.6 Other reported items
-[RESULT: C against A; split by language; summary lengths, leak-check hits, regenerations, cuts, scrubs, timeouts and refusals per arm.]
+C against A: +0.070 (CI -0.127 to +0.274; Wilcoxon p = 0.57).
+
+By language (descriptive): in Go (n = 8), rubric scores were A 0.476, B 0.795, C 0.585. In Python (n = 4), they were A 0.530, B 0.571, C 0.524. Nearly all of the B-A gain so far is in Go PRs.
+
+Summaries: the median length was 144 words for B and 138 for C. The leak check fired on one first answer (B). The rule check (code spans or length) fired on 5 first answers in B and 4 in C. After regeneration, 3 B and 2 C summaries were cut to 150 words. The comment scrub removed 2 lines, both in arm B. There were no timeouts and no refusals.
 
 ## 6. Discussion
 
-[RESULT: restate the verdicts for H1 and H2 in one paragraph.]
+With 12 of the planned 30 or more PRs, neither hypothesis has a verdict. H1 (B beats A) has the clearer pattern so far: B was never below A, its interval excludes zero, and it passes the Holm threshold, though the plan does not allow a verdict yet. H2 (B beats C) is weaker: B was above C on six PRs and below on two, and the adjusted p is 0.063. The numbers are given as a progress report, not as findings.
 
-What each outcome would mean is stated here before the data are read. If B beats A and B beats C, the intent in human review carries something that the issue and AI review do not, on these PRs and for this agent. If B beats A and C does too, with B and C close, the gain may come from any added statement of intent or from added text, and this design cannot separate the two. If B beats A but not C, human review is not shown to differ from agent review as a source of intent. If neither B nor C beats A, a summary of review given up front does not help this agent on these tasks, at a size this study can detect. If B scores lower than A, the summary may mislead or distract, and the paired differences will show which PRs drive it. In every case a null result rules out a large effect, not a modest one (Section 4.6). [RESULT: which case occurred, and what the split by language and the token results add.]
+What each outcome would mean is stated here before the data are read. If B beats A and B beats C, the intent in human review carries something that the issue and AI review do not, on these PRs and for this agent. If B beats A and C does too, with B and C close, the gain may come from any added statement of intent or from added text, and this design cannot separate the two. If B beats A but not C, human review is not shown to differ from agent review as a source of intent. If neither B nor C beats A, a summary of review given up front does not help this agent on these tasks, at a size this study can detect. If B scores lower than A, the summary may mislead or distract, and the paired differences will show which PRs drive it. In every case a null result rules out a large effect, not a modest one (Section 4.6). No case can be named yet. So far the data look most like the first case (B beats both A and C), driven by Go PRs. The Python PRs show almost no difference between arms. With 4 Python PRs, that may be noise, or it may be a real difference between languages or repositories. The remaining 43 runnable PRs will decide which.
 
 ## 7. Threats to validity
 
@@ -130,7 +159,7 @@ The study cannot show why intent helps or not. It measures closeness to what the
 
 Review is summarised once by one model, and a different summariser may carry different intent. Only inline review conversations are in the data; top-level PR comments and discussion elsewhere are not. Review comments respond to a draft the agent never sees, so some intent arrives as advice about code that does not exist in the agent's run. Issues are fetched now and may have been edited after the PR. Each PR has one run per arm, so run-to-run noise is in the comparisons and is not measured separately. The study covers two languages, 22 repositories, and AI review from the agents in one dataset, and results may not carry to other projects or agents. The summary and leak rules reduce the risk that a summary hands the agent the answer, but they do not remove it, and Amendment 1 shows that the first rules missed a code fragment.
 
-Several fixes were made before the runs they affect and are disclosed here. Container recipes (not part of the plan) were fixed during pilot setup: Python dependencies resolved as of the PR's merge time with the project's own constraints, generated files that projects keep out of git (Home Assistant translations, zitadel's protobuf code) produced in every container, and OpenTofu installed for terragrunt. Amendment 2 limited Go stage 1 to the PR's changed test functions. The eligibility rule differs from the earlier sampled checks in two ways, both fixed before any agent run: it now needs a runnable test file, and regex escapes that a copied script had lost were restored. [RESULT: amendments after the pilot, if any.]
+Several fixes were made before the runs they affect and are disclosed here. Container recipes (not part of the plan) were fixed during pilot setup: Python dependencies resolved as of the PR's merge time with the project's own constraints, generated files that projects keep out of git (Home Assistant translations, zitadel's protobuf code) produced in every container, and OpenTofu installed for terragrunt. Amendment 2 limited Go stage 1 to the PR's changed test functions. The eligibility rule differs from the earlier sampled checks in two ways, both fixed before any agent run: it now needs a runnable test file, and regex escapes that a copied script had lost were restored. Amendment 3, made after the pilot and before any main-run agent run, changed one line of the agent prompt so the file tools are given the checkout's own paths rather than /work paths (Section 4.7).
 
 ## 8. Reproducibility
 

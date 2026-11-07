@@ -75,7 +75,8 @@ def run_tests(pid, meta, work, network=False, setup=False):
     box = env.start_box(pid, work, name="eval", network=network)
     try:
         if setup:
-            env.exec_box(box, env.recipe(meta)["setup"], timeout=3600)
+            env.exec_box(box, f"export MERGED_AT='{meta['merged_at']}' PR_TESTS='{' '.join(meta['runnable_tests'])}'; "
+                         + env.recipe(meta)["setup"], timeout=3600)
         code, out = env.exec_box(box, command(meta), timeout=TEST_TIMEOUT)
     finally:
         env.stop_box(box)

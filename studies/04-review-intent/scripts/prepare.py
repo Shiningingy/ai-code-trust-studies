@@ -76,6 +76,9 @@ def export_tree(d, sha, dest):
         return
     dest.mkdir(parents=True, exist_ok=True)
     env = dict(os.environ, GIT_INDEX_FILE=str(dest.parent / f".index-{dest.name}"))
+    for stale in (env["GIT_INDEX_FILE"], env["GIT_INDEX_FILE"] + ".lock"):  # left by an interrupted run
+        if os.path.exists(stale):
+            os.remove(stale)
     sh(["git", f"--work-tree={dest}", "-c", "core.autocrlf=false", "-c", "core.symlinks=false",
         "-c", "core.longpaths=true", "checkout", "-f", sha, "--", "."], cwd=d, env=env)
     os.remove(env["GIT_INDEX_FILE"])

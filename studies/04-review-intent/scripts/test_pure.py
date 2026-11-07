@@ -1,4 +1,4 @@
-"""Offline tests for the pure parts: leak check, scrub, test-result parsing, tox parsing."""
+﻿"""Offline tests for the pure parts: leak check, scrub, test-result parsing, tox parsing."""
 import json
 import os
 import subprocess
@@ -62,3 +62,10 @@ def test_sentry_extras(tmp_path):
                                     "tests/integrations/django/test_z.py")
     out = subprocess.run([sys.executable, "-c", src], env=env, capture_output=True, text=True).stdout.split()
     assert out == ["openai==2.3.0", "pytest-asyncio", "langchain==1.4.7", "httpx", "psycopg2"]
+
+
+def test_cut_to_words_and_code_spans():
+    t = "- one two three.\n- four five. six seven eight.\n- nine"
+    assert summarise.cut_to_words(t, 7) == "- one two three.\n- four five."
+    assert summarise.cut_to_words(t, 100) == t
+    assert summarise.CODE_SPAN.findall("use `(int)` here") == ["`(int)`"]

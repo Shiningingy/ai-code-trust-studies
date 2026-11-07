@@ -32,20 +32,18 @@ def recipe(meta):
                 "setup": PY_BASE.format(apt="libturbojpeg0 libpcap-dev ffmpeg libavformat-dev libavcodec-dev "
                                             "libavdevice-dev libavutil-dev libswscale-dev libswresample-dev "
                                             "libavfilter-dev autoconf") +
-                "cd /work; uv pip install --system -q -r requirements_test.txt -r requirements.txt; "
-                "uv pip install --system -q --no-deps -e . ; "
-                "for c in $(python /opt/ha_components.py); do "
-                "python -m script.install_integration_requirements \"$c\" >/dev/null 2>&1 "
-                "|| echo \"integration requirements failed: $c\"; done; "
-                "pip uninstall -y -q homeassistant || true",
+                "cd /work; python /opt/ha_components.py > /tmp/int.txt; cat /tmp/int.txt; "
+                # mypy-dev pre-releases are deleted from PyPI; the type checker is not needed to run tests
+                "grep -v '^mypy-dev' requirements_test.txt > /tmp/req_test.txt; "
+                "uv pip install --system -q --exclude-newer \"$MERGED_AT\" -c homeassistant/package_constraints.txt "
+                "-r /tmp/req_test.txt -r requirements.txt -r /tmp/int.txt",
                 "pytest": "python -m pytest -p no:randomly -o addopts='' -n 0"}
     if repo == "getsentry/sentry-python":
         return {"image": "python:3.12-bookworm", "env": {"PYTHONPATH": "/work"},
                 "setup": PY_BASE.format(apt="") +
-                "cd /work; uv pip install --system -q -r requirements-testing.txt; "
-                "uv pip install --system -q -e . ; "
-                "for x in $(python /opt/sentry_extras.py); do uv pip install --system -q \"$x\" "
-                "|| echo \"extra failed: $x\"; done; pip uninstall -y -q sentry-sdk || true",
+                "cd /work; python /opt/sentry_extras.py > /tmp/extras.txt; cat /tmp/extras.txt; "
+                "uv pip install --system -q --exclude-newer \"$MERGED_AT\" -r requirements-testing.txt "
+                "-r /tmp/extras.txt . ; pip uninstall -y -q sentry-sdk || true",
                 "pytest": "python -m pytest -o addopts=''"}
     if meta["language"] == "Go":
         v = go_version(tree)
@@ -83,6 +81,7 @@ def build(pid, meta):
     docker("rm", "-f", name)
     code, out = docker("run", "--name", name, "-v", f"{SNAP / pid / 'base'}:/work",
                        "-v", f"{helpers()}:/opt/h:ro", "-e", f"PR_TESTS={' '.join(meta['runnable_tests'])}",
+                       "-e", f"MERGED_AT={meta['merged_at']}",
                        r["image"], "bash", "-lc", "cp /opt/h/* /opt/; " + r["setup"], timeout=7200)
     log.write_text(out[-100000:], encoding="utf-8")
     if code != 0:

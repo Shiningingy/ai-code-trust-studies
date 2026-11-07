@@ -27,7 +27,7 @@ STATE = STUDY / "runs" / "pilot.json"
 
 
 def state():
-    return json.loads(STATE.read_text()) if STATE.exists() else {"pilot": [], "excluded": {}}
+    return json.loads(STATE.read_text(encoding="utf-8-sig")) if STATE.exists() else {"pilot": [], "excluded": {}}
 
 
 def save(s):

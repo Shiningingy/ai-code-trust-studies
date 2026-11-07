@@ -1,4 +1,4 @@
-# Study 04: does human review intent help a coding agent?
+﻿# Study 04: does human review intent help a coding agent?
 
 **Status: plan frozen 2026-11-07; pilot (10 PRs) being built. No results yet.**
 
@@ -22,9 +22,9 @@ All model calls go through `claude -p` on a Claude subscription (no API key), is
 python -I selection/scripts/eligible.py selection/out
 python -I selection/scripts/draw.py selection/out
 cd scripts
-python -I pilot.py setup     # trees, environments, fail-to-pass tests
-python -I pilot.py texts     # review summaries and rubrics
-python -I pilot.py runs      # agent runs
-python -I pilot.py inspect   # scrub and inspectors
-python -I pilot.py report
+python pilot.py setup     # trees, environments, fail-to-pass tests
+python pilot.py texts     # review summaries and rubrics
+python pilot.py runs      # agent runs
+python pilot.py inspect   # scrub and inspectors
+python pilot.py report
 ```

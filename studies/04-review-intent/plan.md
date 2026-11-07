@@ -146,7 +146,7 @@ The pilot runs all three arms with Sonnet 5.5, and arm A once more with Opus 5.5
 
 ## Amendments
 
-None yet.
+1. **2026-11-07, before any agent run: summary rules enforced, not changed.** Reading the first pilot PR's two summaries by hand (home-assistant/core #148639) found one quoting a code fragment from the draft (`(int)`), which the leak check does not catch, and one at 159 words, over the 150 cap. Both break rules already in this plan. Added: (a) the prompt asks for requirements for the finished change, not edits to a draft the developer never saw, and forbids backticks; (b) an automatic check for code spans (backticks) and length, folded into the one regeneration (the regeneration request names the problem); (c) if the second answer still breaks a rule, backticks are removed and the text is cut at the last whole bullet or sentence within 150 words. Both sides get the same procedure; first-answer rule breaks, regenerations and cuts are counted per arm. The two summaries were regenerated under this procedure. Container recipes were also fixed before any agent run (Python dependencies resolved as of the PR's merge time, with the project's own constraints); recipes are not part of this plan.
 
 ## Launch log
 

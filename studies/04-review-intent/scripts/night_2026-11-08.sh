@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 # Night of 2026-11-08: all planned follow-ups (H.1-H.3) + Opus-agent replication (H.4), until the weekly reset.
-# Owner's rule for tonight: use the rest of the week; only the five-hour window is guarded (pause at 80%).
+# Owner's rule for tonight: use the rest of the week and the five-hour window; only a real limit hit waits.
 # Streams: tags (coverage + pre-review, no Docker) and 3 Docker streams split by repository (followup_night.py).
 # Logs: runs/night2_*.log.  At the end: reports, then Docker Desktop and WSL are stopped.
 cd "$(dirname "$0")"
 PY=/g/PhD-Prototype/.venv/Scripts/python
 R=../runs
-export STUDY_WEEK_STOP=0.99 STUDY_PAUSE_AT=0.80
+export STUDY_WEEK_STOP=0.99 STUDY_PAUSE_AT=1.0   # owner 02:40: never pause early; a real limit hit still waits for the reset (llm.pause_after_limit)
 export STUDY_STOP_AT=1794164100   # Sun 2026-11-08 13:55 Toronto, 5 min before the weekly reset
 M=$R/night2_main.log
 echo "== start $(date)" >> $M

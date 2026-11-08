@@ -58,6 +58,12 @@ def one(pid, arm, model):
     if llm.STOP_AT and time.time() + ARM_BUDGET > llm.STOP_AT:
         print(time.strftime("%H:%M"), "STOP: stop time", flush=True)
         raise SystemExit(0)
+    arm_dir = PRS / pid / "arms" / tag
+    if (arm_dir / "run.json").exists() and not (arm_dir / "stage1.json").exists():
+        # run interrupted between the agent and stage 1 (process restart): set it aside and rerun from scratch
+        aside = arm_dir.with_name(f"{tag}.interrupted-{time.strftime('%H%M%S')}")
+        arm_dir.rename(aside)
+        print(time.strftime("%H:%M"), "RERUN", pid, tag, "interrupted run moved to", aside.name, flush=True)
     try:
         r = agent.run(pid, arm, model)
         judge.inspect(pid, tag)

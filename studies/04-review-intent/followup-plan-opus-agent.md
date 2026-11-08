@@ -1,6 +1,6 @@
 # Study 04 follow-up H.4: another agent model (report Section 7.5), fixed before running
 
-Written 2026-11-08 02:10, before any run of this follow-up. Exploratory; results go in the follow-up report next to H.1-H.3 and cannot change the main verdicts.
+Written 2026-11-08 ~02:00 (commit a34b0a0), before any run of this follow-up. Exploratory; results go in the follow-up report next to H.1-H.3 and cannot change the main verdicts.
 
 **Question.** Do the main results carry to a stronger agent? Section 7.5 lists "other agents and models" as future work. This follow-up reruns the three main arms with Claude Opus 5.5 as the agent instead of Sonnet 5.5, on the same 56 PRs.
 

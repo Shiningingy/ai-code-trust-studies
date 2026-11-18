@@ -71,20 +71,21 @@ OBSERVATIONS
 
 Written down as they were found, so nothing depends on memory; the final observations above are drawn from these.
 
-**F1. Closure: the one repair (T1) is the one run whose full test suite finished.** All seven frozen Sonnet 4.5 Closure runs graded so far fixed most or all of the 12 trigger tests in `CodeGenerator`/`IRFactory`. The developer fix also changes `RenamePrototypes.java` (2 of its 7 hunks: after the parser change, quoted numeric keys reach `RenamePrototypes` as string keys and must not be renamed); without it two `RenamePrototypesTest` tests fail, and those show only in the full suite, which takes 777-790 s in this container (grading runs, alone). Every run tried the full suite; only T1's leader gave the `run` tool a timeout long enough (1800 s, the maximum). Its suite reported the two failures at step 113 of 139; it read `RenamePrototypes.java` at step 120, a sub-agent changed it at step 131, and a second 1800 s full run showed 0 failing. No other run saw those failures or opened that file.
+**F1. Closure: the one repair (T1) is the one run whose full test suite finished.** Frozen Sonnet 4.5 Closure result: 1 of 9 repaired (S 0/3, T 1/3, U 0/3). Most runs fixed most or all of the 12 trigger tests in `CodeGenerator`/`IRFactory`. The developer fix also changes `RenamePrototypes.java` (2 of its 7 hunks: after the parser change, quoted numeric keys reach `RenamePrototypes` as string keys and must not be renamed); without it two `RenamePrototypesTest` tests fail, and those show only in the full suite, which takes 777-790 s in this container (grading runs, alone). Every run tried the full suite; only T1's leader gave the `run` tool a timeout long enough (1800 s, the maximum). Its suite reported the two failures at step 113 of 139; it read `RenamePrototypes.java` at step 120, a sub-agent changed it at step 131, and a second 1800 s full run showed 0 failing. No other run saw those failures or opened that file.
 
 | Run | Full-suite timeouts asked (s) | Finished? | At the end (grading) |
 |---|---|---|---|
 | S1 | 600, 60 | no | trigger 0/12 failing; new: 2 `RenamePrototypesTest` |
 | S2 | 600, 320 | no | trigger 8/12 failing; 9 new (RR −5) |
-| S3 | default 300, 600 | no | GRADE_S3 |
+| S3 | default 300, 600 | no | trigger 0/12 failing; new: 2 `RenamePrototypesTest` |
 | **T1** | **1800, 1800** | **yes (2 failing → 0)** | **repaired** |
 | T2 | default 300, 650 | no | trigger 0/12; new: 2 `RenamePrototypesTest`, 2 `AmbiguatePropertiesTest` (it also edited `RenameProperties.java` and a test file) |
+| T3 | 600 | no | trigger 5/12 failing; new: 2 `RenamePrototypesTest`, 1 `CodePrinterTest`; changed `IRFactory.java`, `Parser.java` |
 | U1 | 600 (sub-agent), default 300 ×2 | no | trigger 0/12; new: 2 `RenamePrototypesTest` |
 | U2 | 600, 300, 300, default 300 | no | trigger 0/12; new: 2 `RenamePrototypesTest` |
 | U3 | default 300, 600, 600, 360, 300, 600 | no | trigger 11/12 failing; only `CodeGenerator.java` changed |
 
-So three of the failed runs (S1, U1, U2) ended exactly where T1 stood when its suite finished; with that result they would have been one file from T1's position. Whether they would then have fixed it is not known (T1 is the only case).
+So four of the eight failed runs (S1, S3, U1, U2) ended exactly where T1 stood when its suite finished; with that result they would have been one file from T1's position. Whether they would then have fixed it is not known (T1 is the only case).
 
 **F2. Why T1 chose 1800 s is not visible.** Its text before the call is the same as every other run's ("Let's run the full test suite to ensure no regressions"); the thinking blocks in all transcripts are empty (the CLI logs only a signature), and no sub-agent brief mentions timeouts. What differs is a habit: T1's leader gave the 30-second trigger script 600 s every time (6 calls) and the full suite the maximum; the other runs sized timeouts close to what they had seen (default 300 s or 120-240 s for the trigger script) and about 600 s for the full suite. Claude's reading: a sampled habit of generous time budgets, not a reasoned estimate of the suite's length.
 
@@ -94,13 +95,13 @@ So three of the failed runs (S1, U1, U2) ended exactly where T1 stood when its s
 
 **F5. Delegation is not what repaired T1.** T2 (also a team run) failed the same way as the S runs; the deciding step in T1 was the leader's own full-suite run. The U runs used the most sub-agents (4, 5, 10) and the most time (94, 86, 171 min) without a repair.
 
-**F6. The class_graph tool was never called.** 0 calls in all 3 Astropy U runs and all 3 Closure U runs; nothing in any agent's text mentions it. With file locations (arm L, Amendment 2) the first Astropy runs also made 0 calls (L_ASTROPY_NOTE).
+**F6. The class_graph tool was never called.** 0 calls in all 3 Astropy U runs and all 3 Closure U runs; nothing in any agent's text mentions it. With file locations (arm L, Amendment 2) all 3 Astropy L runs also made 0 calls (tool present in the init event every time; all 3 repaired, 1 sub-agent each, 117-140 s); Closure L results below.
 
-**F7. U3's leader finished while two sub-agents were still running.** The CLI stopped them at session end; their 5 pending `run` calls appear in the transcript as "The user doesn't want to proceed with this tool use", which is the stop, not a permission problem. U3 ended with only `CodeGenerator.java` changed.
+**F7. Two leaders finished while sub-agents were still running (U3, T3).** The CLI stopped the sub-agents at session end; their pending `run` calls (U3: 5, T3: 2) appear in the transcript as "The user doesn't want to proceed with this tool use", which is the stop, not a permission problem. Both runs ended far from the fix (U3: only `CodeGenerator.java` changed, 11/12 trigger tests failing; T3: 5/12 failing).
 
 **F8. Concurrency changes the suite's speed.** With other runs or gradings going at the same time, the Closure full suite took 869-1,044 s instead of 777-790 s. Since the results turn on whether a full-suite run finishes inside the agent's chosen timeout, all Closure runs ran one at a time; the only overlaps were the first night's (5.5 pilot with the first 4.5 Astropy runs) and the 3 Astropy L runs during Closure S3's grading and T3.
 
-**F9. Follow-up arms (Amendments 3 and 4).** H = S + "read `RenamePrototypes.java` first" asks whether naming the file is enough; F = S + "the full suite takes about 13 minutes" asks whether knowing the duration makes the agent wait for it. Both Closure only, 3 runs each, base S (S's frozen result so far: 0 of 3).
+**F9. Follow-up arms (Amendments 3 and 4).** H = S + "read `RenamePrototypes.java` first" asks whether naming the file is enough; F = S + "the full suite takes about 13 minutes" asks whether knowing the duration makes the agent wait for it. Both Closure only, 3 runs each, base S (S's frozen result: 0 of 3).
 
 ## 5. What failed, was skipped, or differs from the plan
 

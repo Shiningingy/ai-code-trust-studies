@@ -104,7 +104,7 @@ def count_tool(events, names):
 
 
 def out_dir(bug_id, arm, k):
-    return llm.RUNS / bug_id / arm / ("smoke" if k == 0 else f"run{k}")
+    return llm.RUNS / llm.MODEL_DIR[llm.SONNET] / bug_id / arm / ("smoke" if k == 0 else f"run{k}")
 
 
 def capture(work, out, base):
@@ -151,7 +151,7 @@ def run(bug_id, arm, k, slot):
         attempt += 1
         llm.wait_for_room(START_BELOW[bug_id])  # the between-runs five-hour check, before the tree and box exist
         work = env.fresh_workspace(bug_id, slot)
-        box = env.start_box(bug_id, work, name=f"box-{arm}{k}")
+        box = env.start_box(bug_id, work, name=f"box-{arm}{k}", hide=llm.SONNET != llm.PILOT_MODEL)
         started = time.strftime("%Y-%m-%dT%H:%M:%S%z")
         uml, rate_before, rate_after = None, llm.read_rate(), None
         try:

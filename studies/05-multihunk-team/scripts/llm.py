@@ -30,7 +30,14 @@ ISOLATION = {"claudeMdExcludes": [(Path.home() / ".claude" / "CLAUDE.md").as_pos
              "autoMemoryEnabled": False}
 LIMIT_WORDS = ("usage limit", "rate limit", "limit reached", "limit will reset", "out of extra usage", "overloaded")
 
-SONNET = "claude-sonnet-5-5"
+# Amendment 1 (Allen, 2026-11-18): counted runs use the paper's model, Sonnet 4.5 (the 5.5 memory probe recalled
+# the Astropy-7606 gold patch; 4.5 recalled neither fix). The first night's Sonnet 5.5 runs are kept as a pilot.
+PILOT_MODEL = "claude-sonnet-5-5"
+SONNET = os.environ.get("STUDY_MODEL", "claude-sonnet-4-5-20250929")
+# run folders per model: 5.5 pilot runs stay at RUNS\<bug>\...; 4.5 runs go to RUNS\sonnet-4-5\<bug>\...
+MODEL_DIR = {PILOT_MODEL: "", "claude-sonnet-4-5-20250929": "sonnet-4-5"}
+# workspace slots per model, so a new model never overwrites the pilot's kept folders (E:\w\r00-r18)
+SLOT_BASE = {PILOT_MODEL: 0, "claude-sonnet-4-5-20250929": 20}
 
 RATE = RUNS / "ratelimit.json"
 PAUSE_AT = float(os.environ.get("STUDY_PAUSE_AT", "0.80"))
@@ -56,7 +63,28 @@ def base_cmd(model, effort=None):
 
 
 def read_rate():
-    return json.loads(RATE.read_text(encoding="utf-8")) if RATE.exists() else None
+    """Retry-safe read (two processes may share the file: Study 04 lost runs to a WinError 5 race)."""
+    for wait in (0, 0.5, 1, 2, 4):
+        time.sleep(wait)
+        try:
+            return json.loads(RATE.read_text(encoding="utf-8")) if RATE.exists() else None
+        except (OSError, ValueError):
+            continue
+    return None
+
+
+def write_rate(rec):
+    """Retry-safe write: temp file, then replace."""
+    tmp = RATE.with_suffix(f".{os.getpid()}.tmp")
+    tmp.write_text(json.dumps(rec), encoding="utf-8")
+    for wait in (0, 0.5, 1, 2, 4):
+        time.sleep(wait)
+        try:
+            os.replace(tmp, RATE)
+            return
+        except OSError:
+            continue
+    tmp.unlink(missing_ok=True)
 
 
 def classify(code, result, stderr, timed_out):
@@ -80,7 +108,7 @@ def note_rate(events):
            "five_hour_resets": (w.get("five_hour") or {}).get("resetsAt"),
            "seven_day": (w.get("seven_day") or {}).get("utilization"), "status": infos[-1].get("status")}
     RUNS.mkdir(parents=True, exist_ok=True)
-    RATE.write_text(json.dumps(rec), encoding="utf-8")
+    write_rate(rec)
 
 
 def wait_for_room(pause_at=None):
@@ -89,7 +117,7 @@ def wait_for_room(pause_at=None):
     if not RATE.exists():
         return
     pause_at = PAUSE_AT if pause_at is None else pause_at
-    r = json.loads(RATE.read_text(encoding="utf-8"))
+    r = read_rate() or {}
     if (r.get("seven_day") or 0) >= WEEK_STOP:
         raise SystemExit(f"[stop] seven-day utilization {r['seven_day']:.2f} >= {WEEK_STOP}; stopping cleanly")
     if (r.get("five_hour") or 0) >= pause_at and r.get("five_hour_resets"):
@@ -102,12 +130,11 @@ def wait_for_room(pause_at=None):
 
 
 def pause_after_limit():
-    r = json.loads(RATE.read_text(encoding="utf-8")) if RATE.exists() else {}
+    r = read_rate() or {}
     resets = r.get("five_hour_resets") or 0
     if resets < time.time():
         resets = time.time() + 1800
-    RATE.write_text(json.dumps({"t": time.time(), "five_hour": 1.0, "five_hour_resets": resets,
-                                "status": "limit hit"}), encoding="utf-8")
+    write_rate({"t": time.time(), "five_hour": 1.0, "five_hour_resets": resets, "status": "limit hit"})
     wait_for_room()
 
 
@@ -192,7 +219,7 @@ def call(prompt, *, role, bug, tag, model, effort, cwd, extra, timeout, transcri
            "init_cwd": init.get("cwd"), "init_tools": init.get("tools"), "init_agents": init.get("agents"),
            "init_memory_paths": init.get("memory_paths"), "permission_mode": init.get("permissionMode"),
            "mismatch": mismatch.get("why"),
-           "rate": json.loads(RATE.read_text(encoding="utf-8")) if RATE.exists() else None}
+           "rate": read_rate()}
     if status != "ok":
         row["stderr"] = stderr[-2000:]
         row["result_text"] = str(result.get("result"))[:2000]

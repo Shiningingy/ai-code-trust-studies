@@ -177,9 +177,30 @@ def fresh_workspace(bug_id, slot, graph=None):
     return work
 
 
-def start_box(bug_id, work, name):
+D4J = "/opt/defects4j"
+EMPTY_DIR, EMPTY_FILE = DATA / "empty", DATA / "empty-file"
+# Amendment 1 (Allen, 2026-11-18): in the AGENT's container, hide what reveals the fix: the framework's fix and
+# test patches, the modified/loaded class lists, and the upstream git history (Closure repo + the repos zip).
+# Defects4J's own startup check needs only project_repos/README, which stays. compile, test, export and the
+# paper's trigger script were checked to work with these hidden (same 12 failures). The grading container is
+# unchanged.
+HIDE_D4J_DIRS = [f"{D4J}/framework/projects/Closure/patches", f"{D4J}/framework/projects/Closure/modified_classes",
+                 f"{D4J}/framework/projects/Closure/loaded_classes", f"{D4J}/project_repos/closure-compiler.git"]
+HIDE_D4J_FILES = [f"{D4J}/project_repos/defects4j-repos.zip"]
+
+
+def start_box(bug_id, work, name, hide=False):
+    """hide=True (agent runs only): mount empty placeholders over the fix-revealing Defects4J data."""
     cname = f"{name}-{uuid.uuid4().hex[:6]}"
-    docker("run", "-d", "--name", cname, "--network", "none", "-v", f"{work}:{MOUNT}", "-w", MOUNT,
+    mounts = []
+    if hide and BUGS[bug_id]["kind"] == "d4j":
+        EMPTY_DIR.mkdir(parents=True, exist_ok=True)
+        EMPTY_FILE.touch(exist_ok=True)
+        for d in HIDE_D4J_DIRS:
+            mounts += ["-v", f"{EMPTY_DIR}:{d}:ro"]
+        for f in HIDE_D4J_FILES:
+            mounts += ["-v", f"{EMPTY_FILE}:{f}:ro"]
+    docker("run", "-d", "--name", cname, "--network", "none", "-v", f"{work}:{MOUNT}", "-w", MOUNT, *mounts,
            BUGS[bug_id]["image"], "sleep", "infinity", check=True)
     # the bind-mounted tree is owned by another uid; without this, git in the box refuses to read it
     docker("exec", cname, "git", "config", "--global", "--add", "safe.directory", "*")

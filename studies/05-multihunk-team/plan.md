@@ -134,7 +134,18 @@ The overnight rule said: swap to **Astropy-8707** if it reproduces within about 
 
 ## Amendments
 
-(none)
+### Amendment 1 (Allen, 2026-11-18, night): Sonnet 4.5 for the counted runs; hide the fix data in the Defects4J container
+
+**Why.** After the first Sonnet 5.5 runs, three training-exposure checks were made (results.md, "Training-data exposure"): (1) every 5.5 Astropy patch was compared with the gold patch; (2) a memory probe asked each model, with no repository and no tools, what the developer's fix was; (3) the Defects4J image was searched for fix-revealing data. Sonnet 5.5 reproduced the Astropy-7606 gold patch almost line for line from memory (`return NotImplemented`, `isinstance(other, type(self))`) and guessed 2 of Closure_157's 3 files; Sonnet 4.5 recalled neither fix. Sonnet 4.5 (`claude-sonnet-4-5-20250929`, the paper's model) is still available on this account (checked by a one-word call). The 5.5 probe also pointed at `defects4j info`, which exposed that the agent's container held the developer's fix.
+
+**Changes.**
+1. **Model:** every counted run uses `claude-sonnet-4-5-20250929` (`llm.SONNET`, overridable with `STUDY_MODEL`). CLI stays 2.1.289 (the harness relies on its flags); the paper's CLI was 2.0.13, a recorded difference. 4.5 runs live in `E:\study05\runs\sonnet-4-5\` and use slots `E:\w\r20` (smoke) and `r21`-`r38`.
+2. **The Sonnet 5.5 runs already made are kept as a labelled pilot, not counted:** smoke + 9 Astropy runs (slots r00-r09) and one Closure_157 arm-S run (slot r10). Sonnet 5.5 is not used for any further Closure run.
+3. **Hidden in the agent's container (Closure only; the grading container unchanged):** `framework/projects/Closure/patches/` (the developer's fix and test patches), `modified_classes/` and `loaded_classes/` (class lists, as the blanked properties keys), `project_repos/closure-compiler.git` (the upstream history, fix commit `41acde3e` included) and `project_repos/defects4j-repos.zip`, by empty read-only mounts (`env.start_box(hide=True)`). Defects4J's startup check needs only `project_repos/README`, which stays. Checked 2026-11-18: `defects4j compile`, `test -t`, `export -p tests.trigger`/`cp.test` and the paper's trigger script work, same 12 failures; `defects4j info` shows no bug details. The 5.5 pilot's Closure run had these files readable; its command log is checked for any access (coding row H7).
+4. **Harness:** the five-hour readings file is read and written retry-safe (two runner processes overlapped once, the 4.5 runs starting while the 5.5 Closure pilot finished); token columns use the CLI's `modelUsage` (whole run, sub-agents included) instead of the result event's final-turn `usage`.
+5. **First-night scope with 4.5 (Allen):** smoke run, the 9 Astropy runs, ONE Closure run (arm S); then Allen decides the remaining Closure runs.
+
+**Not changed:** prompts, arms, measures, coding scheme, time limits, run order.
 
 ## Launch log
 

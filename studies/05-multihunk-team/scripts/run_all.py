@@ -24,11 +24,12 @@ from bugs import STUDY
 ASTROPY, CLOSURE = "astropy__astropy-7606", "Closure_157"
 BUG_ORDER = [ASTROPY, CLOSURE]
 ROTATION = {1: ["S", "T", "U"], 2: ["T", "U", "S"], 3: ["U", "S", "T"]}
-SMOKE = {"k": 0, "bug": ASTROPY, "arm": "S", "slot": 0}
+BASE = llm.SLOT_BASE[llm.SONNET]  # Amendment 1: Sonnet 4.5 runs use slots r20 (smoke), r21-r38
+SMOKE = {"k": 0, "bug": ASTROPY, "arm": "S", "slot": BASE}
 
 
 def schedule():
-    rows, slot = [], 0
+    rows, slot = [], BASE
     for bug in BUG_ORDER:
         for k in (1, 2, 3):
             for arm in ROTATION[k]:
@@ -80,6 +81,10 @@ if __name__ == "__main__":
     elif "--overnight" in sys.argv:
         go([r for r in rows if r["bug"] == ASTROPY] + [r for r in rows if r["bug"] == CLOSURE and r["arm"] == "S"
                                                        and r["k"] == 1])
+    elif "--astropy" in sys.argv:
+        go([r for r in rows if r["bug"] == ASTROPY])
+    elif "--closure1" in sys.argv:
+        go([r for r in rows if r["bug"] == CLOSURE and r["arm"] == "S" and r["k"] == 1])
     elif "--go" in sys.argv:
         go(rows)
     else:

@@ -7,7 +7,12 @@ tree before any run by build_index.py with the same parsers as before (uml_py.py
 index, so the same question always gets the same text. Every call is logged.
 
 Hand-written JSON-RPC like box_mcp.py (no MCP library). Standard library only.
-Usage (from an MCP config): python uml_mcp.py <index .puml> <log file>
+Usage (from an MCP config): python uml_mcp.py <index .puml> <log file> [<locations .json>]
+
+Amendment 2 (Allen, 2026-11-18): with a locations file (build_locations.py) every answer also lists the file and
+line range where each shown class is defined, and the tool description says so, as the paper's MAPLE class
+lookups return the defining file. Without it (the frozen arm U) answers and description are byte-identical to
+the frozen version.
 """
 import json
 import re
@@ -16,6 +21,7 @@ import time
 from collections import deque
 
 INDEX, LOG = sys.argv[1], sys.argv[2]
+LOCS = json.load(open(sys.argv[3], encoding="utf-8")) if len(sys.argv) > 3 else None
 CAP = 60000          # characters per answer (~15k tokens); larger answers reduce hops, then drop members
 MAX_HOPS = 3
 TYPE_RE = re.compile(r'^  (class|interface|enum|annotation|abstract class) "([^"]+)" as (\S+)( <<module>>)? \{$')
@@ -29,7 +35,9 @@ TOOL = {
         "does not reflect later edits. `name` is a class name (simple or fully qualified) or a package/module "
         "name; the matching classes are shown with their fields and method signatures. `hops` (default 1, max 3) "
         "also lists, by name only, the classes within that many relationship steps (inheritance, field types, "
-        "uses; both directions), with the relationships between all shown classes."),
+        "uses; both directions), with the relationships between all shown classes."
+        + (" Every shown class also comes with the file (path from the project root) and the line range where "
+           "it is defined." if LOCS is not None else "")),
     "inputSchema": {
         "type": "object",
         "properties": {
@@ -113,6 +121,11 @@ def render(name, seeds, near, hops, full_members, note):
            "A +-- B nested in A"]
     if note:
         out.append("' " + note)
+    if LOCS is not None:
+        out.append("' defined in (file:first-last line):")
+        for q in sorted(shown):
+            f, a, b = LOCS.get(q) or ("?", None, None)
+            out.append(f"'   {q}  {f}" + (f":{a}-{b}" if a is not None else ""))
     by_pkg = {}
     for q in shown:
         by_pkg.setdefault(TYPES[q]["pkg"], []).append(q)
@@ -186,7 +199,8 @@ def main():
             continue
         if method == "initialize":
             reply(id_, {"protocolVersion": req["params"].get("protocolVersion", "2024-11-05"),
-                        "capabilities": {"tools": {}}, "serverInfo": {"name": "uml", "version": "1"}})
+                        "capabilities": {"tools": {}},
+                        "serverInfo": {"name": "uml", "version": "1" if LOCS is None else "2"}})
         elif method == "tools/list":
             reply(id_, {"tools": [TOOL]})
         elif method == "tools/call":

@@ -30,6 +30,7 @@ ATTEMPTS = 3          # first run + up to two reruns for infrastructure errors (
 # five-hour utilization bar to start a run (checked between runs only); Closure's bar leaves room for a long run
 START_BELOW = {"astropy__astropy-7606": 0.80, "astropy__astropy-8707": 0.80, "Closure_157": 0.35}
 UML_TOOL = "mcp__uml__class_graph"
+TEAM, GRAPH = ("T", "U", "L"), ("U", "L")  # Amendment 2: arm L = U with file locations in the tool's answers
 FILE_TOOLS = "Read,Edit,Write,Glob,Grep,TodoWrite"  # the paper's Claude runs used TodoWrite (tools_count_claude.csv)
 
 
@@ -38,8 +39,13 @@ def index_path(bug_id):
     return llm.RUNS.parent / "uml" / bug_id / "index.puml"
 
 
+def locations_path(bug_id):
+    """Arm L: file and line range of every index class (uml/build_locations.py, Amendment 2)."""
+    return llm.RUNS.parent / "uml" / bug_id / "locations.json"
+
+
 def tools_for(arm):
-    return FILE_TOOLS + (",Agent" if arm in ("T", "U") else "")
+    return FILE_TOOLS + (",Agent" if arm in TEAM else "")
 
 
 def expect_tools(arm):
@@ -49,14 +55,14 @@ def expect_tools(arm):
         if "Bash" in tools:
             return "Bash present"
         has_agent = "Agent" in tools or "Task" in tools
-        if arm in ("T", "U") and not has_agent:
+        if arm in TEAM and not has_agent:
             return "sub-agent tool missing"
         if arm == "S" and has_agent:
             return "sub-agent tool present in S"
-        if arm == "U" and UML_TOOL not in tools:
-            return "class_graph tool missing in U"
-        if arm != "U" and UML_TOOL in tools:
-            return "class_graph tool present outside U"
+        if arm in GRAPH and UML_TOOL not in tools:
+            return f"class_graph tool missing in {arm}"
+        if arm not in GRAPH and UML_TOOL in tools:
+            return "class_graph tool present outside U/L"
         return None
     return check
 
@@ -69,23 +75,28 @@ def neutral_box_server(slot):
     return d / "box_mcp.py", d / f"box-r{slot:02d}.jsonl"
 
 
-def neutral_uml_server(bug_id, slot):
+def neutral_uml_server(bug_id, slot, with_locations=False):
     """Arm U: the class_graph server script and a copy of the bug's index, also under E:\\w\\tools."""
     d = env.WORK / "tools"
     d.mkdir(parents=True, exist_ok=True)
     shutil.copy2(Path(__file__).parent / "uml" / "uml_mcp.py", d / "uml_mcp.py")
     idx = d / f"index-r{slot:02d}.puml"
     shutil.copy2(index_path(bug_id), idx)
+    if with_locations:  # arm L: (script, index, log, locations)
+        loc = d / f"locations-r{slot:02d}.json"
+        shutil.copy2(locations_path(bug_id), loc)
+        return d / "uml_mcp.py", idx, d / f"uml-r{slot:02d}.jsonl", loc
     return d / "uml_mcp.py", idx, d / f"uml-r{slot:02d}.jsonl"
 
 
 def extra_args(arm, box, box_log, server=Path("box_mcp.py"), uml=None):
-    """uml: (server script, index file, log file) for arm U."""
+    """uml: (server script, index file, log file[, locations file]) for arms U and L."""
     servers = {"box": {"command": sys.executable, "args": [str(server), box, str(box_log)]}}
     allowed = "mcp__box__run"
-    if arm == "U":
-        u_server, u_index, u_log = uml or (Path("uml_mcp.py"), Path("<index.puml>"), Path("<uml.jsonl>"))
-        servers["uml"] = {"command": sys.executable, "args": [str(u_server), str(u_index), str(u_log)]}
+    if arm in GRAPH:
+        uml = uml or ((Path("uml_mcp.py"), Path("<index.puml>"), Path("<uml.jsonl>"))
+                      + ((Path("<locations.json>"),) if arm == "L" else ()))
+        servers["uml"] = {"command": sys.executable, "args": [str(x) for x in uml]}
         allowed += "," + UML_TOOL
     return ["--tools", tools_for(arm), "--mcp-config", json.dumps({"mcpServers": servers}), "--strict-mcp-config",
             "--allowedTools", allowed, "--permission-mode", "acceptEdits", "--permission-prompts", "none",
@@ -131,7 +142,8 @@ def dry_run(bug_id, arm, k, slot):
     work = env.WORK / f"r{slot:02d}"
     cmd = llm.base_cmd(llm.SONNET, EFFORT) + extra_args(arm, "<container>", "<box.jsonl>")
     return {"bug": bug_id, "arm": arm, "k": k, "slot": slot, "cwd": str(work),
-            "uml_index": str(index_path(bug_id)) if arm == "U" else None,
+            "uml_index": str(index_path(bug_id)) if arm in GRAPH else None,
+            "uml_locations": str(locations_path(bug_id)) if arm == "L" else None,
             "timeout_s": TIME_LIMIT[BUGS[bug_id]["kind"]], "command": cmd, "prompt": prompt,
             "leak_words_in_prompt": check_leaks.scan_text(prompt) + check_leaks.scan_text(str(work))}
 
@@ -157,8 +169,8 @@ def run(bug_id, arm, k, slot):
         try:
             server, box_log = neutral_box_server(slot)
             box_log.unlink(missing_ok=True)
-            if arm == "U":
-                uml = neutral_uml_server(bug_id, slot)
+            if arm in GRAPH:
+                uml = neutral_uml_server(bug_id, slot, with_locations=arm == "L")
                 uml[2].unlink(missing_ok=True)
             extra = extra_args(arm, box, box_log, server, uml)
             (out / "command.json").write_text(json.dumps(llm.base_cmd(llm.SONNET, EFFORT) + extra, indent=1),

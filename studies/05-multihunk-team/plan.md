@@ -147,6 +147,18 @@ The overnight rule said: swap to **Astropy-8707** if it reproduces within about 
 
 **Not changed:** prompts, arms, measures, coding scheme, time limits, run order.
 
+### Amendment 2 (Allen, 2026-11-18, morning): arm L = U with file locations in the class_graph answers
+
+**Why.** Allen meant the class graph to give structure context like the paper's MAPLE, whose class lookups return the file (and line range) where a class is defined. The D7 index had class names, members and relations only, no file locations. In the frozen U runs so far (3 Astropy, Closure U1) the tool was never called, so no agent ever saw its content; those runs show only that a described, unused tool without locations is ignored.
+
+**Changes.**
+1. **Location table** (`scripts/uml/build_locations.py`): for every class in the index, its file (path from the project root, as the agent sees it) and first-last line, from the buggy base tree only; Java ranges by javalang's tokenizer (declaration to closing brace), Python by `ast` (first decorator to `end_lineno`); module-function boxes give the file only. All 887 Closure and 1,226 Astropy index types have an entry; deterministic (`--check`); spot-checked against the source; no leak-check word. Stored at `E:\study05\uml\<bug>\locations.json`, stats in `uml/<bug>/locations-stats.json` (SHA-256 Closure `673173b2…c421`, Astropy `a6ff7ff3…5eba`).
+2. **Tool** (`uml_mcp.py`): an optional third argument loads the table; each answer then opens with a "defined in (file:first-last line)" list for every class shown, and the tool description gains one sentence saying so. Without the argument (arm U) the answers, description and server info are byte-identical to the frozen version (checked on 11 calls over both bugs), so the frozen U runs still to come (Closure U2, U3) are unaffected.
+3. **Arm L** = U's prompt + the same one sentence (`prompts.GRAPH_NOTE_LOC`; rendered in `prompts/rendered/<bug>_L.txt`); otherwise identical to U: leader block, Agent tool, class_graph tool, neutral wording with no instruction to use the tool (MAPLE's prompt said "use Maple proactively… query Maple first"; that push is a separate question and not part of L).
+4. **Runs:** after the frozen 18, `run_all.py --arm-l`: Astropy L k=1-3 (slots r39-r41), then Closure L k=1-3 (r42-r44), Sonnet 4.5, same guards and time limits. Coding rows U1-U3 apply to L.
+
+**Not changed:** the frozen 18 runs, their prompts, tool behaviour and order; measures; time limits.
+
 ## Launch log
 
 - 2026-11-18: setup. Claude Code 2.1.289; Docker 27.2.0; images `swebench/sweb.eval.x86_64.astropy_1776_astropy-7606:v2` (3.88 GB), `study05/d4j:2.0.1` (4.05 GB, Ubuntu 22.04, Corretto 8u412, Defects4J v2.0.1). Graph SHA-256: Astropy `8a28ea8e…16f7e3`, Closure `ed608cf3…dd1339`. No agent run.

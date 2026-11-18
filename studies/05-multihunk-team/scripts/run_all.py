@@ -11,6 +11,7 @@ Usage: python run_all.py --plan                  (print the full order)
        python run_all.py --smoke                 (the smoke run only)
        python run_all.py --overnight             (9 Astropy runs, then Closure run 1 = arm S, then stop)
        python run_all.py --go                    (every run not yet done)
+       python run_all.py --arm-l                 (Amendment 2: arm L, 3 Astropy then 3 Closure runs)
 """
 import json
 import sys
@@ -35,6 +36,17 @@ def schedule():
             for arm in ROTATION[k]:
                 slot += 1
                 rows.append({"k": k, "bug": bug, "arm": arm, "slot": slot})
+    return rows
+
+
+def schedule_l():
+    """Amendment 2 (Allen, 2026-11-18): arm L after the frozen 18 runs; Astropy first (cheap, it shakes out the
+    harness), then Closure. Slots continue after the frozen schedule's last one (Sonnet 4.5: r39-r44)."""
+    rows, slot = [], BASE + 18
+    for bug in BUG_ORDER:
+        for k in (1, 2, 3):
+            slot += 1
+            rows.append({"k": k, "bug": bug, "arm": "L", "slot": slot})
     return rows
 
 
@@ -72,10 +84,12 @@ def go(rows):
 if __name__ == "__main__":
     rows = schedule()
     if "--plan" in sys.argv:
-        for r in [SMOKE] + rows:
+        for r in [SMOKE] + rows + schedule_l():
             print(r)
     elif "--dry-run" in sys.argv:
-        dry_run(rows)
+        dry_run(rows + schedule_l())
+    elif "--arm-l" in sys.argv:
+        go(schedule_l())
     elif "--smoke" in sys.argv:
         go([SMOKE])
     elif "--overnight" in sys.argv:

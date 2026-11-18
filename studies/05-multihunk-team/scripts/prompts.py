@@ -2,7 +2,8 @@
 
 S = the paper's prompt + ENV_NOTE
 T = S + LEADER
-U = T + GRAPH_NOTE   (and class-graph.puml in the workspace)
+U = T + GRAPH_NOTE   (the class_graph tool)
+L = T + GRAPH_NOTE_LOC (Amendment 2: the class_graph tool with file locations)
 
 ENV_NOTE is the same in every arm: it only explains this harness's tools (the paper's agents had a Bash tool
 inside the environment; here commands go through the `run` tool, as in Study 04). LEADER and GRAPH_NOTE avoid
@@ -23,13 +24,19 @@ GRAPH_NOTE = """### Reference material
 
 The `class_graph` tool returns a UML class graph (PlantUML text) of this project's main source code, produced by a static parser from the code as checked out at the start of the session. Give it a class name or a package/module name, and optionally a number of hops: it shows the matching classes with their fields and method signatures, plus the classes related to them within that many steps (inheritance, field types, uses), with the relationships between them."""
 
-ARMS = ("S", "T", "U")
+# Amendment 2 (Allen, 2026-11-18): arm L = U whose tool also gives each class's file and line range; one sentence
+# added, the same neutral wording otherwise (no instruction to use the tool).
+GRAPH_NOTE_LOC = GRAPH_NOTE + " Every class shown also comes with the file (path from the project root) and the line range where it is defined."
+
+ARMS = ("S", "T", "U", "L")
 
 
 def build(bug_id, arm):
     parts = [render_paper_prompt(bug_id).rstrip("\n"), ENV_NOTE]
-    if arm in ("T", "U"):
+    if arm in ("T", "U", "L"):
         parts.append(LEADER)
     if arm == "U":
         parts.append(GRAPH_NOTE)
+    if arm == "L":
+        parts.append(GRAPH_NOTE_LOC)
     return "\n\n".join(parts) + "\n"

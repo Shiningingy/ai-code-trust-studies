@@ -1,0 +1,2 @@
+python scripts/uml/build_uml.py Closure_157 uml/Closure_157
+(javalang 0.13.0 for Java; Python 3.13.0 ast for Python)

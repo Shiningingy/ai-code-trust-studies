@@ -1,0 +1,88 @@
+You are an experienced software engineer with expertise in program analysis and automated bug fixing in Python projects. You are tasked with identifying and fixing a bug in a Python project.
+
+**Bug Report**:
+Unit equality comparison with None raises TypeError for UnrecognizedUnit
+```
+In [12]: x = u.Unit('asdf', parse_strict='silent')
+
+In [13]: x == None  # Should be False
+---------------------------------------------------------------------------
+TypeError                                 Traceback (most recent call last)
+<ipython-input-13-2486f2ccf928> in <module>()
+----> 1 x == None  # Should be False
+
+/Users/aldcroft/anaconda3/lib/python3.5/site-packages/astropy/units/core.py in __eq__(self, other)
+   1699 
+   1700     def __eq__(self, other):
+-> 1701         other = Unit(other, parse_strict='silent')
+   1702         return isinstance(other, UnrecognizedUnit) and self.name == other.name
+   1703 
+
+/Users/aldcroft/anaconda3/lib/python3.5/site-packages/astropy/units/core.py in __call__(self, s, represents, format, namespace, doc, parse_strict)
+   1808 
+   1809         elif s is None:
+-> 1810             raise TypeError("None is not a valid Unit")
+   1811 
+   1812         else:
+
+TypeError: None is not a valid Unit
+```
+
+
+**Additional Hints**:
+`x is None` works fine. Is there a reason why `==` is needed here?
+`x is None` would indeed be preferred, but `==` should never fail, so this is still a bug.
+
+
+You are currently located at `/testbed`, the root directory of a Python project checked out from GitHub at a specific commit. The project has failing test cases that expose the bug described above. The project's dependencies are already installed and the correct Python environment is active — you do **not** need to set up a virtualenv, run `pip install`, or activate conda.
+
+Your objective is to investigate and fix the underlying defect such that all failing tests pass without introducing regressions.
+
+Use appropriate debugging and development practices to:
+
+- Determine which test cases are failing and understand what they test.
+- Diagnose the root cause of failure by reading relevant source code.
+- Modify the **source code** (not the test files) to correct the issue.
+- Preserve existing functionality unless changes are required for correctness.
+- Run the full test suite after fixing the bug to confirm no regressions.
+
+**Final Output**:
+Your final output must be a **patch** that:
+- Fixes all failing test cases.
+- Does **not** modify test files.
+- Passes the full test suite without regressions.
+
+**Success Criteria**:
+- All previously failing tests now pass.
+- No new test failures (regressions).
+
+---
+### Known Failing Tests
+
+These tests currently fail and must pass after your fix:
+
+```
+astropy/units/tests/test_units.py::test_unknown_unit3
+```
+
+### Running Tests
+
+Two scripts are pre-generated in `/testbed/` (and use the right test runner for this project automatically — pytest or `runtests.py` as appropriate):
+
+- `./run_failing_tests.sh` — runs only the FAIL_TO_PASS tests with verbose output.
+- `./run_all_tests.sh` — runs FAIL_TO_PASS + PASS_TO_PASS to check for regressions.
+
+Use these instead of constructing your own `pytest` / `runtests.py` invocations.
+
+### Environment notes
+
+- Shell commands, including the scripts and commands named above, run through the `run` tool: it executes bash in the project's Linux environment, with this repository mounted as the working directory (/testbed). There is no network access.
+- The file tools (Read, Edit, Write, Glob, Grep) take this directory's own paths, absolute or relative. They cannot open /testbed paths: when a command's output names a file under /testbed, open the same relative path here.
+
+### How to work
+
+You lead this task and coordinate sub-agents through the Agent tool. Do not edit source files yourself. Your role is to localize the defect, plan the change, and decide each next step. For each step, start one or more sub-agents: for example, one per file or group of related edits you have localized, or one to investigate an open question. Give each sub-agent a self-contained brief: the goal, the relevant files and findings so far, and what to verify. Ask each sub-agent to end its work with a short written handoff: what it changed, what it verified (the commands it ran and their results), and what is still open. Decide the next step from the handoffs. You may read files and run commands yourself to localize the defect and to check results. When the work is complete, confirm the final state and finish.
+
+### Reference material
+
+The file `class-graph.puml` in this directory is a UML class graph (PlantUML text) of part of this project's code as checked out; its first lines state the scope. It lists classes with their fields and method signatures, inheritance, and which classes use which. A static analysis tool generated it.

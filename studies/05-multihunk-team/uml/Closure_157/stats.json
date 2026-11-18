@@ -1,0 +1,41 @@
+{
+ "bug": "Closure_157",
+ "budget_tokens": 50000,
+ "chosen_tier": "4",
+ "scope": "33 types from packages com.google.javascript.jscomp, com.google.javascript.jscomp.parsing, com.google.javascript.jscomp.testing, com.google.javascript.rhino, com.google.javascript.rhino.testing",
+ "tiers": [
+  {
+   "tier": "1",
+   "scope": "the whole main source tree",
+   "lines": 17277,
+   "chars": 1110264,
+   "approx_tokens": 277566,
+   "types": 887
+  },
+  {
+   "tier": "2",
+   "scope": "all types in packages com.google.javascript.jscomp, com.google.javascript.jscomp.parsing",
+   "lines": 12472,
+   "chars": 856200,
+   "approx_tokens": 214050,
+   "types": 679
+  },
+  {
+   "tier": "3",
+   "scope": "267 types from packages com.google.javascript.jscomp, com.google.javascript.jscomp.deps, com.google.javascript.jscomp.graph, com.google.javascript.jscomp.parsing, com.google.javascript.jscomp.testing, com.google.javascript.rhino, com.google.javascript.rhino.jstype, com.google.javascript.rhino.testing",
+   "lines": 7479,
+   "chars": 429934,
+   "approx_tokens": 107483,
+   "types": 267
+  },
+  {
+   "tier": "4",
+   "scope": "33 types from packages com.google.javascript.jscomp, com.google.javascript.jscomp.parsing, com.google.javascript.jscomp.testing, com.google.javascript.rhino, com.google.javascript.rhino.testing",
+   "lines": 1747,
+   "chars": 78090,
+   "approx_tokens": 19522,
+   "types": 33
+  }
+ ],
+ "sha256": "ed608cf3def397e6f8faf6e9d4ec247e694b3189ca3ce8aa88fc2aecb7dd1339"
+}

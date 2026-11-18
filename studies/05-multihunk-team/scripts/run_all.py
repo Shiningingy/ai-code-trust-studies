@@ -12,6 +12,7 @@ Usage: python run_all.py --plan                  (print the full order)
        python run_all.py --overnight             (9 Astropy runs, then Closure run 1 = arm S, then stop)
        python run_all.py --go                    (every run not yet done)
        python run_all.py --arm-l                 (Amendment 2: arm L, 3 Astropy then 3 Closure runs)
+       python run_all.py --arm-h                 (Amendment 3: arm H, 3 Closure runs)
 """
 import json
 import sys
@@ -50,6 +51,12 @@ def schedule_l():
     return rows
 
 
+def schedule_h():
+    """Amendment 3 (Allen, 2026-11-18): arm H (S + read RenamePrototypes.java first), Closure only, 3 runs,
+    after arm L. Slots r45-r47 (Sonnet 4.5)."""
+    return [{"k": k, "bug": CLOSURE, "arm": "H", "slot": BASE + 24 + k} for k in (1, 2, 3)]
+
+
 def dry_run(rows):
     out = STUDY / "prompts" / "rendered"
     out.mkdir(parents=True, exist_ok=True)
@@ -84,12 +91,14 @@ def go(rows):
 if __name__ == "__main__":
     rows = schedule()
     if "--plan" in sys.argv:
-        for r in [SMOKE] + rows + schedule_l():
+        for r in [SMOKE] + rows + schedule_l() + schedule_h():
             print(r)
     elif "--dry-run" in sys.argv:
-        dry_run(rows + schedule_l())
+        dry_run(rows + schedule_l() + schedule_h())
     elif "--arm-l" in sys.argv:
         go(schedule_l())
+    elif "--arm-h" in sys.argv:
+        go(schedule_h())
     elif "--smoke" in sys.argv:
         go([SMOKE])
     elif "--overnight" in sys.argv:

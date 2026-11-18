@@ -8,7 +8,8 @@ A high gold_added_found with a different approach elsewhere would point to recal
 its own. Trivial lines (blank, braces, 'else', 'return;') are left out so they do not inflate the overlap.
 
 Gold: Astropy-7606 = E:\\study05\\astropy-7606\\gold.diff; Closure_157 = the buggy->fixed diff used in
-verification (E:\\study05\\verify\\Closure_157\\fixed\\graded.diff, the Defects4J src patch reversed).
+verification (E:\\study05\\verify\\Closure_157\\fixed\\graded.diff). That file is Defects4J's src patch as stored,
+fixed -> buggy (grading applies it with reverse=True), so its + and - sides are swapped here (REVERSED).
 Writes E:\\study05\\runs\\similarity.json and prints a table.
 
 Usage: python similarity.py
@@ -21,6 +22,7 @@ import llm
 
 GOLD = {"astropy__astropy-7606": Path(r"E:\study05\astropy-7606\gold.diff"),
         "Closure_157": Path(r"E:\study05\verify\Closure_157\fixed\graded.diff")}
+REVERSED = {"Closure_157"}  # gold stored fixed -> buggy
 TRIVIAL = {"", "{", "}", "};", "else", "else {", "} else {", "return;", "pass", ")", "(", "*/", "/*", "*", "//"}
 
 
@@ -40,9 +42,11 @@ def changed(diff_text):
     return files, plus, minus
 
 
-def compare(agent_text, gold_text):
+def compare(agent_text, gold_text, reversed_gold=False):
     af, ap, am = changed(agent_text)
     gf, gp, gm = changed(gold_text)
+    if reversed_gold:
+        gp, gm = gm, gp
     a = {("+", x) for x in ap} | {("-", x) for x in am}
     g = {("+", x) for x in gp} | {("-", x) for x in gm}
     return {"files_shared": sorted(af & gf), "files_gold": len(gf),
@@ -60,7 +64,7 @@ def main():
             for diff in sorted((root / bug).glob("*/*/agent.diff")):
                 arm, run = diff.parent.parent.name, diff.parent.name
                 rows.append({"model": model, "bug": bug, "arm": arm, "run": run,
-                             **compare(diff.read_text(encoding="utf-8"), gold_text)})
+                             **compare(diff.read_text(encoding="utf-8"), gold_text, bug in REVERSED)})
     (llm.RUNS / "similarity.json").write_text(json.dumps(rows, indent=1), encoding="utf-8")
     print(f"{'model':<28}{'bug':<24}{'arm':<4}{'run':<7}{'files':<7}{'gold+found':<12}{'jaccard':<8}")
     for r in rows:

@@ -159,6 +159,17 @@ The overnight rule said: swap to **Astropy-8707** if it reproduces within about 
 
 **Not changed:** the frozen 18 runs, their prompts, tool behaviour and order; measures; time limits.
 
+### Amendment 3 (Allen, 2026-11-18, afternoon): arm H = S + "read RenamePrototypes.java first" (Closure only)
+
+**Why.** Of the first 7 Sonnet 4.5 Closure runs only T1 repaired the bug. Every run fixed the 12 trigger tests in `CodeGenerator`/`IRFactory`; the developer fix also changes `RenamePrototypes.java` (2 of its 7 hunks), and without that change two `RenamePrototypesTest` tests fail. Those failures show only in the full suite (about 13 min in this container). T1's leader was the only one to run it with the `run` tool's maximum timeout (1800 s); every other full-suite attempt (timeouts 60-650 s or the 300 s default) was cut off, and no other run opened `RenamePrototypes.java`. Arm H asks whether naming that file at the start is enough.
+
+**Changes.**
+1. **Arm H** = S's prompt + one block: "### Starting point — Before you start, read `src/com/google/javascript/jscomp/RenamePrototypes.java`: it is relevant to this defect." (`prompts.HINT_NOTE`; rendered `prompts/rendered/Closure_157_H.txt`). It names the file, not the change. Single agent, no sub-agent tool, no class_graph (base S, so the hint is the only difference from S's runs).
+2. **Runs:** Closure_157 only, 3 runs, after arm L: `run_all.py --arm-h`, slots r45-r47, Sonnet 4.5, same guards and time limits.
+3. **Correction to the patch-similarity check** (`similarity.py`): the Closure gold file is Defects4J's patch as stored (fixed → buggy), so its sides are now swapped before comparing. Corrected share of the gold's added lines found in the agent's patch: Sonnet 4.5 Closure runs 0.09-0.17, the 5.5 pilot 0.26 (the first figures, 0.07-0.43, compared against the buggy side). Astropy unchanged.
+
+**Not changed:** the frozen 18 runs, arm L, measures, time limits.
+
 ## Launch log
 
 - 2026-11-18: setup. Claude Code 2.1.289; Docker 27.2.0; images `swebench/sweb.eval.x86_64.astropy_1776_astropy-7606:v2` (3.88 GB), `study05/d4j:2.0.1` (4.05 GB, Ubuntu 22.04, Corretto 8u412, Defects4J v2.0.1). Graph SHA-256: Astropy `8a28ea8e…16f7e3`, Closure `ed608cf3…dd1339`. No agent run.

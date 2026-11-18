@@ -57,8 +57,8 @@ def expect_tools(arm):
         has_agent = "Agent" in tools or "Task" in tools
         if arm in TEAM and not has_agent:
             return "sub-agent tool missing"
-        if arm == "S" and has_agent:
-            return "sub-agent tool present in S"
+        if arm not in TEAM and has_agent:
+            return f"sub-agent tool present in {arm}"
         if arm in GRAPH and UML_TOOL not in tools:
             return f"class_graph tool missing in {arm}"
         if arm not in GRAPH and UML_TOOL in tools:

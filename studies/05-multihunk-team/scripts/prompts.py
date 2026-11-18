@@ -28,7 +28,15 @@ The `class_graph` tool returns a UML class graph (PlantUML text) of this project
 # added, the same neutral wording otherwise (no instruction to use the tool).
 GRAPH_NOTE_LOC = GRAPH_NOTE + " Every class shown also comes with the file (path from the project root) and the line range where it is defined."
 
-ARMS = ("S", "T", "U", "L")
+# Amendment 3 (Allen, 2026-11-18): arm H = S + a starting instruction naming the third developer-modified file,
+# the one no frozen run except T1 found (its two RenamePrototypesTest failures show only in the full suite).
+# Closure_157 only. It names the file, not the change.
+HINT = {"Closure_157": "src/com/google/javascript/jscomp/RenamePrototypes.java"}
+HINT_NOTE = """### Starting point
+
+Before you start, read `{path}`: it is relevant to this defect."""
+
+ARMS = ("S", "T", "U", "L", "H")
 
 
 def build(bug_id, arm):
@@ -39,4 +47,6 @@ def build(bug_id, arm):
         parts.append(GRAPH_NOTE)
     if arm == "L":
         parts.append(GRAPH_NOTE_LOC)
+    if arm == "H":
+        parts.append(HINT_NOTE.format(path=HINT[bug_id]))
     return "\n\n".join(parts) + "\n"

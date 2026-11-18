@@ -170,6 +170,17 @@ The overnight rule said: swap to **Astropy-8707** if it reproduces within about 
 
 **Not changed:** the frozen 18 runs, arm L, measures, time limits.
 
+### Amendment 4 (Allen, 2026-11-18, afternoon): arm F = S + "the full suite takes about 13 minutes" (Closure only)
+
+**Why.** Every frozen Closure run tried the full suite at least once, but only T1 gave the `run` tool a timeout long enough (1800 s, the maximum) for a suite that takes 777-790 s here; all other attempts (default 300 s, or 60-650 s) were cut off, and three of the failed runs (S1, U1, U2) ended with exactly the two `RenamePrototypesTest` failures T1 saw and then fixed. Allen: full suites of large projects commonly take 20-30 minutes, so a 13-minute suite is not unusual; arm F asks whether stating the duration is enough for the agent to wait for the result.
+
+**Changes.**
+1. **Arm F** = S's prompt + one block: "### Test durations — In this environment the full test suite (`defects4j test`) takes about 13 minutes to run; `./run_bug_exposing_tests.sh` takes about 30 seconds." (`prompts.SUITE_NOTE`; rendered `prompts/rendered/Closure_157_F.txt`). Durations only: it does not mention the timeout parameter, whose default (300 s) and maximum (1800 s) the `run` tool's own description already gives. Single agent, base S.
+2. **Runs:** Closure_157 only, 3 runs, after arm H: slots r48-r50, Sonnet 4.5, same guards and time limits. `run_all.py --extra` runs L, H, F in that order (done runs skipped).
+3. **Order and concurrency:** the 3 Astropy L runs ran alongside the frozen batch's last Closure runs (S3 grading, T3), since Astropy's tests take seconds; every Closure run stays one at a time, because concurrent load slowed the Closure full suite by 10-35% (869-1,044 s against 777-790 s alone), which would change the very timing the results turn on.
+
+**Not changed:** the frozen 18 runs, arms L and H, measures, time limits.
+
 ## Launch log
 
 - 2026-11-18: setup. Claude Code 2.1.289; Docker 27.2.0; images `swebench/sweb.eval.x86_64.astropy_1776_astropy-7606:v2` (3.88 GB), `study05/d4j:2.0.1` (4.05 GB, Ubuntu 22.04, Corretto 8u412, Defects4J v2.0.1). Graph SHA-256: Astropy `8a28ea8e…16f7e3`, Closure `ed608cf3…dd1339`. No agent run.

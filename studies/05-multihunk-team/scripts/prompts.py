@@ -36,7 +36,14 @@ HINT_NOTE = """### Starting point
 
 Before you start, read `{path}`: it is relevant to this defect."""
 
-ARMS = ("S", "T", "U", "L", "H")
+# Amendment 4 (Allen, 2026-11-18): arm F = S + the full suite's measured duration in this environment (grading
+# runs of the 4.5 Closure runs: 777-790 s alone). It states the duration only; the `run` tool's own description
+# already gives its timeout default (300 s) and maximum (1800 s). Closure_157 only.
+SUITE_NOTE = {"Closure_157": """### Test durations
+
+In this environment the full test suite (`defects4j test`) takes about 13 minutes to run; `./run_bug_exposing_tests.sh` takes about 30 seconds."""}
+
+ARMS = ("S", "T", "U", "L", "H", "F")
 
 
 def build(bug_id, arm):
@@ -49,4 +56,6 @@ def build(bug_id, arm):
         parts.append(GRAPH_NOTE_LOC)
     if arm == "H":
         parts.append(HINT_NOTE.format(path=HINT[bug_id]))
+    if arm == "F":
+        parts.append(SUITE_NOTE[bug_id])
     return "\n\n".join(parts) + "\n"

@@ -13,6 +13,8 @@ Usage: python run_all.py --plan                  (print the full order)
        python run_all.py --go                    (every run not yet done)
        python run_all.py --arm-l                 (Amendment 2: arm L, 3 Astropy then 3 Closure runs)
        python run_all.py --arm-h                 (Amendment 3: arm H, 3 Closure runs)
+       python run_all.py --arm-f                 (Amendment 4: arm F, 3 Closure runs)
+       python run_all.py --extra                 (arms L, H, F in that order; done runs skipped)
 """
 import json
 import sys
@@ -57,6 +59,12 @@ def schedule_h():
     return [{"k": k, "bug": CLOSURE, "arm": "H", "slot": BASE + 24 + k} for k in (1, 2, 3)]
 
 
+def schedule_f():
+    """Amendment 4 (Allen, 2026-11-18): arm F (S + the full suite takes about 13 minutes), Closure only, 3 runs,
+    after arm H. Slots r48-r50 (Sonnet 4.5)."""
+    return [{"k": k, "bug": CLOSURE, "arm": "F", "slot": BASE + 27 + k} for k in (1, 2, 3)]
+
+
 def dry_run(rows):
     out = STUDY / "prompts" / "rendered"
     out.mkdir(parents=True, exist_ok=True)
@@ -91,10 +99,14 @@ def go(rows):
 if __name__ == "__main__":
     rows = schedule()
     if "--plan" in sys.argv:
-        for r in [SMOKE] + rows + schedule_l() + schedule_h():
+        for r in [SMOKE] + rows + schedule_l() + schedule_h() + schedule_f():
             print(r)
     elif "--dry-run" in sys.argv:
-        dry_run(rows + schedule_l() + schedule_h())
+        dry_run(rows + schedule_l() + schedule_h() + schedule_f())
+    elif "--extra" in sys.argv:  # amendments 2-4 in order: arm L (Astropy runs done earlier are skipped), H, F
+        go(schedule_l() + schedule_h() + schedule_f())
+    elif "--arm-f" in sys.argv:
+        go(schedule_f())
     elif "--arm-l" in sys.argv:
         go(schedule_l())
     elif "--arm-h" in sys.argv:

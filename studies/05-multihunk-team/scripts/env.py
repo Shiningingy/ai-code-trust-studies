@@ -71,6 +71,23 @@ def write_exclude(tree, kind):
     (tree / ".git" / "info" / "exclude").write_text("\n".join(EXCLUDE[kind]) + "\n", encoding="utf-8")
 
 
+def blank_props(path, keys):
+    """D6: keep the keys Defects4J's check.properties needs, but with empty values (no class names)."""
+    if not keys:
+        return
+    out = []
+    for ln in path.read_text(encoding="utf-8").splitlines():
+        k = ln.split("=", 1)[0]
+        out.append(f"{k}=" if k in keys else ln)
+    path.write_text("\n".join(out) + "\n", encoding="utf-8", newline="\n")
+
+
+def restore_props(bug, tree):
+    """Grading: put back the original defects4j.build.properties (as checked out by Defects4J)."""
+    if bug.get("props_blank"):
+        shutil.copy2(bug["checkout"] / "defects4j.build.properties", tree / "defects4j.build.properties")
+
+
 def prepare_d4j(bug):
     """Defects4J checkout (made in the image: defects4j checkout -p Closure -v 157b) minus its .git, which
     holds the fixed version as the parent commit; fresh git with one commit; the paper's two scripts beside it."""
@@ -85,6 +102,7 @@ def prepare_d4j(bug):
             raise RuntimeError(out[-1500:])
     rmtree(base)
     shutil.copytree(co, base, ignore=shutil.ignore_patterns(".git"))
+    blank_props(base / "defects4j.build.properties", bug.get("props_blank", []))
     git(base, "init", "-q")
     git(base, "config", "core.filemode", "false")
     git(base, "config", "core.autocrlf", "false")
@@ -112,7 +130,7 @@ def prepare_swe(bug):
     shutil.copytree(co, base, symlinks=True)
     git(base, "config", "core.filemode", "false")
     git(base, "config", "core.autocrlf", "false")
-    r = swe_record()
+    r = swe_record(bug["id"])
     (base / ".swebench_test_patch.diff").write_text(r["test_patch"], encoding="utf-8", newline="\n")
     git(base, "apply", ".swebench_test_patch.diff")
     (base / ".swebench_test_patch.diff").unlink()
@@ -138,7 +156,7 @@ def prepare_swe(bug):
 
 
 def prepare(bug_id):
-    bug = BUGS[bug_id]
+    bug = dict(BUGS[bug_id], id=bug_id)
     return prepare_d4j(bug) if bug["kind"] == "d4j" else prepare_swe(bug)
 
 
@@ -192,7 +210,7 @@ def verify(bug_id):
                      "cd /opt/defects4j/framework/projects/Closure && cat patches/157.src.patch", check=True)[1]
         fixed = grade.grade_patch(bug_id, fix, out / "fixed", reverse=True, force=True)  # D4J stores fixed->buggy
     else:
-        fixed = grade.grade_patch(bug_id, swe_record()["patch"], out / "fixed", force=True)
+        fixed = grade.grade_patch(bug_id, swe_record(bug_id)["patch"], out / "fixed", force=True)
     rec = {"bug": bug_id, "buggy": empty, "fixed": fixed}
     (out / "verify.json").write_text(json.dumps(rec, indent=1), encoding="utf-8")
     print(json.dumps(rec, indent=1))

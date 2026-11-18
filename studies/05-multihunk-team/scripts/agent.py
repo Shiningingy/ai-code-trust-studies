@@ -2,8 +2,9 @@
 no-network container, `claude -p` with file tools + the container's `run` tool (+ the Agent tool in T/U),
 then the patch, the paper's measures (grade.py) and the leak check.
 
-Writes E:\\study05\\runs\\<bug>\\<arm>\\run<k>\\: prompt.txt, command.json, transcript.jsonl (stream-json, with
-sub-agent messages forwarded), box.jsonl (every `run` command), run.json, agent.diff, after/, grade/, leaks.json.
+Writes E:\\study05\\runs\\<bug>\\<arm>\\run<k>\\ (k = 0: smoke\\): prompt.txt, command.json, transcript.jsonl
+(stream-json, with sub-agent messages forwarded), box.jsonl (every `run` command), uml.jsonl (arm U: every
+class_graph call), run.json, agent.diff, after/, grade/, leaks.json.
 
 Usage: python agent.py <bug id> <S|T|U> <k> <slot> --dry-run | --go
 """
@@ -20,15 +21,21 @@ import llm
 import prompts
 from bugs import BUGS, STUDY
 
-TIME_LIMIT = 90 * 60  # wall clock per run, same for every arm (Closure's full suite takes ~13 min on the bind mount)
-EFFORT = "medium"     # as Study 04; pinned so arms and runs match
+# 2026-11-18 decisions (plan.md): D4 no --effort flag; D5 time limits as the paper's runners; D7 arm U gets the
+# class_graph MCP tool (uml/uml_mcp.py) instead of a pre-placed graph file. k = 0 is the smoke run (folder smoke/).
+# D5: HunkSWE automated_claude_cli.py --duration-min default 30; Hunk4J's wrapper has no timeout (None = no cap).
+TIME_LIMIT = {"swe": 30 * 60, "d4j": None}
+EFFORT = None         # D4: no --effort flag, as the paper's command line; the CLI default applies
 ATTEMPTS = 3          # first run + up to two reruns for infrastructure errors (limit hits are not counted)
-START_BELOW = {"astropy__astropy-7606": 0.80, "Closure_157": 0.35}  # five-hour utilization bar to start a run
+# five-hour utilization bar to start a run (checked between runs only); Closure's bar leaves room for a long run
+START_BELOW = {"astropy__astropy-7606": 0.80, "astropy__astropy-8707": 0.80, "Closure_157": 0.35}
+UML_TOOL = "mcp__uml__class_graph"
 FILE_TOOLS = "Read,Edit,Write,Glob,Grep,TodoWrite"  # the paper's Claude runs used TodoWrite (tools_count_claude.csv)
 
 
-def graph_path(bug_id):
-    return STUDY / "uml" / bug_id / "graph.puml"
+def index_path(bug_id):
+    """Arm U tool index (uml/build_index.py): the full static graph of the buggy main source tree."""
+    return llm.RUNS.parent / "uml" / bug_id / "index.puml"
 
 
 def tools_for(arm):
@@ -46,6 +53,10 @@ def expect_tools(arm):
             return "sub-agent tool missing"
         if arm == "S" and has_agent:
             return "sub-agent tool present in S"
+        if arm == "U" and UML_TOOL not in tools:
+            return "class_graph tool missing in U"
+        if arm != "U" and UML_TOOL in tools:
+            return "class_graph tool present outside U"
         return None
     return check
 
@@ -58,15 +69,42 @@ def neutral_box_server(slot):
     return d / "box_mcp.py", d / f"box-r{slot:02d}.jsonl"
 
 
-def extra_args(arm, box, box_log, server=Path("box_mcp.py")):
-    mcp = {"mcpServers": {"box": {"command": sys.executable, "args": [str(server), box, str(box_log)]}}}
-    return ["--tools", tools_for(arm), "--mcp-config", json.dumps(mcp), "--strict-mcp-config",
-            "--allowedTools", "mcp__box__run", "--permission-mode", "acceptEdits", "--permission-prompts", "none",
+def neutral_uml_server(bug_id, slot):
+    """Arm U: the class_graph server script and a copy of the bug's index, also under E:\\w\\tools."""
+    d = env.WORK / "tools"
+    d.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(Path(__file__).parent / "uml" / "uml_mcp.py", d / "uml_mcp.py")
+    idx = d / f"index-r{slot:02d}.puml"
+    shutil.copy2(index_path(bug_id), idx)
+    return d / "uml_mcp.py", idx, d / f"uml-r{slot:02d}.jsonl"
+
+
+def extra_args(arm, box, box_log, server=Path("box_mcp.py"), uml=None):
+    """uml: (server script, index file, log file) for arm U."""
+    servers = {"box": {"command": sys.executable, "args": [str(server), box, str(box_log)]}}
+    allowed = "mcp__box__run"
+    if arm == "U":
+        u_server, u_index, u_log = uml or (Path("uml_mcp.py"), Path("<index.puml>"), Path("<uml.jsonl>"))
+        servers["uml"] = {"command": sys.executable, "args": [str(u_server), str(u_index), str(u_log)]}
+        allowed += "," + UML_TOOL
+    return ["--tools", tools_for(arm), "--mcp-config", json.dumps({"mcpServers": servers}), "--strict-mcp-config",
+            "--allowedTools", allowed, "--permission-mode", "acceptEdits", "--permission-prompts", "none",
             "--forward-subagent-text"]
 
 
+def count_tool(events, names):
+    """tool_use blocks with one of these names, leader and sub-agents (forwarded messages) alike."""
+    n = 0
+    for e in events:
+        if e.get("type") == "assistant":
+            for c in (e.get("message") or {}).get("content") or []:
+                if isinstance(c, dict) and c.get("type") == "tool_use" and c.get("name") in names:
+                    n += 1
+    return n
+
+
 def out_dir(bug_id, arm, k):
-    return llm.RUNS / bug_id / arm / f"run{k}"
+    return llm.RUNS / bug_id / arm / ("smoke" if k == 0 else f"run{k}")
 
 
 def capture(work, out, base):
@@ -93,8 +131,8 @@ def dry_run(bug_id, arm, k, slot):
     work = env.WORK / f"r{slot:02d}"
     cmd = llm.base_cmd(llm.SONNET, EFFORT) + extra_args(arm, "<container>", "<box.jsonl>")
     return {"bug": bug_id, "arm": arm, "k": k, "slot": slot, "cwd": str(work),
-            "graph_file": str(graph_path(bug_id)) if arm == "U" else None,
-            "timeout_s": TIME_LIMIT, "command": cmd, "prompt": prompt,
+            "uml_index": str(index_path(bug_id)) if arm == "U" else None,
+            "timeout_s": TIME_LIMIT[BUGS[bug_id]["kind"]], "command": cmd, "prompt": prompt,
             "leak_words_in_prompt": check_leaks.scan_text(prompt) + check_leaks.scan_text(str(work))}
 
 
@@ -111,29 +149,41 @@ def run(bug_id, arm, k, slot):
     attempt, limits = 0, 0
     while attempt < ATTEMPTS:
         attempt += 1
-        work = env.fresh_workspace(bug_id, slot, graph_path(bug_id) if arm == "U" else None)
+        llm.wait_for_room(START_BELOW[bug_id])  # the between-runs five-hour check, before the tree and box exist
+        work = env.fresh_workspace(bug_id, slot)
         box = env.start_box(bug_id, work, name=f"box-{arm}{k}")
         started = time.strftime("%Y-%m-%dT%H:%M:%S%z")
+        uml, rate_before, rate_after = None, llm.read_rate(), None
         try:
             server, box_log = neutral_box_server(slot)
             box_log.unlink(missing_ok=True)
-            extra = extra_args(arm, box, box_log, server)
+            if arm == "U":
+                uml = neutral_uml_server(bug_id, slot)
+                uml[2].unlink(missing_ok=True)
+            extra = extra_args(arm, box, box_log, server, uml)
             (out / "command.json").write_text(json.dumps(llm.base_cmd(llm.SONNET, EFFORT) + extra, indent=1),
                                               encoding="utf-8")
             r = llm.call(prompt, role="agent", bug=bug_id, tag=f"{arm}{k}", model=llm.SONNET, effort=EFFORT,
-                         cwd=work, extra=extra, timeout=TIME_LIMIT, transcript=out / "transcript.jsonl",
-                         expect_tools=expect_tools(arm), pause_at=START_BELOW[bug_id])
+                         cwd=work, extra=extra, timeout=TIME_LIMIT[BUGS[bug_id]["kind"]],
+                         transcript=out / "transcript.jsonl", expect_tools=expect_tools(arm),
+                         pause_at=START_BELOW[bug_id])
+            rate_after = llm.read_rate()
         finally:
             env.stop_box(box)
             if box_log.exists():
                 shutil.move(str(box_log), str(out / "box.jsonl"))
+            if uml and uml[2].exists():
+                shutil.move(str(uml[2]), str(out / "uml.jsonl"))
         rec = {"bug": bug_id, "arm": arm, "k": k, "slot": slot, "cwd": str(work), "started": started,
                "model": llm.SONNET, "effort": EFFORT, "attempt": attempt, "status": r["status"],
                "seconds": r["seconds"], "num_turns": r["num_turns"], "usage": r["usage"],
                "total_tokens": llm.total_tokens(r["usage"]), "model_usage": r["model_usage"],
                "init_model": r["init"].get("model"), "init_tools": r["init"].get("tools"),
                "init_cwd": r["init"].get("cwd"), "cc_version": r["init"].get("claude_code_version"),
-               "mismatch": r["mismatch"]}
+               "mismatch": r["mismatch"], "time_limit_s": TIME_LIMIT[BUGS[bug_id]["kind"]],
+               "rate_before": rate_before, "rate_after": rate_after,
+               "subagents": count_tool(r["events"], ("Agent", "Task")),
+               "uml_calls": count_tool(r["events"], (UML_TOOL,))}
         if r["status"] == "tool_mismatch":
             (out / "run.json").write_text(json.dumps(rec, indent=1), encoding="utf-8")
             raise SystemExit(f"tool check failed on {bug_id} {arm}{k}: {r['mismatch']}; fix the harness first")

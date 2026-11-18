@@ -56,4 +56,4 @@ You lead this task and coordinate sub-agents through the Agent tool. Do not edit
 
 ### Reference material
 
-The file `class-graph.puml` in this directory is a UML class graph (PlantUML text) of part of this project's code as checked out; its first lines state the scope. It lists classes with their fields and method signatures, inheritance, and which classes use which. A static analysis tool generated it.
+The `class_graph` tool returns a UML class graph (PlantUML text) of this project's main source code, produced by a static parser from the code as checked out at the start of the session. Give it a class name or a package/module name, and optionally a number of hops: it shows the matching classes with their fields and method signatures, plus the classes related to them within that many steps (inheritance, field types, uses), with the relationships between them.

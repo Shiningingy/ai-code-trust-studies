@@ -84,6 +84,8 @@ def grade_patch(bug_id, diff, out, reverse=False, force=False):
         if not rec["applied"]:
             rec.update(compiled=False, failed_after=None, repair=0, regression_reduction=None, localization=0)
             return rec
+        if bug["kind"] == "d4j":
+            env.restore_props(bug, tree)
         box = env.start_box(bug_id, tree, "grade")
         if bug["kind"] == "d4j":
             code, log = env.exec_box(box, "defects4j compile", timeout=1200)
@@ -99,7 +101,7 @@ def grade_patch(bug_id, diff, out, reverse=False, force=False):
                 rec["trigger_still_failing"] = sorted(set(failing) & set(bug["failing_tests"]))
                 rec["new_failures"] = sorted(set(failing) - set(bug["failing_tests"]))
         else:
-            r = swe_record()
+            r = swe_record(bug_id)
             test_files = sorted({ln.split(" b/", 1)[1].strip() for ln in r["test_patch"].splitlines()
                                  if ln.startswith("diff --git a/")})
             env.git(tree, "checkout", "HEAD", "--", *test_files)

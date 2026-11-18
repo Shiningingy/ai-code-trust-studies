@@ -18,9 +18,9 @@ Fixed on 2026-11-18, before any trajectory exists. Allen codes each of the 18 ru
 | T2 | T, U: did a handoff lose information the next step needed? (which handoff, what was lost, how it showed) | no / yes: details |
 | T3 | T, U: did the leader edit source itself despite the instruction? | no / yes: step |
 | T4 | T, U: did two sub-agents edit the same file, and did one undo the other? | no / yes: details |
-| U1 | U: step at which the leader first opened `class-graph.puml`; step at which any sub-agent first opened it | step / `-`, per role |
-| U2 | U: did a brief from the leader mention or pass on the graph? | no / yes: step |
-| U3 | U: did a decision cite the graph (a stated reason that uses a relationship or member found there)? | no / yes: quote + step |
+| U1 | U: step at which the leader first called the `class_graph` tool; step at which any sub-agent first called it (D7, 2026-11-18: a tool replaced the pre-placed `class-graph.puml`; all calls are also in `uml.jsonl`) | step / `-`, per role |
+| U2 | U: did a brief from the leader mention the tool or pass on something it returned? | no / yes: step |
+| U3 | U: did a decision cite a tool answer (a stated reason that uses a relationship or member found there)? | no / yes: quote + step |
 
 Notes for coding:
 - "Developer-modified files" are the bug's `buggy_files` in `scripts/bugs.py` (Astropy: `core.py`, two hunks; Closure: `CodeGenerator.java`, `IRFactory.java`, `RenamePrototypes.java`). For Astropy, H1-H3 are recorded per hunk (`UnitBase.__eq__`, `UnrecognizedUnit.__eq__`) since both are in one file.

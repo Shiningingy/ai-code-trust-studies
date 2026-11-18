@@ -1,16 +1,18 @@
-"""The 18 runs (2 bugs x 3 arms x 3 runs) in the fixed order of plan.md, one at a time.
+"""The runs in the fixed order of plan.md (D8, 2026-11-18), one at a time.
 
-Order: rounds k = 1, 2, 3; in each round astropy first, then Closure; within a bug the three arms in an order
-shuffled with seed 20261118 + k (so no arm always runs first or last). Each run has its own folder slot
-E:\\w\\r01..r18, kept after the run for hand coding. Done runs are skipped, so a rerun resumes.
-S runs only with --with-control (it is the recommended control, pending Allen's OK).
+Bugs: Astropy-7606 (kept after the pre-check; the planned swap 8707 does not reproduce, plan.md Amendments)
+and Closure_157. Within a bug the arms rotate per
+round: k=1 S T U, k=2 T U S, k=3 U S T. Slots: r00 = smoke run (Astropy, arm S, not counted), r01-r09 Astropy,
+r10-r18 Closure. Each slot E:\\w\\rNN is kept after its run for hand coding. Done runs are skipped, so a rerun
+resumes.
 
-Usage: python run_all.py --plan                 (print the order)
-       python run_all.py --dry-run [--with-control]   (write and print every prompt and command; no model call)
-       python run_all.py --go [--with-control]        (real runs; only after Allen approves plan.md)
+Usage: python run_all.py --plan                  (print the full order)
+       python run_all.py --dry-run               (write and print every prompt and command; no model call)
+       python run_all.py --smoke                 (the smoke run only)
+       python run_all.py --overnight             (9 Astropy runs, then Closure run 1 = arm S, then stop)
+       python run_all.py --go                    (every run not yet done)
 """
 import json
-import random
 import sys
 import time
 
@@ -19,19 +21,18 @@ import env
 import llm
 from bugs import STUDY
 
-BUG_ORDER = ["astropy__astropy-7606", "Closure_157"]
+ASTROPY, CLOSURE = "astropy__astropy-7606", "Closure_157"
+BUG_ORDER = [ASTROPY, CLOSURE]
+ROTATION = {1: ["S", "T", "U"], 2: ["T", "U", "S"], 3: ["U", "S", "T"]}
+SMOKE = {"k": 0, "bug": ASTROPY, "arm": "S", "slot": 0}
 
 
-def schedule(with_control=True):
+def schedule():
     rows, slot = [], 0
-    for k in (1, 2, 3):
-        for bug in BUG_ORDER:
-            arms = ["S", "T", "U"]
-            random.Random(20261118 + k).shuffle(arms)
-            for arm in arms:
+    for bug in BUG_ORDER:
+        for k in (1, 2, 3):
+            for arm in ROTATION[k]:
                 slot += 1
-                if arm == "S" and not with_control:
-                    continue
                 rows.append({"k": k, "bug": bug, "arm": arm, "slot": slot})
     return rows
 
@@ -54,23 +55,31 @@ def dry_run(rows):
 
 def go(rows):
     print(time.strftime("%Y-%m-%d %H:%M"), "Claude Code", llm.cli_version(), "pinned", llm.PIN, flush=True)
-    for b in BUG_ORDER:
+    for b in {r["bug"] for r in rows}:
         env.prepare(b)
     for r in rows:
+        print(time.strftime("%H:%M"), "START", r["bug"], r["arm"], r["k"], "slot", r["slot"], "rate", llm.read_rate(),
+              flush=True)
         rec = agent.run(r["bug"], r["arm"], r["k"], r["slot"])
         g = rec.get("grade") or {}
         print(time.strftime("%H:%M"), "DONE", r["bug"], r["arm"], r["k"], rec["status"], rec["seconds"], "s",
               rec["total_tokens"], "tokens", "repair", g.get("repair"), "LS", g.get("localization"),
-              "RR", g.get("regression_reduction"), flush=True)
+              "RR", g.get("regression_reduction"), "subagents", rec.get("subagents"), "uml", rec.get("uml_calls"),
+              "rate_after", rec.get("rate_after"), flush=True)
 
 
 if __name__ == "__main__":
-    rows = schedule("--with-control" in sys.argv or "--plan" in sys.argv)
+    rows = schedule()
     if "--plan" in sys.argv:
-        for r in rows:
+        for r in [SMOKE] + rows:
             print(r)
     elif "--dry-run" in sys.argv:
         dry_run(rows)
+    elif "--smoke" in sys.argv:
+        go([SMOKE])
+    elif "--overnight" in sys.argv:
+        go([r for r in rows if r["bug"] == ASTROPY] + [r for r in rows if r["bug"] == CLOSURE and r["arm"] == "S"
+                                                       and r["k"] == 1])
     elif "--go" in sys.argv:
         go(rows)
     else:

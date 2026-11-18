@@ -9,6 +9,10 @@ Copied from Study 04 (scripts/llm.py) with these changes only:
 
 Isolation as in Study 04: no settings sources, user CLAUDE.md excluded, auto-memory off, CLAUDE*/ANTHROPIC*
 env vars dropped. Usage guards: pause at PAUSE_AT five-hour utilization, stop at WEEK_STOP seven-day.
+
+2026-11-18 decisions: no --effort flag (D4: the paper passed none; the CLI default is recorded); the weekly stop
+is set near 0.99 only to catch a real limit (weekly is not a concern for Study 05); the five-hour check runs
+once per agent run, before it starts (each run is one `claude -p` call), never inside a run.
 """
 import json
 import os
@@ -30,7 +34,7 @@ SONNET = "claude-sonnet-5-5"
 
 RATE = RUNS / "ratelimit.json"
 PAUSE_AT = float(os.environ.get("STUDY_PAUSE_AT", "0.80"))
-WEEK_STOP = float(os.environ.get("STUDY_WEEK_STOP", "0.75"))
+WEEK_STOP = float(os.environ.get("STUDY_WEEK_STOP", "0.99"))
 
 
 def clean_env():
@@ -44,10 +48,15 @@ def cli_version():
     return p.stdout.decode("utf-8", "replace").split()[0] if p.stdout else None
 
 
-def base_cmd(model, effort):
+def base_cmd(model, effort=None):
+    """effort None = no --effort flag (the CLI default), as the paper's runs."""
     return [CLAUDE, "-p", "--setting-sources", "", "--settings", json.dumps(ISOLATION),
-            "--model", model, "--effort", effort, "--no-session-persistence",
+            "--model", model, *(["--effort", effort] if effort else []), "--no-session-persistence",
             "--output-format", "stream-json", "--verbose"]
+
+
+def read_rate():
+    return json.loads(RATE.read_text(encoding="utf-8")) if RATE.exists() else None
 
 
 def classify(code, result, stderr, timed_out):

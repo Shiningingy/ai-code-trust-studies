@@ -1,0 +1,13 @@
+{
+ "files": 377,
+ "types": 887,
+ "members": 10394,
+ "edges": 5083,
+ "lines": 17276,
+ "chars": 1110264,
+ "approx_tokens": 277566,
+ "bug": "Closure_157",
+ "source": "E:\\study05\\base\\closure-157-tree",
+ "sha256": "205a37e78298033dcaecf7d185f9cd974184e3502bc274506a55fdf303168c4f",
+ "python": "3.13.0"
+}

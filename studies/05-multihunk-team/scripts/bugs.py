@@ -31,8 +31,8 @@ CLOSURE_TRIGGER = [
 ]
 
 
-def swe_record():
-    return json.loads((DATA / "astropy-7606" / "record.json").read_text(encoding="utf-8"))
+def swe_record(bug_id):
+    return json.loads((BUGS[bug_id]["data"] / "record.json").read_text(encoding="utf-8"))
 
 
 BUGS = {
@@ -47,6 +47,10 @@ BUGS = {
         "failing_tests": CLOSURE_TRIGGER,
         "failed_before": 12,                    # the paper's failed_test_prior = number of triggered tests
         "harness_files": ["run_bug_exposing_tests.sh", "run_all_tests_trace.sh"],
+        # D6 (2026-11-18): these defects4j.build.properties keys name the developer-modified classes. The file
+        # cannot be removed (Defects4J's check.properties target fails without it, so compile/test/export break),
+        # so in the run tree the keys are kept but emptied; grading restores the original file.
+        "props_blank": ["d4j.classes.modified", "d4j.classes.relevant"],
         # SCORING ONLY
         "buggy_files": ["src/com/google/javascript/jscomp/CodeGenerator.java",
                         "src/com/google/javascript/jscomp/parsing/IRFactory.java",
@@ -56,6 +60,7 @@ BUGS = {
         "kind": "swe",
         "image": "swebench/sweb.eval.x86_64.astropy_1776_astropy-7606:v2",
         "image_digest": "sha256:f4bcd149eb4cfcd9017d798f2b5b40a0b4c85c62390667f2b2f751cff29a184f",
+        "data": DATA / "astropy-7606",
         "checkout": BASE / "astropy-7606",      # /testbed copied out of the image (history ends at base_commit)
         "base": BASE / "astropy-7606-tree",     # + test_patch committed as HEAD, as the paper's harness does
         "template": PROMPTS / "paper_hunkswe_prompt.md",
@@ -72,6 +77,32 @@ BUGS = {
         "harness_files": ["run_failing_tests.sh", "run_all_tests.sh", ".swebench/"],
         # SCORING ONLY
         "buggy_files": ["astropy/units/core.py"],
+        # Pre-check 2026-11-18 (results.md): with the official swebench 4.1.0 grader the gold patch is
+        # "not resolved" here (failed count 1, the [] name); the paper's four agents all have failed count 1,
+        # i.e. each made the failing test pass with no regression. The planned swap (astropy-8707) does not
+        # reproduce either (below), so 7606 is KEPT and flagged, as the overnight rule says.
+    },
+    # NOT USED. The other HunkSWE bug all four agents localized and none repaired (Table 5). Set up 2026-11-18 as the
+    # planned swap, but in its pinned image the gold patch also fails (all TestHeaderFunctions tests ERROR in setup:
+    # pytest turns the nose-style setup() deprecation warning into an error), failed count 8 = buggy = the paper's
+    # Claude/Codex/Gemini count; official swebench 4.1.0 gives RESOLVED_NO for gold. So it cannot be repaired here.
+    "astropy__astropy-8707": {
+        "kind": "swe",
+        "image": "swebench/sweb.eval.x86_64.astropy_1776_astropy-8707:v2",
+        "image_digest": "sha256:55e63ac83d4ab4a2e1e584adbd7b47f5a2fd43d131fe26d0e12103024915f13b",
+        "data": DATA / "astropy-8707",          # record.json from the package's swe_bench.jsonl, gold.diff, test.diff
+        "checkout": BASE / "astropy-8707",
+        "base": BASE / "astropy-8707-tree",
+        "template": PROMPTS / "paper_hunkswe_prompt.md",
+        "package": "astropy",
+        "failing_tests": ["astropy/io/fits/tests/test_header.py::TestHeaderFunctions::test_card_from_bytes"],
+        "test_cmd": "pytest -rA -vv -o console_output_style=classic --tb=no",
+        "test_directives": "astropy/io/fits/tests/test_header.py",
+        "failed_before": 1,                     # the paper's failed_test_prior (claude_repair_ability.csv)
+        "test_aliases": {},
+        "harness_files": ["run_failing_tests.sh", "run_all_tests.sh", ".swebench/"],
+        # SCORING ONLY
+        "buggy_files": ["astropy/io/fits/card.py", "astropy/io/fits/header.py"],
     },
 }
 
@@ -83,7 +114,7 @@ def render_paper_prompt(bug_id):
     if b["kind"] == "d4j":  # claude-cli-automation/automated_claude_cli.py: read_base_prompt_and_inject
         return (tpl.replace("{{bug_title}}", b["title"] or "title unavailable")
                    .replace("{{bug_description}}", (b["description"] or "").strip()))
-    r = swe_record()  # hunk-swe/swe_bench_utils/config.py: render_prompt
+    r = swe_record(bug_id)  # hunk-swe/swe_bench_utils/config.py: render_prompt
     f2p = json.loads(r["FAIL_TO_PASS"]) if isinstance(r["FAIL_TO_PASS"], str) else r["FAIL_TO_PASS"]
     hints = (r.get("hints_text") or "").strip()
     hints_section = f"**Additional Hints**:\n{hints}\n" if hints else ""

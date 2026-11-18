@@ -1,14 +1,14 @@
 # Study 05: do sub-agents help on the multi-hunk bugs no single agent fixed?
 
-**Status: setup only. No agent run has been made.** The plan ([plan.md](plan.md)) is a draft waiting for Allen's decisions and approval; runs spend his Claude quota and start only after that.
+**Status: plan frozen 2026-11-18 (all decisions settled by Allen); first night in overnight mode: smoke run, 9 Astropy runs, 1 Closure run (arm S). Results: [results.md](results.md).** Pre-run checks found that the paper's "unsolved" Astropy-7606 is a grading artefact (plan.md, "Pre-run checks").
 
 ## The question
 
 "Beyond Accuracy: Behavioral Dynamics of Agentic Multi-Hunk Repair" (TOSEM 2026, arXiv 2511.11012v3) ran four coding-agent CLIs, one trajectory per bug, with no planner or sub-agents. Two bugs that none of them repaired are replayed here with Claude Code on Sonnet 5.5, three times each, in three arms:
 
-- **S**: the paper's own prompt, one agent, sub-agent tool off (recommended control, pending Allen's OK);
+- **S**: the paper's own prompt, one agent, sub-agent tool off (the control);
 - **T**: the same prompt plus a leader block: the leader localizes and plans, sub-agents edit and test, each returns a short written handoff;
-- **U**: T plus a static UML class graph of the buggy code in the workspace.
+- **U**: T plus a `class_graph` tool (MCP, Maple-style) that returns a static UML class graph of the buggy code for the scope the agent asks.
 
 Bugs: **Astropy-7606** (SWE-bench Verified; all four agents found the file, none repaired it) and **Closure_157** (Defects4J; none localized it; the paper's Section 5 traces two new failures to an unmodified third file).
 

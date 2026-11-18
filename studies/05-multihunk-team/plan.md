@@ -1,8 +1,8 @@
 # Study 05 plan: do sub-agents help on multi-hunk bugs that no single agent fixed?
 
-**Status: draft, setup only. No agent run has been made.** The plan freezes when Allen approves it; the commit that records his approval is the freeze, and its hash goes in the Launch log at the end. Changes after that go under Amendments, with a date and a reason.
+**Status: frozen 2026-11-18.** Allen settled all eight decisions on 2026-11-18 (listed under "Decisions (settled 2026-11-18)"; source: the Study 05 handoff in the workspace). The commit that adds this text is the freeze; its hash goes in the Launch log. Changes after it go under Amendments, with a date and a reason. Pre-run checks made before the freeze are under "Pre-run checks".
 
-Set up on 2026-11-18 (Claude Code 2.1.289, model `claude-sonnet-5-5`). Items marked **[Allen]** need his decision before the freeze (collected in "Decisions for Allen").
+Set up on 2026-11-18 (Claude Code 2.1.289, model `claude-sonnet-5-5`). The first night runs in overnight mode: pre-checks, the class_graph tool test, one smoke run, the 9 Astropy runs, then ONE Closure run (arm S), then stop; Allen decides the other Closure runs after seeing that run's real cost.
 
 ## Source
 
@@ -29,50 +29,43 @@ The comparison Allen cares about most is **U vs T** (graph vs no graph, same del
 - Astropy-7606: on the buggy tree with test_patch, `test_unknown_unit3` FAILS (`TypeError: None is not a valid Unit`) and 241 pass; with the gold patch, all 242 pass (`E:\study05\astropy-7606\verify.log`, `E:\study05\verify\astropy__astropy-7606\verify.json`).
 - Closure_157: on the buggy tree, `defects4j compile` succeeds; the paper's `run_bug_exposing_tests.sh` (6 classes, 12 failures) and the full `defects4j test` (790 s) report exactly the 12 trigger tests failing and nothing else; with the developer fix (Defects4J's `157.src.patch`, reversed: 3 files, +63/−15) it compiles and `defects4j test` reports `Failing tests: 0` (754 s).
 
-**Finding that changes how Astropy-7606 must be scored.** The SWE-bench record's PASS_TO_PASS list names `test_compose_roundtrip[]`, but pytest in the pinned image names that case `test_compose_roundtrip[unit0]`. Under SWE-bench's grading rule (PASS_AND_FAIL: a test missing from the log counts as failed), **even the developer's gold patch is "not resolved"** here: failed after = 1. The paper's four agents all show failed after = 1, which is what this artefact produces for a correct fix. So "no agent repaired Astropy-7606" may be partly or wholly a grading artefact; the paper's published data do not include the HunkSWE patches, so this cannot be checked from the package. This study reports both verdicts: `repair_strict` (SWE-bench's rule, comparable with the paper) and `repair` (the renamed case matched by its printed name, `bugs.py: test_aliases`). **[Allen]** confirm `repair` (aliased) as the primary Astropy outcome.
+**Finding that changes how Astropy-7606 must be scored.** The SWE-bench record's PASS_TO_PASS list names `test_compose_roundtrip[]`, but pytest in the pinned image names that case `test_compose_roundtrip[unit0]`. Under SWE-bench's grading rule (PASS_AND_FAIL: a test missing from the log counts as failed), **even the developer's gold patch is "not resolved"** here: failed after = 1. The paper's four agents all show failed after = 1, which is what this artefact produces for a correct fix. So "no agent repaired Astropy-7606" may be partly or wholly a grading artefact; the paper's published data do not include the HunkSWE patches, so this cannot be checked from the package. This study reports both verdicts: `repair_strict` (SWE-bench's rule, comparable with the paper) and `repair` (the renamed case matched by its printed name, `bugs.py: test_aliases`). Primary Astropy outcome = `repair` (D2). The pre-check below settles what the paper's data show.
 
 ## Arms
 
 Same model, CLI version, tools, budget and harness in every arm; the prompts differ only by appended blocks. Exact texts: `scripts/prompts.py`; rendered prompts for both bugs: `prompts/rendered/<bug>_<arm>.txt` (from `python scripts/run_all.py --dry-run --with-control`).
 
-- **S (single agent, recommended control, pending Allen's OK):** the paper's prompt template, rendered exactly as the paper's runner renders it (`prompts/paper_hunk4j_prompt.md`, `prompts/paper_hunkswe_prompt.md`, verbatim from the package with line endings normalised), plus one environment note that explains this harness's tools. The sub-agent tool is disabled (`--tools` omits `Agent`). Sonnet 4.5 numbers from the paper are not comparable with Sonnet 5.5 and a newer CLI, so without S there is no baseline for T and U. **[Allen]** approve S.
+- **S (single agent, control; approved D1):** the paper's prompt template, rendered exactly as the paper's runner renders it (`prompts/paper_hunk4j_prompt.md`, `prompts/paper_hunkswe_prompt.md`, verbatim from the package with line endings normalised), plus one environment note that explains this harness's tools. The sub-agent tool is disabled (`--tools` omits `Agent`). Sonnet 4.5 numbers from the paper are not comparable with Sonnet 5.5 and a newer CLI, so without S there is no baseline for T and U.
 - **T (delegation):** S's prompt + a leader block ("How to work"): the leader does not edit source itself; it localizes, plans and decides the next step; it starts one or more sub-agents through the Agent tool (e.g. one per localized file or group of edits, or one to investigate a question); each sub-agent ends with a short written handoff (what it changed, what it verified with which commands, what is still open); the leader decides from the handoffs, may read files and run commands to localize and check, and confirms the final state. Wording is neutral (it avoids the leak-check words, see below) and fixed before any run.
-- **U (delegation + class graph):** T's prompt + one neutral block saying that `class-graph.puml` in the directory is a UML class graph (PlantUML) of part of the code as checked out, with its scope in its first lines, listing classes, fields, method signatures, inheritance and which classes use which, generated by a static analysis tool. The file is placed in the workspace root, untracked and excluded from the patch.
+- **U (delegation + class-graph tool; D7):** T's prompt + one neutral block naming the `class_graph` tool: it returns a UML class graph (PlantUML) of the main source code as checked out at the start of the session, for a class or package/module name the agent gives, with related classes within a number of hops. The tool is an MCP server like the paper's MAPLE (which had lookups only). Leader and sub-agents both have it.
 
 The leader's "do not edit source files yourself" is an instruction, not a tool restriction: removing Edit from the leader would remove it from sub-agents too. Compliance is coded by hand (coding scheme, T/U rows).
 
-## Arm U: the class graph
+## Arm U: the class_graph tool (D7, 2026-11-18)
 
-Rules (Allen, 2026-11-18):
+Replaces the setup draft's pre-placed, pre-scoped `class-graph.puml` (that draft, its 50k-token tier rule and the files in `uml/<bug>/graph.puml` are kept for the record but are **not used**). Allen's decision: a Maple-style tool, so the agent chooses the scope; no pre-scoping, no stubs.
 
-1. **Built deterministically by a static tool from the buggy checkout only**, never from the fixed version or the gold patch, and never by a model. Python: `scripts/uml/uml_py.py` (standard-library `ast`; pyreverse was not used so that the output format and the scope rule are the same for both languages). Java: `scripts/uml/uml_java.py` (`javalang` 0.13.0). Output: PlantUML text. Re-running gives byte-identical files (`build_uml.py --check`; SHA-256 in `stats.json`).
-2. **Contents:** classes (Python: plus one `<<module>>` box per module listing its top-level functions), fields, method signatures with visibility, inheritance/implements, associations (a field whose type, or Python: whose assigned constructor, is a repo class) and dependencies (any other use of a repo class: parameters, returns, locals, `new`, static calls, constants such as `Token.STRING`). Relationships are the point: the paper's MAPLE tool had lookups only.
-3. **Scope rule**, fixed here (`scripts/uml/build_uml.py`). Budget: **50,000 approximate tokens** (characters / 4; the Read tool returns about 25k tokens per call, so the graph is at most two reads and is greppable). Take the first tier that fits:
-   1. the whole main source tree (tests excluded);
-   2. the package(s) holding the failing tests' classes (Java: the test class's package; Python: the package holding the test module's `tests/` directory), non-recursive;
-   3. the repo types named in the failing test source files, plus one hop (their supertypes, field types and every repo type they use);
-   4. the repo types named in the failing test source files only.
+1. **Index, built before any run, statically, from the buggy base tree only** (`scripts/uml/build_index.py`, the same parsers as before: `uml_py.py` with the standard-library `ast`; `uml_java.py` with `javalang` 0.13.0). Never from the fixed version or the gold patch, never by a model. The index is the whole main source tree, tests excluded. Re-running gives byte-identical files (`--check`).
 
-   The rule reads only the buggy tree and the failing-test names. **Leak note:** a test-derived scope points at code near the failing tests, which is a localization hint. It is limited to what the agent already has or gets in one step: SWE-bench's prompt lists the FAIL_TO_PASS test, and for Defects4J the paper's `run_bug_exposing_tests.sh` prints the failing test classes on its first run; the rule never looks at the gold patch's file list. Whether the developer-modified files fall inside the scope was checked only after the rule was fixed and the graphs built, and is reported below for transparency; the rule was not changed after that check.
-4. **Same graph for all three U runs of a bug**, stored at `uml/<bug>/graph.puml` with `stats.json` (every tier's size, the tier chosen, SHA-256) and `command.txt`.
-5. Coding scheme rows U1-U3 record whether and when the leader or a sub-agent opened the graph and whether a decision cited it.
+   | Bug | Files | Types (incl. Python module boxes) | Chars | ~Tokens | SHA-256 |
+   |---|---|---|---|---|---|
+   | Astropy-7606 | 391 | 1,226 | 582,307 | 145.6k | `ab3e0ce8…952f5df` |
+   | Closure_157 | 377 | 887 | 1,110,264 | 277.6k | `205a37e7…168c4f` |
 
-**Graphs built (2026-11-18):**
+   Stored at `E:\study05\uml\<bug>\index.puml`; stats in `uml/<bug>/index-stats.json`.
+2. **Tool** (`scripts/uml/uml_mcp.py`, stdio MCP, standard library only, copied with the index to `E:\w\tools` for each run): `class_graph(name, hops=1)`. `name` = a class (simple or qualified) or a package/module (prefix match). The matched classes are shown with fields and method signatures; classes within `hops` (0-3) relationship steps in either direction (inheritance, implements, field types, uses, nesting) are shown by name only, with every edge among the shown classes. Answers are capped at 60,000 characters: over the cap, hops are reduced step by step (the answer says so), then members are dropped. No match returns similar class and package names. Deterministic: the same call always gives the same text.
+3. **Static, not live:** the index reflects the code at session start; the tool description says so. It does not see the agent's edits.
+4. **Logged:** every call (name, hops asked/used, classes matched/related, characters) goes to the run's `uml.jsonl`; `run.json` counts `uml_calls` from the transcript.
+5. Tested before any run on both bugs with no model call (calls such as `UnitBase`, `astropy.units.core`, `CodeGenerator`, `IRFactory`, `RenamePrototypes`, `Node` hops 2 → reduced to 0, an unknown name); no leak-check word in any answer.
+6. Coding scheme rows U1-U3 now read "first call of the class_graph tool" instead of "first opened class-graph.puml".
 
-| Bug | Tier 1 (whole tree) | Tier 2 (test packages) | Tier 3 (named + 1 hop) | Tier 4 (named only) | Chosen |
-|---|---|---|---|---|---|
-| Astropy-7606 | 1,226 boxes, 582k chars, ~146k tokens | `astropy.units`: 22 classes + 11 module boxes, 489 lines, 18k chars, **~4.5k tokens** | (not needed) ~6.1k tokens | n/a | **tier 2** |
-| Closure_157 | 887 types, 17,277 lines, 1.11M chars, ~278k tokens | `jscomp` + `jscomp.parsing`: 679 types, ~214k tokens | 267 types, ~107k tokens | 33 types, 1,747 lines, 78k chars, **~19.5k tokens** | **tier 4** |
+## Design and order (D8)
 
-After-the-fact coverage (developer-modified files inside the graph): Astropy, `core.py` yes (both buggy classes, `UnitBase` and `UnrecognizedUnit`, are in it); Closure, `IRFactory` yes, `CodeGenerator` and `RenamePrototypes` no (edges to types outside the scope are dropped, so `CodePrinter ..> CodeGenerator` does not appear). **[Allen]** A variant that keeps edges from in-scope types to out-of-scope types as name-only stubs would show those two classes; I saw the coverage before thinking of it, so adopting it would be a post-hoc change and should be your call, recorded as such.
+2 bugs × 3 arms × 3 runs = **18 runs**, one at a time. Within a bug, the arm order rotates per round: k=1 **S T U**, k=2 **T U S**, k=3 **U S T**. Slots: `E:\w\r00` = the smoke run (Astropy, arm S; checks the harness and measures time and quota; **not counted**), `r01`-`r09` Astropy, `r10`-`r18` Closure (`run_all.py --plan`). Each run folder is kept for hand coding.
 
-## Design and order
+Steps: (1) pre-checks; (2) build and test the class_graph tool, no model call; (3) the smoke run, then a self-check (prompt arrived as rendered, agent ran only in the workspace and container, both verdicts graded, tokens/time/five-hour reading logged, leak grep clean); (4) the 9 Astropy runs; (5) checkpoint: Allen reads 1-2 Astropy trajectories and tries the coding scheme; (6) Closure: ONE run first (arm S, slot r10), measure its real cost, then Allen decides how many more and which arms. On the first night steps 1-4 and the one Closure run run unattended (`run_all.py --smoke`, then `--overnight`); step 5 moves to the morning.
 
-2 bugs × 3 arms × 3 runs = **18 runs** (12 without S). One run at a time. Rounds k = 1, 2, 3; in each round Astropy first, then Closure; within a bug the arms in an order shuffled with seed 20261118 + k (`run_all.py --plan`):
-
-k=1: Astropy U, S, T; Closure U, S, T · k=2: Astropy S, U, T; Closure S, U, T · k=3: Astropy T, S, U; Closure T, S, U.
-
-Each run gets its own neutral folder `E:\w\r01` … `E:\w\r18`, kept afterwards for hand coding. No replacements: a run that times out or refuses is scored as it stands. A run cut off by a usage limit is discarded and repeated from a fresh tree (not counted); an infrastructure error is repeated up to twice.
+No replacements: a run that times out or refuses is scored as it stands. A run cut off by a usage limit is logged as interrupted and repeated whole from a fresh tree (never resumed, never counted); an infrastructure error is repeated up to twice.
 
 ## Harness (reused from Study 04) and how it differs from the paper
 
@@ -80,13 +73,13 @@ Pattern from Study 04 (`studies/04-review-intent/scripts/agent.py`, `env.py`, `l
 
 | | Paper (Claude Code) | This study |
 |---|---|---|
-| CLI / model | 2.0.13 / Sonnet 4.5 (`claude-sonnet-4-5-20250929`; the HunkSWE runner documents `--model` but its command line does not pass it) | **2.1.289 pinned** (`llm.PIN`; a different installed version stops the run) / `claude-sonnet-5-5`, effort `medium` **[Allen]** |
-| Prompt delivery | template written to `CLAUDE.md`, `-p "Read and execute the instructions listed in CLAUDE.md."` | the same rendered text sent as the prompt itself; no CLAUDE.md. Reason: sub-agents may load a CLAUDE.md, which would hand every sub-agent the whole task and the leader block, against the context-hygiene point of T/U. **[Allen]** |
+| CLI / model | 2.0.13 / Sonnet 4.5 (`claude-sonnet-4-5-20250929`; the HunkSWE runner documents `--model` but its command line does not pass it); no effort or thinking flag | **2.1.289 pinned** (`llm.PIN`; a different installed version stops the run) / `--model claude-sonnet-5-5` passed explicitly; **no `--effort` flag** (D4: as the paper; the CLI default applies and is recorded) |
+| Prompt delivery | template written to `CLAUDE.md`, `-p "Read and execute the instructions listed in CLAUDE.md."` | the same rendered text sent as the prompt itself; no CLAUDE.md (D3), so sub-agents do not inherit the whole task and the leader block |
 | Tools | everything, `--dangerously-skip-permissions`; Bash in the environment (Hunk4J: on the host; HunkSWE: inside the container, network on). Claude used Bash, Edit, Glob, Grep, Read, TodoWrite; no sub-agent calls in the published Closure_157 counts | Read, Edit, Write, Glob, Grep, TodoWrite + `run` (bash in the no-network container); `Agent` added in T/U only; no host Bash, no web. The init event is checked live: wrong tool set → process killed before the model is called |
 | Git history | Defects4J checkout keeps the fixed version as the parent commit; the paper's Claude Closure_157 run used it (`git log | grep D4J_Closure_157`, `git diff 822acb61 3ff39c0b -- …IRFactory.java`, `git show`) | **removed**: the Closure tree is the checkout without `.git`, in a fresh one-commit repo. SWE-bench's `/testbed` history ends at the base commit (checked), so it is kept, with test_patch committed as HEAD as the paper's harness does. Our runs are therefore harder than the paper's on Closure |
-| Localization hint | `defects4j.build.properties` in the checkout names the 3 modified classes (`d4j.classes.modified`) | kept (Defects4J's commands read the file; the paper's agents had it). Coding row H8 records whether an agent read it **[Allen]** |
+| Localization hint | `defects4j.build.properties` in the checkout names the 3 modified classes (`d4j.classes.modified`) | **blanked** (D6): in the run tree `d4j.classes.modified=` and `d4j.classes.relevant=` are kept with empty values; grading restores Defects4J's original file. The plan was to hide the file, but without it Defects4J's `check.properties` target fails, so `defects4j compile`, `test` and every `export` (which the paper's test scripts call) break; with the keys present but empty all of them work (checked 2026-11-18: compile OK, the trigger script reports the same 12 failures). No other file in the tree names the modified classes (`.defects4j.config` holds only pid/vid). Same in every arm. Coding row H8 records whether an agent read the file |
 | Test scripts | `run_bug_exposing_tests.sh`, `run_all_tests_trace.sh` (Hunk4J); `run_failing_tests.sh`, `run_all_tests.sh` + `.swebench/` (HunkSWE) | the same files (line endings normalised to LF; `sdk use java …` is a no-op in the image, which has only Corretto 8u412) |
-| Time limit | not stated in the paper; HunkSWE runner default 30 min | **90 min** wall clock, every arm (Closure's full suite takes about 13 min on the Windows bind mount); longest single `run` command 30 min **[Allen]** |
+| Time limit | HunkSWE runner: `--duration-min` default 30; Hunk4J wrapper: no timeout | **the same** (D5): Astropy 30 min wall clock, Closure no cap, every arm; longest single `run` command 30 min |
 | Runs per bug | 1 | 3 per arm |
 
 ## Measures (fixed before any run)
@@ -99,6 +92,8 @@ Paper's own (Section 2.2; equation numbers as in v3 HTML, where regression reduc
 - **Regression reduction (Eq. 6):** failed_before − failed_after, undefined if compilation fails; failed_before as in the paper's data (Closure 12 = number of trigger tests; Astropy 1).
 - **Tokens:** from the run's `result` event: input, cache creation, cache read, output (the paper's `token_and_duration` columns), plus `modelUsage` per model (covers sub-agents) and `total_cost_usd` as the CLI reports it.
 - **Runtime:** wall clock of the `claude -p` process, and the CLI's `duration_ms`.
+- **Usage:** five-hour and seven-day utilization read from the CLI's `rate_limit_event` before and after every run (`rate_before`, `rate_after` in `run.json`).
+- **Delegation and tool use:** number of sub-agent (`Agent`) calls and of `class_graph` calls per run, counted from the transcript.
 
 Also recorded: changed files, new untracked files (not part of the patch, as in the paper's `git diff HEAD`), trigger tests still failing, new failures, number of turns, every `run` command (`box.jsonl`).
 
@@ -114,18 +109,28 @@ Also recorded: changed files, new untracked files (not part of the patch, as in 
 
 - **Disk (measured 2026-11-18):** see README "Disk". All data on E: (Docker images, clone, base trees, run folders); G: holds only this folder.
 - **Time per run:** Astropy, paper's Claude 170 s; expect 5-15 min for S and 10-30 min for T/U. Closure, paper's Claude 17 min with a native filesystem; here one full suite takes about 13 min and the trigger script about 3 min (compile included), so expect 30-60 min for S and up to the 90-min limit for T/U. All 18 runs: roughly 12-20 hours, spread over several five-hour windows.
-- **Quota:** from Study 04's ledger, a Sonnet 5.5 agent run used about 4.4% of the five-hour window and 0.40% of the seven-day window per million total tokens (an upper bound: parallel streams inflate it). Paper-sized runs: Astropy ~0.9M tokens → ~4% five-hour, ~0.4% weekly; Closure ~15M tokens → up to ~60% of a five-hour window and ~6% of the week per run, more if sub-agents re-read code. Nine Closure runs could approach half a week's quota. Guards: stop at 75% seven-day (`STUDY_WEEK_STOP`), start an Astropy run only below 80% five-hour and a Closure run only below 35%. **Recommendation:** run the 9 Astropy runs first, read the measured per-run usage off the ledger (runs are sequential, so the readings are clean), then decide on Closure.
+- **Quota:** from Study 04's ledger, a Sonnet 5.5 agent run used about 4.4% of the five-hour window per million total tokens. Paper-sized runs: Astropy ~0.9M tokens → ~4% of a five-hour window; Closure ~15M tokens → up to ~60% of a five-hour window and ~6% of the week per run. **Guard (Allen 2026-11-18): the five-hour window only, checked between runs, never inside one.** Before each run the harness reads the last five-hour reading and starts only below 80% (Astropy) or 35% (Closure); otherwise it waits for the reset + 2 min, so nothing is lost. The weekly stop is set at 0.99 only to catch a real limit (weekly is not a concern: a whole five-hour session is about 9% of the week). No hard stop time is set.
 
-## Decisions for Allen (before the freeze)
+## Decisions (settled 2026-11-18)
 
-1. Approve arm S as the control (recommended).
-2. Astropy primary outcome = `repair` with the test-name alias; `repair_strict` reported alongside.
-3. Prompt sent directly instead of via CLAUDE.md.
-4. Effort `medium` (Study 04) vs the CLI default.
-5. Time limit 90 min for every arm.
-6. Keep `defects4j.build.properties` (paper-faithful, a localization hint) or strip its `d4j.classes.*` lines.
-7. Closure graph: keep tier 4 as built, or adopt the stub-edge variant (post-hoc, see Arm U).
-8. Run Astropy first and decide Closure after seeing measured quota.
+1. **D1** Arm S is included as the control, on both bugs.
+2. **D2** Follow the paper's metrics, reported both ways: Astropy primary = `repair` (the test name pytest prints, `[unit0]`); `repair_strict` (SWE-bench's recorded `[]`) beside it.
+3. **D3** The prompt is passed directly, not via CLAUDE.md.
+4. **D4** Effort as the paper: no effort or thinking flag; `--model claude-sonnet-5-5` passed explicitly.
+5. **D5** Time limit as the paper: Astropy 30 min, Closure no cap, every arm.
+6. **D6** Remove the class-name hint in `defects4j.build.properties` during the run, restore it before grading, every arm (implemented as blanked keys, see the harness table).
+7. **D7** Arm U = team + a Maple-style class_graph tool (section "Arm U").
+8. **D8** Order: pre-checks → tool test → smoke run → 9 Astropy runs (rotated) → checkpoint → ONE Closure run, then Allen decides.
+
+## Pre-run checks (2026-11-18, before the freeze)
+
+**(a) Astropy-7606 vs the paper's per-instance data.** The package has no HunkSWE patches or test logs; it has per-agent `failed_test_after` (`hunk-poly/*/*_repair_ability.csv`) and the grader (`hunk-swe/swe_bench_utils/grader.py`): the official `swebench.harness.run_evaluation`, with `failed_tests` = FAIL_TO_PASS failures + PASS_TO_PASS failures. Our gold-patch and buggy pytest logs (pinned image, SWE-bench's own test command) graded with the official swebench 4.1.0 code (`get_logs_eval`, `get_eval_tests_report`, run in a python:3.11 container; `E:\study05\precheck\swebench-official\`): **gold → RESOLVED_NO, failed count 1** (only `test_compose_roundtrip[]`, absent from the log, which prints `[unit0]`); **unfixed tree → failed count 2**. All four of the paper's agents have failed count 1. So each of the four made `test_unknown_unit3` pass with no PASS_TO_PASS regression, and was marked unresolved by the test-name artefact alone. "No agent repaired Astropy-7606" is a grading artefact in the paper's own harness (the tests' verdict, not a reading of their patches, which are not published).
+
+The overnight rule said: swap to **Astropy-8707** if it reproduces within about an hour. Set up (image pinned by the paper's digest `sha256:55e63ac8…915f13b`, record from the package's `swe_bench.jsonl`): it **does not reproduce**. In its pinned image all `TestHeaderFunctions` tests ERROR in setup (pytest turns the nose-style `setup(self)` deprecation warning into an error), so the gold patch also gets failed count 8, the same as the unfixed tree; official swebench 4.1.0 gives RESOLVED_NO for gold (`E:\study05\precheck\swebench-official-8707\`). The paper's Claude, Codex and Gemini all show failed count 8 there too (Qwen 1). So **7606 is kept** and flagged: with the `repair` verdict (printed name) a correct fix is scored as repaired, which is what the paper's four agents appear to have produced; Astropy runs can therefore show only whether S/T/U reach the fix and at what cost, not a gain over "unsolved". 8707 stays in `bugs.py`, marked not used.
+
+**(b) Closure_157: the paper's Claude run read the fixed version from git history.** The package's command log for that run (`hunk4j-results/results/claude_code_results/claude_results/tools_count_claude.csv`, lines 1303-1309) contains `git log --oneline | grep "D4J_Closure_157"`, `git diff 3ff39c0b 822acb61 -- …/CodeGenerator.java`, the same for `IRFactory.java` (three times), `git show 822acb61:…/IRFactory.java | grep -A 20 "transformAsString"`, and `git stash && git checkout 822acb61 && defects4j test -t …RenamePropertiesTest::testRenamePrototypes1`. Our trees have a fresh one-commit history, so our Closure runs are harder than the paper's (description only, as decided).
+
+**(c) `defects4j.build.properties`:** see the harness table (blanked keys; hiding the file breaks Defects4J).
 
 ## Amendments
 
@@ -135,3 +140,4 @@ Also recorded: changed files, new untracked files (not part of the patch, as in 
 
 - 2026-11-18: setup. Claude Code 2.1.289; Docker 27.2.0; images `swebench/sweb.eval.x86_64.astropy_1776_astropy-7606:v2` (3.88 GB), `study05/d4j:2.0.1` (4.05 GB, Ubuntu 22.04, Corretto 8u412, Defects4J v2.0.1). Graph SHA-256: Astropy `8a28ea8e…16f7e3`, Closure `ed608cf3…dd1339`. No agent run.
 - 2026-11-18: grader checked end to end (`python env.py verify <bug>`, results in `E:\study05\verify\<bug>\verify.json`). Astropy: buggy repair 0, failed_after 1 (strict 2), RR 0; gold repair 1 (strict 0), RR 1, localization 1, ~10 s per grading. Closure: buggy compiled, failed_after 12, RR 0; developer fix compiled, failed_after 0, repair 1, RR 12, localization 1; 810 s and 930 s per grading (one full suite each).
+- 2026-11-18 (freeze, overnight session): pre-checks above; Astropy-8707 set up and rejected (gold fails in its image); Closure base tree rebuilt with the blanked properties keys (new base commit `234e014d`; re-verify of buggy and developer fix started before the freeze, result logged below); class_graph indexes built and the tool tested; plan frozen. Runs: `run_all.py --smoke`, then `--overnight`. Results in `results.md`.

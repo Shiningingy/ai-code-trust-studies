@@ -59,7 +59,7 @@ def table(rs):
         lines.append(f'| {"5.5" if "5-5" in (x["model"] or "") else "4.5"} | {b} | {x["arm"]} | {x["run"]} | {x["status"]} | {x["localization"]} | {int(bool(x["compiled"]))} '
                      f'| {x["repair"]} | {"-" if x["repair_strict"] is None else x["repair_strict"]} | {fa} | {x["rr"]} '
                      f'| {tok} | {x["minutes"]} | {x["five_before"]}→{x["five_after"]} | {x["week_before"]}→{x["week_after"]} '
-                     f'| {x["subagents"]} | {x["uml_calls"] if x["arm"] == "U" else "-"} |')
+                     f'| {x["subagents"]} | {x["uml_calls"] if x["arm"] in ("U", "L") else "-"} |')
     return "\n".join(lines)
 
 

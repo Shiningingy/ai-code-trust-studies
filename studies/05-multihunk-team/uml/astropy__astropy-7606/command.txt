@@ -1,0 +1,2 @@
+python scripts/uml/build_uml.py astropy__astropy-7606 uml/astropy__astropy-7606
+(javalang 0.13.0 for Java; Python 3.13.0 ast for Python)

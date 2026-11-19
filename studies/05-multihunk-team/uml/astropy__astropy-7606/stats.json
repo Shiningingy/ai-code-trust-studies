@@ -1,0 +1,33 @@
+{
+ "bug": "astropy__astropy-7606",
+ "budget_tokens": 50000,
+ "chosen_tier": "2",
+ "scope": "package(s) astropy.units",
+ "tiers": [
+  {
+   "tier": "1",
+   "scope": "the whole astropy package",
+   "lines": 13972,
+   "chars": 582307,
+   "approx_tokens": 145576,
+   "types": 1226
+  },
+  {
+   "tier": "2",
+   "scope": "package(s) astropy.units",
+   "lines": 489,
+   "chars": 18161,
+   "approx_tokens": 4540,
+   "types": 33
+  },
+  {
+   "tier": "3",
+   "scope": "packages imported by the failing test modules: astropy, astropy.constants, astropy.tests, astropy.units",
+   "lines": 667,
+   "chars": 24474,
+   "approx_tokens": 6118,
+   "types": 57
+  }
+ ],
+ "sha256": "8a28ea8ef1e407c170089dd215517cfdaf698348255f7a6483aebdedd716f7e3"
+}

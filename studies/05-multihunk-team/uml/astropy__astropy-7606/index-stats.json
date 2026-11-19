@@ -1,0 +1,14 @@
+{
+ "files": 391,
+ "classes": 1005,
+ "members": 8746,
+ "edges": 2128,
+ "lines": 13971,
+ "chars": 582307,
+ "approx_tokens": 145576,
+ "bug": "astropy__astropy-7606",
+ "source": "E:\\study05\\base\\astropy-7606-tree",
+ "sha256": "ab3e0ce8c3ea701bf3a81fa5ecf89db23102878837091532bc5d735b7952f5df",
+ "types": 1226,
+ "python": "3.13.0"
+}

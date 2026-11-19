@@ -36,12 +36,13 @@ HINT_NOTE = """### Starting point
 
 Before you start, read `{path}`: it is relevant to this defect."""
 
-# Amendment 4 (Allen, 2026-11-18): arm F = S + the full suite's measured duration in this environment (grading
-# runs of the 4.5 Closure runs: 777-790 s alone). It states the duration only; the `run` tool's own description
-# already gives its timeout default (300 s) and maximum (1800 s). Closure_157 only.
+# Amendment 4 (Allen, 2026-11-18): arm F = S + how long the full suite takes. Allen's wording (changed before any
+# F run, 22:50): "about 30 minutes", the usual duration for a large project's suite, not the measured figure
+# (grading runs of the 4.5 Closure runs: 777-790 s alone, 869-1,044 s under load). It states the duration only;
+# the `run` tool's own description already gives its timeout default (300 s) and maximum (1800 s). Closure_157 only.
 SUITE_NOTE = {"Closure_157": """### Test durations
 
-In this environment the full test suite (`defects4j test`) takes about 13 minutes to run; `./run_bug_exposing_tests.sh` takes about 30 seconds."""}
+In this environment the full test suite (`defects4j test`) takes about 30 minutes to run; `./run_bug_exposing_tests.sh` takes about 30 seconds."""}
 
 ARMS = ("S", "T", "U", "L", "H", "F")
 

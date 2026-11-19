@@ -52,4 +52,4 @@ Use these scripts to capture full stack traces:
 
 ### Test durations
 
-In this environment the full test suite (`defects4j test`) takes about 13 minutes to run; `./run_bug_exposing_tests.sh` takes about 30 seconds.
+In this environment the full test suite (`defects4j test`) takes about 30 minutes to run; `./run_bug_exposing_tests.sh` takes about 30 seconds.

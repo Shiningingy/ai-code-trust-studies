@@ -1,1 +1,7 @@
 __pycache__/
+# report build sources and intermediates (kept locally; the published report is report.pdf)
+report-draft.md
+figures/
+scripts/make_pdf.py
+scripts/figures.py
+results/

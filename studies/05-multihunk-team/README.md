@@ -1,6 +1,6 @@
 # Study 05: do sub-agents help on the multi-hunk bugs no single agent fixed?
 
-**Status: complete (runs ended 2026-11-19).** 30 counted runs on Sonnet 4.5 (the paper's model) in Claude Code 2.1.289, plus a smoke run; the first Sonnet 5.5 runs are kept as a labelled pilot. Report: [results.md](results.md). Hand coding (coding-scheme.md) has not been done.
+**Status: complete (runs ended 2026-11-19).** 30 counted runs on Sonnet 4.5 (the paper's model) in Claude Code 2.1.289, plus a smoke run; the first Sonnet 5.5 runs are kept as a labelled pilot. **Report: [report.pdf](report.pdf)** (proposal, design, results, discussion, threats, conclusion). Full record: [results.md](results.md). Hand coding (coding-scheme.md) has not been done.
 
 ## Result in short
 
@@ -23,6 +23,7 @@ Bugs: **Astropy-7606** (SWE-bench Verified; all four agents found the file, none
 
 ## Layout
 
+- [report.pdf](report.pdf): the study report.
 - [results.md](results.md): pre-run checks, training-data exposure, the run table, readings, findings F1-F16, what failed or differs from the plan, framing.
 - [plan.md](plan.md): question, arms, measures, harness differences from the paper, amendments, launch log.
 - [coding-scheme.md](coding-scheme.md): the hand-coding table for trajectories, fixed before any run.

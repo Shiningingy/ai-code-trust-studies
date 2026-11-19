@@ -1,4 +1,6 @@
-# Study 05: do sub-agents help on the multi-hunk bugs no single agent fixed?
+# Study 05: why a three-file bug stays unfixed
+
+Replaying two "unsolved" bugs from *Beyond Accuracy* with Claude Code. The study was proposed to ask whether sub-agents and a class graph help on these bugs. They did not decide the outcome, so the question it answers is the one closer to the paper's own: why some runs repaired the bug and most did not.
 
 **Status: complete (runs ended 2026-11-19).** 30 counted runs on Sonnet 4.5 (the paper's model) in Claude Code 2.1.289, plus a smoke run; the first Sonnet 5.5 runs are kept as a labelled pilot. **Report: [report.pdf](report.pdf)** (proposal, design, results, discussion, threats, conclusion). Full record: [results.md](results.md). Hand coding (coding-scheme.md) has not been done.
 
@@ -10,7 +12,9 @@
 
 Three runs per arm and bug: the report describes patterns and cases, not rates.
 
-## The question
+Open directions (report Section 7): more bugs of the same shape; an instruction to compare new failures against the unchanged code; a MAPLE-style prompt for the graph tool; and how to make a repair consistent across runs while keeping what is already fixed (end states of the same prompt ranged from repaired to more tests failing than the buggy code).
+
+## The question, and how it shifted
 
 "Beyond Accuracy: Behavioral Dynamics of Agentic Multi-Hunk Repair" (TOSEM 2026, arXiv 2511.11012v3) ran four coding-agent CLIs, one trajectory per bug, with no planner or sub-agents. Two bugs that none of them repaired are replayed here with Claude Code, three times per arm:
 
@@ -18,6 +22,8 @@ Three runs per arm and bug: the report describes patterns and cases, not rates.
 - **T**: S plus a leader block: the leader localizes and plans, sub-agents edit and test, each returns a short written handoff;
 - **U**: T plus a `class_graph` tool (MCP) that returns a static UML class graph of the buggy code;
 - follow-ups added during the runs (plan.md Amendments 2-4): **L** = U whose graph also gives each class's file and line range; **H** = S plus "read `RenamePrototypes.java` first"; **F** = S plus "the full suite takes about 30 minutes" (H and F on Closure only).
+
+The arms test the proposed question (does structure help?). Once the runs showed that it did not decide the outcome, the analysis turned to what did: whether the agent let the full test suite finish and what it did with the failures it showed (results.md F12-F16; the H and F arms came from that turn).
 
 Bugs: **Astropy-7606** (SWE-bench Verified; all four agents found the file, none repaired it) and **Closure_157** (Defects4J; none localized it; the paper's Section 5 traces two new failures to an unmodified third file).
 

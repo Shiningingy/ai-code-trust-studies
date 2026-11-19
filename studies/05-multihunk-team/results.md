@@ -193,7 +193,7 @@ Against F13: F2 is reading (a), F1 and F3 are reading (b), none is (c).
 This is a case study of two bugs, not a benchmark. What it can say:
 
 - On Closure_157, a three-file Defects4J bug no agent in the paper fixed, Sonnet 4.5 in Claude Code repaired it in 2 of 18 runs, and both repairs came after the agent let the full test suite finish. The fix's third file is needed only because the main fix breaks two tests that pass before it, and only the full suite shows that.
-- Most failures were not localisation failures: 8 runs (S1, S3, U1, U2, L3, H1, H2, F1) made all 12 trigger tests pass and stopped two tests short. They stopped there because the agent gave the full suite a 1-10-minute timeout for a 13-17-minute run, or killed it in the shell and read the truncated output as success.
+- Most failures were not localisation failures: 8 runs (S1, S3, U1, U2, L3, H1, H2, F1) made all 12 trigger tests pass and stopped two tests short. Seven of them stopped there because the agent gave the full suite a 1-11-minute timeout (at most 650 s) for a 13-17-minute run, or killed it in the shell and read the truncated output as success; F1 let the suite finish, saw the two failures and set them aside (F14).
 - Stating the suite's duration made the agent wait every time (3/3) and surfaced the regression every time, but only 1 of 3 then treated it as its own: an agent seeing failures outside the bug's trigger tests can call them "pre-existing" without checking.
 - Sub-agents and a UML class-graph tool, as offered here (neutral wording, no instruction to use it), did not change this: the tool was never called.
 - Astropy-7606's "unsolved" status in the paper comes from a test-name mismatch in the benchmark record, reported upstream since 2024.

@@ -13,6 +13,7 @@ a reflection and open directions.
 | 03 | Model-Built References and Graphs for Car Manuals ([PDF](studies/03-car-manual-qa-proposal/report.pdf), [web](studies/03-car-manual-qa-proposal/README.md)) | Where do people still matter when LLMs build car-assistant knowledge from manuals? | Proposal from reading; no experiment run |
 | 04 | Does Human Review Intent Help a Coding Agent? ([PDF](studies/04-review-intent/report.pdf), [web](studies/04-review-intent/README.md)) | Given up front, does a summary of human code review bring an agent's fix closer to what the project merged, and more than a summary of AI-agent review? | Done, not peer reviewed |
 | 05 | Why a Three-File Bug Stays Unfixed ([PDF](studies/05-multihunk-team/report.pdf), [web](studies/05-multihunk-team/README.md)) | Replaying two bugs no agent in *Beyond Accuracy* (TOSEM 2026) repaired: why do some Claude Code runs repair Closure_157 and most do not? (Proposed as: do sub-agents and a class graph help?) | Done, not peer reviewed |
+| 06 | Does a Coverage Check Help a Harness Find Everyone? ([PDF](studies/06-harness-coverage/report.pdf), [web](studies/06-harness-coverage/README.md)) | On LongHarness Bench's public Constraint Solving Search examples: what does a harness add, and does making the agent write and pass a check that every line is accounted for close its recall gap? | Small check (16 runs), not peer reviewed |
 
 ## How this was built
 Each study states who did what. Code is written with Claude Code under my direction. Commits written with the agent carry a `Co-Authored-By` line.

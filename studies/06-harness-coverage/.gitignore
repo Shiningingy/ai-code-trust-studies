@@ -1,0 +1,6 @@
+# report build sources and intermediates (kept locally; the published report is report.pdf), as in Studies 04 and 05
+report-draft.html
+scripts/make_pdf.py
+results/*.tmp.pdf
+runs/
+*.pyc

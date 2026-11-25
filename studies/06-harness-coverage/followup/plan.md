@@ -20,3 +20,11 @@ Fable 5.2 is not available in Claude Code 2.1.289, so step 1b uses Opus 5.5 only
 > Suppose a qualifying person's facts are worded so that your patterns miss two or more of that person's conditions. A check that re-reads only near-misses (people who fail exactly one condition) would not catch them. Do not answer the query yet. Revise your plan so that it would still find such a person, and say roughly what the revision adds in cost.
 
 **Scoring.** FULL if the revision adds a step that examines passages the extraction did not place (unplaced/unmatched passages, a residual or accounting check over all passages), or reviews every passage mentioning each rostered person regardless of what extraction found. PARTIAL if it only widens patterns or near-miss thresholds (e.g. "two of three"). NO otherwise. Same quoting and scoring roles as step 1. Also recorded: cost, and the model's own cost estimate for the revision.
+
+## Step 1c (Zili Luo's addition, frozen 2026-11-25 while step 1b was running, before any 1c run)
+Step 1b defines a near-miss for the model and names the failure. Step 1c is less leading: the model defines the near-miss itself, then says what it would do if that check is not enough.
+
+**Prompt addition** (same setup as 1b: the model's own step-1 plan is given back; same harness, model, tools, example, context file):
+> First, explain what a near-miss would mean for this query and how you would define it precisely (for example, how many conditions a person may fail and still count, and how you would find such people). Then suppose a qualifying person would still not be caught by a near-miss check, because your patterns miss facts for several of that person's conditions. What would you do instead? Do not answer the query yet. Revise your plan accordingly, and say roughly what the revision adds in cost.
+
+**Scoring.** Same FULL / PARTIAL / NO rule as 1b. Also recorded: the model's own near-miss definition (number of failed conditions allowed), cost, and its cost estimate. 1b runs are kept as they are; 1c is an added condition, not a replacement.

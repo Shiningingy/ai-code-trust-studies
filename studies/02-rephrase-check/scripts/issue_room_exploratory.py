@@ -1,4 +1,4 @@
-"""EXPLORATORY, raised by Allen after labels were seen, not in analysis-plan.md.
+"""EXPLORATORY, raised by Zili Luo after labels were seen, not in analysis-plan.md.
 
 Is there too little room to rephrase, and does wording move outcomes more than re-running does?
 Reads issues and rewrites as text. No model call: rewriter is imported for its masking rule only.

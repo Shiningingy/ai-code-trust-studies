@@ -1,6 +1,6 @@
 # Study 02 analysis plan, fixed before any F→P label exists
 
-**Status: frozen 2026-11-02 after Allen's read, before any label existed. The hash is in the Launch log.**
+**Status: frozen 2026-11-02 after Zili Luo's read, before any label existed. The hash is in the Launch log.**
 
 Written 2026-11-02. No F→P label exists for any Sonnet output, and no rewrite arm has been compared with anything. The only distances seen are on repeat pairs (baseline, repeat1, repeat2), for the runtime check below. Everything here is settled by this text; `scoring/analyze.py` carries it out. Anything added after labels exist is exploratory and labelled so.
 

@@ -1,6 +1,6 @@
 # Study 05 hand-coding scheme
 
-Fixed on 2026-11-18, before any trajectory exists. Allen codes each of the 18 runs from `transcript.jsonl` (stream-json; sub-agent messages are forwarded with `parent_tool_use_id` set), `box.jsonl` (every `run` command) and `agent.diff`. Code from the transcript, not from the score: fill rows H1-H7 before opening `grade/grade.json`.
+Fixed on 2026-11-18, before any trajectory exists. Zili Luo codes each of the 18 runs from `transcript.jsonl` (stream-json; sub-agent messages are forwarded with `parent_tool_use_id` set), `box.jsonl` (every `run` command) and `agent.diff`. Code from the transcript, not from the score: fill rows H1-H7 before opening `grade/grade.json`.
 
 **Step** = the index of a tool call in the run, counting the leader's and every sub-agent's calls in transcript order, starting at 1. Write `-` for "never".
 

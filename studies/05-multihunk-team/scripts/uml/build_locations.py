@@ -1,5 +1,5 @@
 """Where each class in the class_graph index is defined: file (path from the project root, as the agent sees it)
-and line range. Amendment 2 (Allen, 2026-11-18): the tool was meant to give structure context like the paper's
+and line range. Amendment 2 (Zili Luo, 2026-11-18): the tool was meant to give structure context like the paper's
 MAPLE, whose class lookups return the defining file; the first index had names, members and relations only.
 
 Built from the BUGGY base tree only, like build_index.py; no model, deterministic (--check compares).

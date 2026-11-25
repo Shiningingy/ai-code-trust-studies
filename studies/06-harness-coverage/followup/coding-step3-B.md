@@ -1,5 +1,7 @@
 # Step 3 method coding, arms B and B1 (Claude subagent's proposals; Zili Luo checks)
 
+**Cost correction (2026-11-25).** Attempt-1 costs below are right. For S2Bopus55000413, $1.8892 is the session's running total after attempt 2: attempt 2 itself cost $0.6455, and the run total is $1.8892 (not $3.1329). See results-step2.md.
+
 Everything below is a proposal for Zili Luo to check. Codes are the frozen ones in `plan.md` (L0-L3, G, K). The convention is the one in `coding-step2-notes.md`: a keyword-limited residue is **L1**. L2 needs the residue of all passages, every passage of every person not ruled out, or a template inventory over all text with the unlabelled shapes read to the end.
 
 Sources: `runs/step2_summary.jsonl` (the 00041 lines), the `runs/step2/<run>-a<N>.jsonl` transcripts (digest tool plus full tool outputs where a code depended on them), and the plan files `plans/CV-*-00041-*` (arm B) and `plans/CV1-*-00041-*` (arm B1). In three places I re-ran an agent's own inventory code on its own copy of `context.md` (read only, in my scratchpad). That was only to check what a truncated or filtered printout contained (Sonnet B-1, Opus B-2). The answer-key folder was not opened.

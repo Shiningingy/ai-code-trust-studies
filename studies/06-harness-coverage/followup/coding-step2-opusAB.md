@@ -1,5 +1,7 @@
 # Step 2 method coding, Opus 5.5, arms A and B (Claude's proposed coding, for Zili Luo to check)
 
+**Cost correction (2026-11-25).** Costs below come from the uncorrected summary, which added up cumulative session totals for runs with retries. Only B-00002 changes: its total is $0.98 (not $1.53), so arm B is $4.62 for 6 runs, about $0.77 a run (1.7x Opus arm A). See results-step2.md.
+
 Everything below is Claude's proposal. Codes are the frozen ones in `plan.md` (L0-L3, G, K). The convention is the one in `coding-step2-notes.md`: a keyword-limited residue (sentences that contain the agent's own topic keywords but match none of its patterns) is **L1**. L2 needs the residue of all passages, every passage of every person not ruled out, or a template inventory over all passages with the unlabelled shapes read until none are left. Sources: `runs/step2_summary.jsonl`, the `runs/step2/<run>-a<N>.jsonl` transcripts, read through `scripts/trace_digest.py`, plus the tool results where a code depended on them (B-00013 shape file, B-00002 roster check). The answer-key folder was not opened.
 
 **K (key access): none.** The summary records `key_access: false` for all 13 attempts, and no transcript mentions `lhb-data` or `answers`.

@@ -2,7 +2,7 @@
 
 Design frozen in [plan.md](plan.md) ("Step 3") before any run. 36 runs: 6 arms × 2 models × 3 runs on Constraint instance 00041 (five conditions: volunteered at 3+ events, guardian of someone on an evening course, prefers train to plane, enjoys a fruit, avoids dairy). Same harness and feedback as step 2. A trailing **1** means the plan was made and executed under the one-pass sentence ("You will give one final answer. It is scored once, by exact match, with no feedback and no second try."), and the run stopped after the first answer.
 
-Numbers: lines with `"sample": "00041"` in [data/step2_summary.jsonl](data/step2_summary.jsonl). Spend: Sonnet $10.01, Opus $16.16, plans not included (caps $20 / $35). **Method levels are not coded yet.**
+Numbers: lines with `"sample": "00041"` in [data/step2_summary.jsonl](data/step2_summary.jsonl). Spend (corrected for cumulative session costs, see results-step2.md): Sonnet $6.81, Opus $14.11, plans not included (caps $20 / $35). **Method levels are not coded yet.**
 
 ## First answer (the one-pass comparable)
 
@@ -15,7 +15,7 @@ Numbers: lines with `"sample": "00041"` in [data/step2_summary.jsonl](data/step2
 
 - **Pooled, the one-pass sentence made no difference:** 11/18 exact on the first answer with it, 11/18 without. Opus 7/9 vs 6/9, Sonnet 4/9 vs 5/9. With 3 runs per cell this is noise-level.
 - **It did not make the first attempt more expensive.** Attempt-1 cost is the same or lower in every one-pass arm.
-- **Retry arms:** 17 of 18 reached the answer (Sonnet A-2 failed all 5 attempts, always missing P-104). Mean total cost: Sonnet B $0.61, A $1.56, N $0.37; Opus B $1.72, A $1.00, N $0.69.
+- **Retry arms:** 17 of 18 reached the answer (Sonnet A-2 failed all 5 attempts, always missing P-104). Mean total cost: Sonnet B $0.61, A $0.60, N $0.26; Opus B $1.31, A $0.84, N $0.58.
 
 ## Errors (14 wrong first answers, plus 4 later attempts of Sonnet A-2)
 

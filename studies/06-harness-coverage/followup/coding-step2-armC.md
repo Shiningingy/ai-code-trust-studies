@@ -1,5 +1,7 @@
 # Step 2, arm C (critic): method coding of the 12 runs
 
+**Cost correction (2026-11-25).** Costs below come from the uncorrected summary, which added up cumulative session totals for runs with retries. Corrected run totals: Sonnet C-00000-1 $1.38 (not $2.65), Opus C-00003 $3.75 (not $4.91), Opus C-00011 $4.87 (not $5.74); critic share of arm C: $10.31 of $18.38 (56%), Sonnet 51%, Opus 58%. See results-step2.md.
+
 **Claude's proposed coding, for Zili Luo to check.** It was written 2026-11-25 from the transcripts (`runs/step2/<run>-a<N>.jsonl`), the critic logs (`<run>-critic.jsonl`) and `runs/step2_summary.jsonl`. The codes follow plan.md (L0-L3, G, K) and the convention in `coding-step2-notes.md`. A keyword-limited residue or a keyword-filtered per-person dossier is coded **L1**, and a phrasing census is pattern work (L0/L1). A check on unresolved or unrostered names is coded L1, as in A-00000-2/-3. Nothing was run or edited apart from writing this file.
 
 **Critic challenge classes.** Each challenge is classed by the claim it rests on. Where a challenge mixes claims, the note says so.

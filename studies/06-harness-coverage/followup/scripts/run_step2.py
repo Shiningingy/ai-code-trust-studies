@@ -151,7 +151,7 @@ def main():
             "--tools", "Read,Grep,Glob,Bash", "--allowedTools", "Read,Grep,Glob,Bash",
             "--output-format", "stream-json", "--verbose"]
     t_start = time.time()
-    attempts, passed, stop = [], False, False
+    attempts, passed, stop, cum = [], False, False, 0.0
     msg = first
     for n in range(1, max_attempts + 1):
         remaining = TIME_LIMIT_S - (time.time() - t_start)
@@ -174,7 +174,11 @@ def main():
         low = r["text"].lower()
         if r["is_error"] and any(w in low for w in ("usage limit", "rate limit", "limit reached", "credit", "overloaded")):
             stop = True
-        attempts.append({"attempt": n, "pass": ok, "answer": ans, "cost": round(r["cost"], 4),
+        # With --resume, total_cost_usd is the session's cumulative cost; keep this attempt's own share
+        # (fixed 2026-11-25; earlier summaries were corrected by fix_costs.py).
+        own = r["cost"] - cum if r["cost"] else 0.0
+        cum = r["cost"] or cum
+        attempts.append({"attempt": n, "pass": ok, "answer": ans, "cost": round(own, 4), "cum_cost": round(cum, 4),
                          "secs": round(time.time() - t0), "turns": r["turns"], "tool_calls": r["tool_calls"],
                          "timed_out": timed_out, "is_error": r["is_error"], "key_access": r["key_access"]})
         with open(os.path.join(state_dir, "attempts.txt"), "a", encoding="utf-8") as f:

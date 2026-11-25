@@ -30,14 +30,47 @@ Two first answers (Sonnet B1-1 and N-1) both miss P-104 and include P-159, so th
 
 **First wrong inclusions of the whole study.** Study 06 and step 2 had only missed people; on 00041, 3 first answers include P-159.
 
-## Plans (keyword count only; not scored yet)
+## Plans (Claude's scores under the 1b/1c rule; Zili Luo checks)
 
-The one-pass sentence visibly changed **Opus's 1c plans** (CV1). They talk about labelling every passage or sentence, reading the unmatched residue, and a whole-file fallback. Words like "every passage", "residue" or "unaccounted" appear 8-10 times per CV1 plan, against 0-2 in the CV plans. One plan gives the reason itself: "Since the answer is scored once by exact match, I think that cost is worth it" (CV1-opus55-00041-3). Opus B1 was also 3/3 on the first answer, against 2/3 for B, at the same attempt-1 cost. Whether the B1 runs *executed* the coverage the plans describe is not yet coded; in step 2, plans claiming coverage mostly were not carried out.
+A first keyword count suggested that the one-pass sentence turned Opus's 1c plans into full-coverage plans. Reading the plans corrects this: the CV plans use other words ("every clause", "template census", "inventory of sentence shapes"), and they are full-coverage plans too.
 
-The Sonnet plans show no such shift in the keyword count.
+| Plan | Sonnet 5.5 | Opus 5.5 |
+|---|---|---|
+| PH (step 1) | PARTIAL ×2 (near-miss; 00041-1 keyword-limited template check), 00041-3 PARTIAL or FULL ("I'll list unmatched sentences and review the leftovers", in its risks list) | PARTIAL ×3 (near-miss; 00041-3 keyword-limited residue) |
+| PH1 (step 1, one-pass) | PARTIAL ×2 (near-miss), 00041-1 NO (second search pass and contradiction greps only) | PARTIAL ×3 (near-miss; 00041-3 keyword-limited residue) |
+| CV (1c) | FULL ×3 (template inventory with an unmatched bucket) | FULL ×3 (every clause tagged, template census, sentence-shape inventory) |
+| CV1 (1c, one-pass) | FULL ×3: 00041-1 reads the whole file in chunks; 00041-2 template inventory with a whole-file fallback; 00041-3 dossiers of every person with any keyword hit | FULL ×3: template accounting with a whole-file fallback (-1, -3); every sentence labelled plus every person's dossier (-2) |
+
+- **Without the 1c question, neither model plans full coverage, and the one-pass sentence does not change that.**
+- **With the 1c question, both models plan full coverage on 00041, with or without the one-pass sentence.** What one-pass adds is a willingness to pay more: a whole-file read or a whole-file fallback appears in 4 of 6 CV1 plans and in none of the 6 CV plans. One plan says why: "Since the answer is scored once by exact match, I think that cost is worth it" (CV1-opus55-00041-3).
+- Opus B1 was 3/3 on the first answer, against 2/3 for B, at the same attempt-1 cost. Whether the runs *executed* their plans' coverage is coded in [coding-step3-B.md](coding-step3-B.md).
+
+## Execution, arms B and B1 (coded by a Claude subagent, spot-checked by Claude; [coding-step3-B.md](coding-step3-B.md))
+
+| | Sonnet B | Sonnet B1 | Opus B | Opus B1 |
+|---|---|---|---|---|
+| Exact on attempt 1 | 3/3 | 1/3 | 2/3 | 3/3 |
+| Attempt-1 method | L2*, L1, L1 | L1, L1, L1 | L2*, L2*, L2 by method (segmenter hole; L1 by text covered) | L2, L2*, L1 |
+| Plan's coverage step | 1 mostly done, 2 started and dropped | all 3 dropped or cut, incl. a planned whole-file read with zero Read calls | 2 mostly or partly done, 1 done as written | 2 mostly done, 1 on keyword hits only |
+| Attempt-1 cost, sum of 3 | $1.84 | $1.00 | $3.28 | $3.17 |
+
+\* L2 with an exclusion: a template inventory over the whole file with a class of filler verbs or openers set aside unread (as Opus B-00001-3 in step 2).
+
+- **The one-pass runs did not cover more than the retry runs, for either model.** Coded by the text actually covered, Opus has two L2 runs in each arm. Sonnet B1 made the most ambitious plans (a whole-file read, a whole-file fallback, every person's dossier) and cut them hardest: "I didn't read each person's passages one by one, as my plan said I would" (B1-1, 0 Read calls).
+- **Opus B's one failure was not disobedience.** B-3 executed its inventory as planned, but its own segmenter starts a segment only at a case-sensitive subject (`(?:Youth |Y)\d+`), so the lowercase "youth 104" line was never in the inventory. A coverage step is only as complete as the unit the agent defines for it (the Study 06 HV audit again). Opus B-2's opener filter also dropped the P-104 line unread; it passed only because its youth pattern had been widened from other lowercase lines.
+- **The same mechanism behind every P-104 miss in these 13 attempts:** each looked at P-104 as a near-miss, fetched the youth's lines with a case-sensitive pattern, saw only the guardian line, and concluded the course was absent ("P-104 ... fail[s] c2 or c1 on explicit text", Sonnet B1-1).
+- **Final messages claim more coverage than the transcripts show** in 4 of 13 attempts, e.g. "I gave every one a label" (Opus B-2; 286 of 705 skeletons never read). Five runs state plainly what they skipped.
+
+## Conclusion so far (Claude's reading; Zili Luo checks)
+
+1. **The one-pass sentence changes the plans, not the execution.** With it, plans offer more expensive options (a whole-file read or fallback, 4 of 6 CV1 plans), but no run executed more coverage because of it, and first-answer accuracy is the same pooled (11/18 vs 11/18). Cost does not rise, because effort does not rise.
+2. **Opus B1's 3/3 against B's 2/3 rests on one run's case-sensitive regex**, not on more coverage.
+3. **For Sonnet, one-pass may even hurt** (B1 1/3 at about half of B's cost), but with 3 runs this is not a finding.
+4. **Both models can propose full coverage, but only when asked the 1c question**; neither does it unprompted, with or without one-pass.
+5. **The gap is in execution.** Plans describe full coverage; runs cut it, or run it with a coverage unit that has the same blind spot as the extraction, and the final message may still claim it was done. An instruction does not close this gap. A coverage unit the agent does not define (for example Outlier Memo Detection's fixed 2,500 statements) is the next thing to test.
 
 ## To do (not done)
 
-1. Code the method level of each attempt 1 (L0-L3), especially Opus B vs B1, and score the 24 plans (FULL / PARTIAL / NO; escalation ladder or not).
+1. Code arms A, A1, N and N1 the same way.
 2. Trace which condition each P-057 miss and each P-159 inclusion came from.
 3. Sonnet A-2 resubmitted the same wrong answer on attempts 4 and 5 after 3-5 tool calls: check for G (guess-and-check without new evidence).

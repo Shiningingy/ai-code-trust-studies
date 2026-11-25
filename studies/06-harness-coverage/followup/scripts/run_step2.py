@@ -29,6 +29,38 @@ here = os.path.dirname(os.path.abspath(__file__))
 fdir = os.path.dirname(here)
 
 
+WORKER_EXT = (".py", ".txt", ".json", ".pkl", ".csv", ".tsv", ".md")
+
+
+def quarantine_shared_tmp(dest):
+    """Git Bash maps /tmp to the Windows user Temp whatever TEMP says, so earlier runs' scripts and outputs stay
+    visible there. Before each run, move worker-style files (top-level, plus small folders holding only such files)
+    out of it into dest. Moved, never deleted; other programs' files (.tmp, logs, images, GUID folders) are left."""
+    shared = os.path.join(os.environ.get("LOCALAPPDATA", ""), "Temp")
+    if not os.path.isdir(shared):
+        return 0
+    moved = 0
+    for name in os.listdir(shared):
+        src = os.path.join(shared, name)
+        if name.startswith("Setup Log") or name == "claude":
+            continue
+        if os.path.isfile(src) and name.lower().endswith(WORKER_EXT):
+            ok = True
+        elif os.path.isdir(src) and len(name) <= 4:
+            files = [f for _, _, fs in os.walk(src) for f in fs]
+            ok = bool(files) and len(files) <= 200 and all(f.lower().endswith(WORKER_EXT) for f in files)
+        else:
+            ok = False
+        if ok:
+            os.makedirs(dest, exist_ok=True)
+            try:
+                shutil.move(src, os.path.join(dest, name))
+                moved += 1
+            except OSError:
+                pass
+    return moved
+
+
 def tag_of(model):
     return model.replace("claude-", "").replace("-", "")
 
@@ -83,6 +115,13 @@ def main():
     state_dir = os.path.join(work, "_critic", run_id)
     shutil.rmtree(state_dir, ignore_errors=True)
     os.makedirs(state_dir)
+    # Each run gets its own temp folder: runs share %TEMP% otherwise, and a worker can find an earlier run's scripts
+    # and outputs there (seen in arm C v1, 2026-11-25). Git Bash maps /tmp to TEMP, so this covers /tmp too.
+    tmp = os.path.join(work, "_tmp", run_id)
+    shutil.rmtree(tmp, ignore_errors=True)
+    os.makedirs(tmp)
+    env = dict(os.environ, TEMP=tmp, TMP=tmp, TMPDIR=tmp)
+    quarantine_shared_tmp(os.path.join(work, "_tmp_quarantine", run_id))
     settings = {"autoMemoryEnabled": False}
     if arm == "C":
         cmd = 'python -I "%s" "%s" %s' % (os.path.join(here, "critic_hook.py").replace("\\", "/"),
@@ -119,7 +158,7 @@ def main():
         timed_out = False
         with open(path, "w", encoding="utf-8") as out, open(path[:-6] + ".err", "w", encoding="utf-8") as err:
             try:
-                subprocess.run(cmd, cwd=ws, stdout=out, stderr=err, timeout=remaining, encoding="utf-8")
+                subprocess.run(cmd, cwd=ws, stdout=out, stderr=err, timeout=remaining, encoding="utf-8", env=env)
             except subprocess.TimeoutExpired:
                 timed_out = True
         r = parse_stream(path)

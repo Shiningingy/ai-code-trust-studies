@@ -54,6 +54,11 @@ def transcript_tail(path):
                     items.append("RESULT: " + str(r)[:500])
     except OSError:
         return "(no transcript)"
+    # At PreToolUse time the transcript already holds the call being judged (and any sibling calls of the same turn),
+    # with no result yet. Shown here, the critic read it as an earlier step and challenged the real call as a repeat
+    # (arm C v1, 2026-11-25). Drop trailing calls that have not run; the call itself goes in PROPOSED NEXT STEP.
+    while items and items[-1].startswith("TOOL CALL: "):
+        items.pop()
     out, n = [], 0
     for s in reversed(items):
         if n + len(s) > TAIL_CHARS:

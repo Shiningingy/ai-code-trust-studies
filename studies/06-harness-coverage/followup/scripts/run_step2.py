@@ -1,0 +1,163 @@
+"""Study 06 follow-up, step 2: one run of arm A, B or C with pass/fail feedback (see ../plan.md, Step 2).
+
+Usage: python -I run_step2.py <A|B|C> <model> <sample 00000|00001> <rep>
+Env: LHB_DATA (contexts/, answers/), LHB_WORK (neutral working folders).
+The answer key is read here, outside the agent's session; the agent only ever sees "incorrect".
+Exit 3 = usage limit or similar hard error: the batch must stop.
+"""
+import json
+import os
+import re
+import shutil
+import subprocess
+import sys
+import time
+import uuid
+
+CLAUDE_EXE = os.environ.get("CLAUDE_EXE") or os.path.join(os.environ.get("APPDATA", ""), "npm", "node_modules", "@anthropic-ai", "claude-code", "bin", "claude.exe")
+
+MAX_ATTEMPTS = 5
+TIME_LIMIT_S = 20 * 60
+FAIL_MSG = "Your answer is incorrect. Keep working and give a new final answer in the same JSON format."
+NOFMT_MSG = "No final answer in the required format was found. Keep working and end with the JSON answer."
+TASK = ("The file context.md in the current directory contains a collection of documents followed by a final query "
+        "at the end.")
+ANSWER_FMT = ('When you are done, end your reply with the final answer as a JSON object {"matches": [...]} '
+              "listing the person IDs, sorted.")
+
+here = os.path.dirname(os.path.abspath(__file__))
+fdir = os.path.dirname(here)
+
+
+def tag_of(model):
+    return model.replace("claude-", "").replace("-", "")
+
+
+def parse_stream(path):
+    res = {"text": "", "cost": 0.0, "is_error": False, "turns": 0, "tool_calls": 0, "key_access": False}
+    if not os.path.exists(path):
+        return res
+    for line in open(path, encoding="utf-8"):
+        try:
+            d = json.loads(line)
+        except ValueError:
+            continue
+        if d.get("type") == "result":
+            res.update(text=d.get("result") or "", cost=float(d.get("total_cost_usd") or 0),
+                       is_error=bool(d.get("is_error")), turns=d.get("num_turns") or 0)
+        msg = d.get("message") or {}
+        for c in (msg.get("content") or []) if isinstance(msg.get("content"), list) else []:
+            if c.get("type") == "tool_use":
+                res["tool_calls"] += 1
+                s = json.dumps(c.get("input", {})).lower()
+                if "answers" in s and ("lhb" in s or "sample-0" in s) or "lhb-data" in s:
+                    res["key_access"] = True
+    return res
+
+
+def extract_answer(text):
+    found = re.findall(r'\{\s*"matches"\s*:\s*\[[^\]]*\]\s*\}', text or "")
+    if not found:
+        return None
+    try:
+        return sorted(set(json.loads(found[-1])["matches"]))
+    except (ValueError, KeyError, TypeError):
+        return None
+
+
+def main():
+    arm, model, s, rep = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4]
+    data = os.environ.get("LHB_DATA", "E:/lhb-data")
+    work = os.environ.get("LHB_WORK", "E:/r")
+    tag = tag_of(model)
+    run_id = "S2%s%s%s%s" % (arm, tag, s, rep)
+    out_dir = os.path.join(fdir, "runs", "step2")
+    os.makedirs(out_dir, exist_ok=True)
+    key = sorted(json.load(open(os.path.join(data, "answers", "sample-%s.json" % s), encoding="utf-8"))["matches"])
+
+    ws = os.path.join(work, run_id)
+    shutil.rmtree(ws, ignore_errors=True)
+    os.makedirs(ws)
+    shutil.copy(os.path.join(data, "contexts", "sample-%s.md" % s), os.path.join(ws, "context.md"))
+
+    state_dir = os.path.join(work, "_critic", run_id)
+    shutil.rmtree(state_dir, ignore_errors=True)
+    os.makedirs(state_dir)
+    settings = {"autoMemoryEnabled": False}
+    if arm == "C":
+        cmd = 'python -I "%s" "%s" %s' % (os.path.join(here, "critic_hook.py").replace("\\", "/"),
+                                         state_dir.replace("\\", "/"), model)
+        settings["hooks"] = {"PreToolUse": [{"matcher": "*", "hooks": [{"type": "command", "command": cmd, "timeout": 200}]}]}
+    settings_path = os.path.join(work, "_settings", run_id + ".json")
+    os.makedirs(os.path.dirname(settings_path), exist_ok=True)
+    json.dump(settings, open(settings_path, "w"))
+
+    if arm in ("A", "B"):
+        prefix = "PH" if arm == "A" else "CV"
+        plan = open(os.path.join(fdir, "plans", "%s-%s-%s-%s.md" % (prefix, tag, s, rep)), encoding="utf-8").read()
+        first = (TASK + " Earlier you looked at it and wrote this plan for answering the query:\n\n----- your plan -----\n"
+                 + plan + "\n----- end of plan -----\n\nFollow your plan and answer the query. " + ANSWER_FMT)
+    else:
+        first = TASK + " Answer the final query. " + ANSWER_FMT
+
+    sid = str(uuid.uuid4())
+    base = [CLAUDE_EXE, "-p", None, "--model", model, "--setting-sources", "", "--settings", settings_path,
+            "--tools", "Read,Grep,Glob,Bash", "--allowedTools", "Read,Grep,Glob,Bash",
+            "--output-format", "stream-json", "--verbose"]
+    t_start = time.time()
+    attempts, passed, stop = [], False, False
+    msg = first
+    for n in range(1, MAX_ATTEMPTS + 1):
+        remaining = TIME_LIMIT_S - (time.time() - t_start)
+        if remaining <= 5:
+            break
+        cmd = list(base)
+        cmd[2] = msg
+        cmd += ["--session-id", sid] if n == 1 else ["--resume", sid]
+        path = os.path.join(out_dir, "%s-a%d.jsonl" % (run_id, n))
+        t0 = time.time()
+        timed_out = False
+        with open(path, "w", encoding="utf-8") as out, open(path[:-6] + ".err", "w", encoding="utf-8") as err:
+            try:
+                subprocess.run(cmd, cwd=ws, stdout=out, stderr=err, timeout=remaining, encoding="utf-8")
+            except subprocess.TimeoutExpired:
+                timed_out = True
+        r = parse_stream(path)
+        ans = extract_answer(r["text"])
+        ok = ans == key
+        low = r["text"].lower()
+        if r["is_error"] and any(w in low for w in ("usage limit", "rate limit", "limit reached", "credit", "overloaded")):
+            stop = True
+        attempts.append({"attempt": n, "pass": ok, "answer": ans, "cost": round(r["cost"], 4),
+                         "secs": round(time.time() - t0), "turns": r["turns"], "tool_calls": r["tool_calls"],
+                         "timed_out": timed_out, "is_error": r["is_error"], "key_access": r["key_access"]})
+        with open(os.path.join(state_dir, "attempts.txt"), "a", encoding="utf-8") as f:
+            f.write("Attempt %d: %s\n" % (n, "correct" if ok else ("incorrect" if ans is not None else "no answer in the required format")))
+        if ok or stop or timed_out:
+            passed = ok
+            break
+        msg = FAIL_MSG if ans is not None else NOFMT_MSG
+
+    critic_cost, critic_calls, challenges = 0.0, 0, 0
+    log = os.path.join(state_dir, "critic_log.jsonl")
+    if os.path.exists(log):
+        shutil.copy(log, os.path.join(out_dir, run_id + "-critic.jsonl"))
+        for line in open(log, encoding="utf-8"):
+            d = json.loads(line)
+            critic_cost += d.get("cost", 0)
+            critic_calls += 1
+            challenges += d.get("decision") == "CHALLENGE"
+    summary = {"run": run_id, "arm": arm, "model": model, "sample": s, "rep": rep, "pass": passed,
+               "first_pass_attempt": next((a["attempt"] for a in attempts if a["pass"]), None),
+               "attempts": attempts, "worker_cost": round(sum(a["cost"] for a in attempts), 4),
+               "critic_cost": round(critic_cost, 4), "critic_calls": critic_calls, "challenges": challenges,
+               "total_cost": round(sum(a["cost"] for a in attempts) + critic_cost, 4),
+               "secs": round(time.time() - t_start), "session": sid, "stopped_on_error": stop}
+    with open(os.path.join(fdir, "runs", "step2_summary.jsonl"), "a", encoding="utf-8") as f:
+        f.write(json.dumps(summary) + "\n")
+    print(json.dumps({k: summary[k] for k in ("run", "pass", "first_pass_attempt", "total_cost", "secs", "stopped_on_error")}))
+    sys.exit(3 if stop else 0)
+
+
+if __name__ == "__main__":
+    main()

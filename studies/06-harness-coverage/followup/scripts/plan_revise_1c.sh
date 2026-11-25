@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Study 06 follow-up, step 1c: own plan back; the model defines near-miss, then says what to do if it is not enough.
-# Usage: plan_revise.sh <sample 00000|00001> <rep>   Env: LHB_DATA, LHB_WORK
+# Usage: plan_revise_1c.sh <sample 00000|00001> <rep> [model, default claude-opus-5-5]   Env: LHB_DATA, LHB_WORK
 set -u
-s=$1; rep=$2; model=claude-opus-5-5; tag=opus55
+s=$1; rep=$2; model=${3:-claude-opus-5-5}; tag=$(echo "$model" | sed 's/claude-//; s/-//g')
 data=${LHB_DATA:-/e/lhb-data}; work=${LHB_WORK:-/e/r}
 here="$(cd "$(dirname "$0")/.." && pwd)"
 prev="$here/plans/PH-$tag-$s-$rep.md"; out_dir="$here/runs/plans"; mkdir -p "$out_dir"

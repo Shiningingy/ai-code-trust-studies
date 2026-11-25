@@ -9,3 +9,14 @@
 **Also recorded.** Cost per plan (`total_cost_usd`), turns, and how much of the file the model looked at.
 
 **Next decision (not part of this step).** If cost is small, consider full runs and the feedback ladder (score feedback / pass-fail only / task only), and whether another harness (mini-swe-agent, needs an API key) is worth it.
+
+## Scoring decision after step 1 (Zili Luo, 2026-11-25)
+The near-miss step (re-read every person who fails exactly one condition) **counts as a partial recall step**: it is recall, but it cannot catch a person whose extraction missed two or more conditions, which is the Study 06 miss. Step 1 scores: 5 of 6 Opus plans = PARTIAL, 00000-3 = NO, none = FULL. Rule text above unchanged.
+
+## Step 1b (frozen 2026-11-25, before any run): does Opus find the full recall step once told the near-miss check is not enough?
+Fable 5.2 is not available in Claude Code 2.1.289, so step 1b uses Opus 5.5 only.
+
+**Design.** For each of the six step-1 plans, a new session (same harness, model, tools, example and context file) gets its own earlier plan back plus one paragraph naming the failure mode but **not** the fix:
+> Suppose a qualifying person's facts are worded so that your patterns miss two or more of that person's conditions. A check that re-reads only near-misses (people who fail exactly one condition) would not catch them. Do not answer the query yet. Revise your plan so that it would still find such a person, and say roughly what the revision adds in cost.
+
+**Scoring.** FULL if the revision adds a step that examines passages the extraction did not place (unplaced/unmatched passages, a residual or accounting check over all passages), or reviews every passage mentioning each rostered person regardless of what extraction found. PARTIAL if it only widens patterns or near-miss thresholds (e.g. "two of three"). NO otherwise. Same quoting and scoring roles as step 1. Also recorded: cost, and the model's own cost estimate for the revision.

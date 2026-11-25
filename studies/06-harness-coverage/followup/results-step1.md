@@ -1,6 +1,6 @@
 # Step 1 results: plan-only probe, Opus 5.5 in Claude Code (2026-11-25)
 
-Scores below are **Claude's proposals** under the frozen rule in `plan.md`; Zili Luo scores. Plans: `runs/plans/PH-opus55-*.md` (raw `*.jsonl`).
+Scores below are **Claude's proposals** under the frozen rule in `plan.md`; Zili Luo scores. Plans: [plans/](plans/) (`PH-opus55-*.md`; raw stream-json kept locally under `runs/plans/`, not committed).
 
 | Plan | Cost | Turns | Proposed score | Deciding sentence |
 |---|---|---|---|---|

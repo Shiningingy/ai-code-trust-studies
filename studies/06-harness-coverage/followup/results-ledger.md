@@ -60,3 +60,9 @@ Study 06's Direct arm put the whole file in the prompt: $0.87 per run ($0.74 Son
 - Exact-text matching: a sentence printed with changed spacing or cut in the middle counts as unseen. A 30-character middle chunk is recorded separately (`part`); it does not change the picture.
 - Seeing a sentence is not reading it with attention (Direct arm).
 - Two trap lines, two samples. The 0-of-22 result is strong for these traps, not a general law.
+
+## 6. What Claude Code itself does, and a cue that needs no reading (added 2026-11-25)
+
+**Claude Code makes no relevance judgment; it only caps sizes.** Across 104 attempt transcripts: 1,594 Bash calls and 26 Read calls. A Read of the whole file returns "File content (459.9KB) exceeds maximum allowed size (256KB). Use offset and limit parameters to read specific portions of the file, or search for specific content instead of reading the whole file." (22 times). A Bash output over the limit is saved to a file and the model sees a 2 KB preview (7 times). Both push the model towards search and scripts.
+
+**Rarity of a sentence's shape** ([scripts/rarity_check.py](scripts/rarity_check.py); shape = capitalised words → C, digits → N, case kept, nothing task-specific). All four trap sentences behind the misses (P-101's roster line and its employer's city line in 00000, P-091's quote in 00001, P-104's youth line in 00041) have a shape that occurs **once** in their file. About 1,500-1,650 sentences per file (17-18%) are in such one-off shapes. The reason is the generator: traps are rare variants of common templates (lowercase name, quote, connector phrase). In natural text, rare does not mean relevant, so this cue is benchmark-dependent. Opus B-2 had these very shapes in its inventory and filtered count-1 lines unread.

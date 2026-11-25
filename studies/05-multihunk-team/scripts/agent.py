@@ -225,7 +225,7 @@ if __name__ == "__main__":
         d = dry_run(b, a, k, s)
         print(d["prompt"])
         print(json.dumps({x: y for x, y in d.items() if x != "prompt"}, indent=1))
-    elif "--go" in sys.argv:  # a real run spends Allen's quota: only after he approves plan.md
+    elif "--go" in sys.argv:  # a real run spends Zili Luo's quota: only after he approves plan.md
         print(json.dumps(run(b, a, k, s), indent=1))
     else:
-        raise SystemExit("add --dry-run to print the prompt, or --go (after Allen's approval) to run")
+        raise SystemExit("add --dry-run to print the prompt, or --go (after Zili Luo's approval) to run")

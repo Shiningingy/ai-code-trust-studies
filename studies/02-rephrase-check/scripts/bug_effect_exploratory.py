@@ -1,4 +1,4 @@
-"""EXPLORATORY, raised by Allen after labels were seen, not in analysis-plan.md.
+"""EXPLORATORY, raised by Zili Luo after labels were seen, not in analysis-plan.md.
 
 Does right or wrong depend mainly on the bug? And when T0 is wrong, does another run get it right?
 Labels only: no test source is read for the first question.

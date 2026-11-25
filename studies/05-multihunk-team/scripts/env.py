@@ -179,7 +179,7 @@ def fresh_workspace(bug_id, slot, graph=None):
 
 D4J = "/opt/defects4j"
 EMPTY_DIR, EMPTY_FILE = DATA / "empty", DATA / "empty-file"
-# Amendment 1 (Allen, 2026-11-18): in the AGENT's container, hide what reveals the fix: the framework's fix and
+# Amendment 1 (Zili Luo, 2026-11-18): in the AGENT's container, hide what reveals the fix: the framework's fix and
 # test patches, the modified/loaded class lists, and the upstream git history (Closure repo + the repos zip).
 # Defects4J's own startup check needs only project_repos/README, which stays. compile, test, export and the
 # paper's trigger script were checked to work with these hidden (same 12 failures). The grading container is

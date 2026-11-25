@@ -11,7 +11,7 @@ not work. Precision was 84.4% among tests that agreed and 78.1% among tests that
 AUROC 0.517. Rewrites were not shown stronger than plain repeat runs, and discarding disagreeing tests raised precision by
 3 points at the cost of 48% of correct tests. Exploratory analysis suggests why. Outcomes cluster by bug: all five runs
 agree on 93 of 127 bugs, against about 36 by chance. Rewording flipped outcomes no more often than re-running did. Most
-disagreement was among correct tests. In a small hand read, none of six "wrong" tests was a clear misreading of the report:
+disagreement was among correct tests. In a small close read by Claude Code, checked by the author, none of six "wrong" tests was a clear misreading of the report:
 several followed the report where the gold patch went another way, and one never ran.
 
 ## 1. Introduction
@@ -141,7 +141,7 @@ beat a coin flip by about 2 tests. For contrast, the same cut in the GPT-4o pret
 Sensitivity lines do not change a verdict. With `added_f2p > 0` as the label the gap is 6.2 points, and with `astropy-8872` counted
 wrong it is 5.0.
 
-**Hand read.** The plan's seeded sample of 12, read with the report, tests, failure, harness output and gold patch. The six right
+**Close read (by Claude Code, checked by the author).** The plan's seeded sample of 12, read with the report, tests, failure, harness output and gold patch. The six right
 tests reproduce their reports, and the three in the disagree group differ only in technique. None of the six wrong tests is a clear
 misreading:
 
@@ -187,7 +187,7 @@ cases all three are wrong. Repeats show the same shape. "Right" means each passe
 **Does the outcome depend on the bug?** On the 127 bugs with all five results, 80 are right on all five runs, 13 are wrong on all
 five, and 34 are mixed. The 93 unanimous bugs compare with 36.5 when labels are shuffled across bugs (95% range 30-43) and 46.0 when
 shuffled within a repository (40-52). None of 10,000 shuffles reached 93. The intraclass correlation is 0.617. This shows clustering, not
-its cause. The hand read suggests part of the cause sits in the gap between report and gold patch.
+its cause. The close read suggests part of the cause sits in the gap between report and gold patch.
 
 **Does another run get it right?** With T0 wrong, T1 or T2 is right on 7 of 14 far bugs and 1 of 10 close bugs (p = 0.079, post hoc).
 Using all four other runs it is 8 of 14 and 3 of 10 (p = 0.24), and 11 of 24 overall. This is a hint at most, and a user still could not
@@ -232,7 +232,7 @@ The pretest signal did not carry over. It came from GPT-4o and from runs that di
 were far more common. Which of those differences matters is unknown, and this study cannot separate them. Passing a pretest justified the
 spend. It did not predict the result, and the pretest's own limits said so.
 
-The hand read raises a harder point. "Wrong" here means "disagrees with the gold patch", and that is not always "misunderstood the bug". A
+The close read raises a harder point. "Wrong" here means "disagrees with the gold patch", and that is not always "misunderstood the bug". A
 test can follow the report faithfully and still fail after a fix that took another route. If that is common, part of the wrong-test rate
 measures the gap between reports and fixes, and no check that lacks the fix can close it: neither the validator, nor disagreement. Six tests
 cannot say how common it is.

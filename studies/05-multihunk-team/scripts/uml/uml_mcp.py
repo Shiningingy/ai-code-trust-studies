@@ -1,5 +1,5 @@
 """MCP server (stdio) for arm U: one tool, `class_graph`, that returns a UML class graph (PlantUML text) for
-the part of the code the agent asks for (D7, Allen 2026-11-18: a Maple-style tool; the agent chooses the scope).
+the part of the code the agent asks for (D7, Zili Luo 2026-11-18: a Maple-style tool; the agent chooses the scope).
 
 The index is the full static graph of the bug's main source tree (tests excluded), built from the BUGGY base
 tree before any run by build_index.py with the same parsers as before (uml_py.py: `ast`; uml_java.py:
@@ -9,7 +9,7 @@ index, so the same question always gets the same text. Every call is logged.
 Hand-written JSON-RPC like box_mcp.py (no MCP library). Standard library only.
 Usage (from an MCP config): python uml_mcp.py <index .puml> <log file> [<locations .json>]
 
-Amendment 2 (Allen, 2026-11-18): with a locations file (build_locations.py) every answer also lists the file and
+Amendment 2 (Zili Luo, 2026-11-18): with a locations file (build_locations.py) every answer also lists the file and
 line range where each shown class is defined, and the tool description says so, as the paper's MAPLE class
 lookups return the defining file. Without it (the frozen arm U) answers and description are byte-identical to
 the frozen version.

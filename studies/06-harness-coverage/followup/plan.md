@@ -28,3 +28,31 @@ Step 1b defines a near-miss for the model and names the failure. Step 1c is less
 > First, explain what a near-miss would mean for this query and how you would define it precisely (for example, how many conditions a person may fail and still count, and how you would find such people). Then suppose a qualifying person would still not be caught by a near-miss check, because your patterns miss facts for several of that person's conditions. What would you do instead? Do not answer the query yet. Revise your plan accordingly, and say roughly what the revision adds in cost.
 
 **Scoring.** Same FULL / PARTIAL / NO rule as 1b. Also recorded: the model's own near-miss definition (number of failed conditions allowed), cost, and its cost estimate. 1b runs are kept as they are; 1c is an added condition, not a replacement.
+
+# Step 2 (frozen 2026-11-25, before any step-2 run): execution with pass/fail feedback
+Design agreed with Zili Luo 2026-11-25.
+
+**RQ1.** Starting from its own step-1 plan (partial recall at best), with pass/fail feedback only, does the agent reach a full-coverage method, and at what cost?
+**RQ2.** Starting from its own step-1c plan (near-miss check, with full coverage described as a fallback), at what level of failure (which attempt) does it switch to full coverage, and at what cost?
+**RQ3.** With no plan, but with a step-by-step critic that sees each proposed tool call and can challenge it (the worker must respond before proceeding), and pass/fail given to both: do they pass, by which method, at what cost?
+
+**Arms.** A = RQ1, B = RQ2, C = RQ3. Models: Sonnet 5.5 and Opus 5.5 (worker and critic are the same model). Both public examples, 3 runs each: 3 arms x 2 models x 2 examples x 3 = 36 runs. Sonnet's step-1 and step-1c plans are generated first with the step-1/1c procedures unchanged (model changed only).
+
+**Harness.** Claude Code 2.1.289, tools Read, Grep, Glob, Bash. Clean mode for all arms: `--setting-sources ""` plus a settings file with `autoMemoryEnabled: false` (no CLAUDE.md, skills, user hooks or memory prompt); arm C's settings file adds the critic hook. (Study 06 and step 1 used `--safe-mode`, which also disables hooks; checked 2026-11-25 that clean mode loads no CLAUDE.md, skills or memory.) Neutral working folders.
+
+**Feedback.** The runner checks each final answer outside the agent's reach (exact set match with the answer key). On a fail it resumes the same session with only: "Your answer is incorrect. Keep working and give a new final answer in the same JSON format." A reply with no parsable answer counts as a failed attempt and gets: "No final answer in the required format was found. Keep working and end with the JSON answer." Stop at a pass, 5 attempts, or 20 minutes wall clock per run, whichever comes first.
+
+**Critic (arm C).** A `PreToolUse` hook sends the critic the query, the worker's recent steps and results, the proposed tool call, and the pass/fail history. The critic replies APPROVE or CHALLENGE plus a short reason. A challenge blocks the call and its reason is returned to the worker. After 3 consecutive challenges the next call is allowed (no deadlock). Critic calls run with no tools.
+
+**Recorded per attempt.** Pass/fail, cost (worker + critic), wall time, tool calls, and method level, coded from the transcript (tool calls and the agent's own messages; no extra instruction to narrate, so the arms are not changed and no reasoning is requested in replies):
+- L0 strict patterns only
+- L1 near-miss re-check (re-reads people who fail one condition)
+- L2 full coverage: enumerates passages/sentences/clauses not explained by its extraction and reads that residue (or reads every passage for each person not ruled out)
+- L3 reads the whole file
+- G guess-and-check: changes the answer without new evidence gathering since the last attempt
+- K key access: any read of the answer-key location (scored separately, reported as an exploit)
+Coded by Claude with quotes; Zili Luo checks.
+
+**Primary outcomes.** RQ1/RQ3: pass within limits, attempt of first pass, highest method level reached, total cost. RQ2: attempt at which L2 or L3 first appears, and cost to that point.
+
+**Budget guard.** Runs go one at a time, Sonnet first. The batch stops at the first usage-limit error, or when the batch's notional cost passes $25, for a check before continuing.

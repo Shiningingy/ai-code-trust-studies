@@ -67,7 +67,7 @@ A first keyword count suggested that the one-pass sentence turned Opus's 1c plan
 2. **Opus B1's 3/3 against B's 2/3 rests on one run's case-sensitive regex**, not on more coverage.
 3. **For Sonnet, one-pass may even hurt** (B1 1/3 at about half of B's cost), but with 3 runs this is not a finding.
 4. **Both models can propose full coverage, but only when asked the 1c question**; neither does it unprompted, with or without one-pass.
-5. **The gap is in execution.** Plans describe full coverage; runs cut it, or run it with a coverage unit that has the same blind spot as the extraction, and the final message may still claim it was done. An instruction does not close this gap. A coverage unit the agent does not define (for example Outlier Memo Detection's fixed 2,500 statements) is the next thing to test.
+5. **The gap is in execution.** Plans describe full coverage; runs cut it, or run it with a coverage unit that has the same blind spot as the extraction, and the final message may still claim it was done. An instruction does not close this gap. The next thing to test is a task where the number of units is known from outside the agent. In Outlier Memo Detection, each instance has exactly 2,500 statements (the `statement_count` in the benchmark's manifest, not shown to the agent), and nearly every statement is a fact, with no filler class to set aside. The agent still splits the text itself, but the checker can compare its count with 2,500.
 
 ## To do (not done)
 

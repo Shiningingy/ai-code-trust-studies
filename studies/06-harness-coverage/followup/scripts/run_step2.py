@@ -1,6 +1,8 @@
 """Study 06 follow-up, step 2: one run of arm A, B or C with pass/fail feedback (see ../plan.md, Step 2).
 
-Usage: python -I run_step2.py <A|B|C> <model> <sample 00000|00001> <rep>
+Usage: python -I run_step2.py <A|B|C|N|A1|B1|N1> <model> <sample> <rep>
+Step 3 (plan.md): N = no plan, no critic; a trailing 1 = one-pass (one-pass plan PH1/CV1, the one-pass sentence
+in the prompt, and the run stops after the first answer).
 Env: LHB_DATA (contexts/, answers/), LHB_WORK (neutral working folders).
 The answer key is read here, outside the agent's session; the agent only ever sees "incorrect".
 Exit 3 = usage limit or similar hard error: the batch must stop.
@@ -22,6 +24,7 @@ FAIL_MSG = "Your answer is incorrect. Keep working and give a new final answer i
 NOFMT_MSG = "No final answer in the required format was found. Keep working and end with the JSON answer."
 TASK = ("The file context.md in the current directory contains a collection of documents followed by a final query "
         "at the end.")
+ONE_PASS = "You will give one final answer. It is scored once, by exact match, with no feedback and no second try."
 ANSWER_FMT = ('When you are done, end your reply with the final answer as a JSON object {"matches": [...]} '
               "listing the person IDs, sorted.")
 
@@ -102,6 +105,10 @@ def main():
     data = os.environ.get("LHB_DATA", "E:/lhb-data")
     work = os.environ.get("LHB_WORK", "E:/r")
     tag = tag_of(model)
+    one_pass = arm.endswith("1")
+    base_arm = arm.rstrip("1")
+    max_attempts = 1 if one_pass else MAX_ATTEMPTS
+    fmt = (ONE_PASS + " " + ANSWER_FMT) if one_pass else ANSWER_FMT
     run_id = "S2%s%s%s%s" % (arm, tag, s, rep)
     out_dir = os.path.join(fdir, "runs", "step2")
     os.makedirs(out_dir, exist_ok=True)
@@ -131,13 +138,13 @@ def main():
     os.makedirs(os.path.dirname(settings_path), exist_ok=True)
     json.dump(settings, open(settings_path, "w"))
 
-    if arm in ("A", "B"):
-        prefix = "PH" if arm == "A" else "CV"
+    if base_arm in ("A", "B"):
+        prefix = ("PH" if base_arm == "A" else "CV") + ("1" if one_pass else "")
         plan = open(os.path.join(fdir, "plans", "%s-%s-%s-%s.md" % (prefix, tag, s, rep)), encoding="utf-8").read()
         first = (TASK + " Earlier you looked at it and wrote this plan for answering the query:\n\n----- your plan -----\n"
-                 + plan + "\n----- end of plan -----\n\nFollow your plan and answer the query. " + ANSWER_FMT)
+                 + plan + "\n----- end of plan -----\n\nFollow your plan and answer the query. " + fmt)
     else:
-        first = TASK + " Answer the final query. " + ANSWER_FMT
+        first = TASK + " Answer the final query. " + fmt
 
     sid = str(uuid.uuid4())
     base = [CLAUDE_EXE, "-p", None, "--model", model, "--setting-sources", "", "--settings", settings_path,
@@ -146,7 +153,7 @@ def main():
     t_start = time.time()
     attempts, passed, stop = [], False, False
     msg = first
-    for n in range(1, MAX_ATTEMPTS + 1):
+    for n in range(1, max_attempts + 1):
         remaining = TIME_LIMIT_S - (time.time() - t_start)
         if remaining <= 5:
             break

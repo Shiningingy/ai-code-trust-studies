@@ -62,3 +62,25 @@ Found by Claude while coding the first arm-C traces; the batch was halted, fixed
 1. **Critic saw the call it was judging as an earlier step.** At `PreToolUse` time Claude Code has already written the pending tool call to the transcript, so the critic's "recent steps" ended with the very call shown as "proposed next step". In arm C v1, 5 of 7 challenges in one run said the call "is identical to the one the agent just issued". Fix: the transcript tail drops trailing calls that have no result yet (checked live with a probe hook). This is what the frozen design specifies (recent steps + the proposed call); the critic prompt text is unchanged.
 2. **Runs shared a temp folder.** Workers write scripts to `$TEMP` or `/tmp`, and Git Bash maps `/tmp` to the Windows user Temp whatever `TEMP` says, so later runs could see earlier runs' scripts and outputs. In arm C v1 a blocked write left a worker running an older run's `a.py`. Fix: each run gets its own `TEMP`/`TMP`, and before each run the runner moves worker-style files (`.py/.txt/.json/.pkl/.csv/.tsv/.md` at the top of the user Temp, and small folders holding only such files) to `$LHB_WORK/_tmp_quarantine/<run>/` (moved, not deleted). An audit of arms A and B found no command that used a temp file the run had not written itself (no calls were blocked in those arms), so they are kept.
 3. Arm C v1 (Sonnet, 3 runs, the third cut off) is kept in `runs/step2_v1_excluded/` and not counted. Arm C is rerun with the fixes; Opus runs all use the fixed harness.
+
+# Step 3 (frozen 2026-11-25, before any step-3 run): a harder instance, and telling the agent it has one answer
+Design agreed with Zili Luo 2026-11-25 (morning): run on Constraint instance **00041**, keep the step-2 arms, and add a one-pass condition.
+
+**Why.** The two public examples did not separate the arms (all reached 6/6). Instance 00041 has five conditions; two are known from the public examples (volunteered 3+, avoids dairy), three are new (guardian of someone on an evening course, prefers train to plane, enjoys a fruit). **One-pass (Zili Luo's addition):** an agent that assumes it can retry may plan a gradual ladder (direct, check, near-miss, check, full coverage) instead of choosing its method at the start. Note: in step 2 the agent was never told retries existed before its first answer, but the 1c prompt itself frames full coverage as a fallback.
+
+**Arms** (instance 00041, Sonnet 5.5 and Opus 5.5, 3 runs each; same harness, clean mode, tools, limits and feedback text as step 2):
+- **B** own 1c plan, pass/fail retries (as step 2). **B1** the same, but the plan is made and executed under the one-pass sentence, and the run stops after the first answer.
+- **A** own step-1 plan, retries. **A1** one-pass version.
+- **N** no plan, no critic, retries (task prompt only). **N1** one-pass version.
+- Arm C is not run in step 3: the four critic issues in results-step2.md are not fixed yet.
+
+Run order per model: B, B1, A, A1, N, N1; Sonnet first. Plans for 00041 come first, with the step-1 and 1c procedures unchanged (`--safe-mode`, same prompts); the one-pass plans (PH1, CV1) differ only by the one-pass sentence, and CV1 is revised from the model's own PH1 plan.
+
+**One-pass sentence** (added to the plan prompt, and to the execution prompt of arms A1, B1, N1, just before the answer-format line):
+> You will give one final answer. It is scored once, by exact match, with no feedback and no second try.
+
+In the one-pass arms this is true: there is no feedback and no second attempt.
+
+**Outcomes.** First-answer exact match, cost and time to first answer, method level of the first attempt (L0-L3/G/K, same codes), and for the retry arms the attempt of first pass and cost to first correct answer. The comparison of interest is X vs X1 on attempt 1. Plans are also scored FULL / PARTIAL / NO with the 1b/1c rule, and whether a plan is staged as an escalation ladder is noted.
+
+**Budget guard.** Step-3 spend counted separately (sample 00041 only): stop at $20 for Sonnet, $35 for Opus, or at the first usage-limit error.

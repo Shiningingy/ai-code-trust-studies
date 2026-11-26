@@ -51,6 +51,8 @@ def tool_outputs_and_usage(path):
             turns += d.get("num_turns") or 0
             mu = d.get("modelUsage") or mu
         msg = d.get("message") or {}
+        if not isinstance(msg, dict):
+            continue
         content = msg.get("content")
         if not isinstance(content, list):
             continue

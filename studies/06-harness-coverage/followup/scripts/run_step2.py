@@ -96,6 +96,8 @@ def parse_stream(path):
             res.update(text=d.get("result") or "", cost=float(d.get("total_cost_usd") or 0),
                        is_error=bool(d.get("is_error")), turns=d.get("num_turns") or 0)
         msg = d.get("message") or {}
+        if not isinstance(msg, dict):  # e.g. a "permission_denied" system event carries a plain-text message
+            continue
         for c in (msg.get("content") or []) if isinstance(msg.get("content"), list) else []:
             if c.get("type") == "tool_use":
                 res["tool_calls"] += 1

@@ -37,6 +37,8 @@ def last_text(transcript_path):
             except ValueError:
                 continue
             msg = d.get("message") or {}
+            if not isinstance(msg, dict):
+                continue
             if msg.get("role") == "assistant" and isinstance(msg.get("content"), list):
                 t = "\n".join(c.get("text", "") for c in msg["content"] if c.get("type") == "text")
                 if t:

@@ -85,32 +85,29 @@ In the one-pass arms this is true: there is no feedback and no second attempt.
 
 **Budget guard.** Step-3 spend counted separately (sample 00041 only): stop at $20 for Sonnet, $35 for Opus, or at the first usage-limit error.
 
-# Step 4 (DRAFT 2026-11-25 night, not frozen; nothing scored run yet): learn a grammar once, reuse it, patch it
-Decisions with Zili Luo 2026-11-25: train/test split; Sonnet 5.5 only; reader arms L/PL/LC dropped (built, never run on the benchmark; the ledger result is an observation, not an intervention). Arm D-from-scratch replaced by G (Zili Luo's design): a dedicated learning session writes a parser library; later sessions reuse it and add documented patches instead of relearning.
+# Step 4 (DRAFT 2026-11-26, not frozen; nothing scored run yet): learn a grammar once, reuse it, patch it
+Decisions with Zili Luo 2026-11-25/26: train/test split; Sonnet 5.5 only; reader arms L/PL/LC dropped (built, never run on the benchmark; the ledger result is an observation, not an intervention); D-from-scratch replaced by G (Zili Luo's design): learning sessions write a grammar library once, test sessions reuse it and patch it. All model-facing texts are in [step4/DRAFTS.md](step4/DRAFTS.md) (generated from the code) for Zili Luo's approval.
 
-**Instances (10).** Train: 00000, 00001 (public examples), 00041 (studied). Test (7, unstudied): five-condition 00002, 00014, 00029; three-condition relation + fruit 00003, 00021, 00039, 00045 (the two groups named in full-suite-hardest-tasks.md). Contexts for 00003/21/39/45 still to be fetched from the HF release. The generator is not released, so the grammar is reverse-engineered from the text only. The grammar covers every statement, not only the query's conditions, so it is query-independent (the test queries include "taught a class this year", which no training query has).
+**Instances (10 + 1 variant).** Train: 00000, 00001 (public examples), 00041 (studied), shown as train/doc1-3.md. Test (7, unstudied): five-condition 00002, 00014, 00029; three-condition relation + fruit 00003, 00021, 00039, 00045. All fetched from the HF release and checked against its manifest (SHA-256). The generator is not released, so the grammar is reverse-engineered from the text. The grammar covers every statement, not only the query's conditions, so it is query-independent (test queries 00002 and 00014 ask about "taught a class this year", which no training query does).
 
-**Arms** (test sessions all one-pass, first answer only, clean mode, same tools and limits):
+**Phase 1: learning (G only).**
+- Three independent learning sessions (same prompt, fresh sessions, Write/Edit allowed) on the three training documents, each producing a library (step4/libs/learn-a, -b, -c). Up to 6 rounds of Stop-hook feedback: which training answers are correct (keys stay outside the workspace), whether the library's tests pass, how many clauses are unresolved. Labels are used in training only. Time limit 75 minutes each.
+- [step4/merge.py](step4/merge.py) (code) compares the three libraries clause by clause on the training documents (signature: status + words of subjects, objects and qualifiers; relation names ignored) and groups disagreements by clause shape; the 40 largest groups get IDs.
+- One reconcile session builds v0 from the three, records a decision per group in lib/RECONCILE.md, and must meet the same requirements (tests pass, nothing unresolved, training answers correct). Purpose (Zili Luo): avoid a one-time error of a single learner.
+
+**Phase 2: test sessions (one-pass, first answer only, clean mode; tools Read, Grep, Glob, Bash for all arms).**
 - **N** task prompt only (runner arm N1).
-- **P** plan-first sentence (runner arm P1): "Before you start, write a plan for solving this. List the ways your approach could miss something, and how you will rule out each one."
-- **G** grammar library. Phase 1, one learning session on the 3 training files, with pass/fail on their 3 queries (labels allowed in training only). Phase 2, test sessions get the current library, run it, triage outliers into patches, answer with one query; Stop hook checks every content line is in parsed.jsonl (code, no model; built and tested offline as the hook's parse mode).
+- **P** plan-first sentence (runner arm P1).
+- **G** (runner arm G1): workspace gets context.md, gram/ and a fresh copy of v0. **No patches travel between test sessions** (Zili Luo): every test session starts from v0, so sessions are independent; their patches are kept for analysis only. The session runs the library, triages each unresolved clause (Normalizer / Rule / manual.jsonl), must not edit v0's parts, answers with a query over the facts. Stop hook ([step4/hook.py](step4/hook.py), test mode): re-parses context.md itself with a pristine copy of gram (a session that edits its own gram/ cannot change the check) and blocks once, naming up to 50 unresolved clauses, if any remain or tests fail. Recorded: edited v0 parts, new parts, unresolved count, answer before and after the check.
 
-**Library framework (harness-provided, task-agnostic; Claude's proposal, Zili Luo to confirm).** Small abstract classes so rules are selectable parts, not branches:
-- `Splitter.split(line) -> clauses`
-- `Normalizer.apply(clause) -> clause` with `name`, `solves`, `examples`: fixes the data's form only. The harness enforces "form only" in code: the normalised clause must keep the same words up to case, punctuation and ID format (no word may be added or removed).
-- `Rule.parse(clause) -> facts | None` with `name`, `solves`, `examples`: one clause template, must consume the whole clause.
-- `Pipeline(config)`: the config lists which splitter, normalizers and rules are used; rules are auto-discovered; every class's examples run as tests; two rules matching one clause is reported as an ambiguity, not resolved silently.
+**Framework ([step4/gram/](step4/gram/), harness-provided, task-agnostic).** Splitter / Normalizer / Rule (+ PatternRule, whole-clause regex), each with `name`, `solves`, `added_by`, `examples` (run as tests); a config selects parts; rules are auto-discovered. Enforced in code: a splitter may drop only text matching its declared connector patterns; a normalizer must keep every word (same word count; each word the same up to case or a typo fix of edit distance at most 2 on words of 4+ letters), so a "data fix" cannot delete meaning such as "in the past"; two rules giving different facts is reported as ambiguous; facts must have subject and relation. Checked offline with a toy library ([step4/tests/test_offline.py](step4/tests/test_offline.py)).
 
-**Outlier triage (Zili Luo).** For each clause that no rule parses, the session decides and records which case it is:
-1. the data breaks the grammar's form (case, quotes, spacing, ID format) -> a Normalizer patch (fix the data, original kept);
-2. a valid construction the grammar lacks -> a Rule patch;
-3. free text no grammar fits -> read by the model and recorded as a manual fact with a reason (a reader fallback; none expected in this generated benchmark, so its use is counted).
-Patches only add: new files with a header (kind, what it solves, example before/after, session), plus a test; all tests must pass. Before a library is carried forward the harness rejects patches containing literal person IDs (e.g. "P-104"; regexes such as p-\d+ are fine), so no answers travel between sessions.
+**Outlier triage (Zili Luo).** Broken form -> Normalizer; missing construction -> Rule; free text no grammar should cover -> manual.jsonl with facts or "ignore" and a reason.
 
-**Chains.** Each G chain starts from the frozen learning-session library v0 and visits all 7 test instances once, in a rotated order; each chain carries its own patches forward. This measures cost by position (does it get cheaper as patches accumulate?) without an instance ever seeing its own earlier patches.
+**Triage test (Zili Luo): a variant with known changes.** [step4/make_variants.py](step4/make_variants.py) builds sample 90017 from test-pool instance 00017 (five conditions, unused elsewhere; seed 17): 40 form breaks (typo, case, spacing) -> expected Normalizer; 22 facts rewritten in constructions the generator never uses (4 per relation) -> expected Rule; 6 decisive facts of answer people rewritten once as free text -> expected manual; 8 inserted garbled passages -> expected ignored. Every change keeps the facts, so 00017's key still holds; 45 changes touch answer people. Manifest: step4/variants/90017-manifest.jsonl. Arms G and N, 2 runs each. Scored: answer, and per change how it was resolved against the expected kind (scoring script to be written after the runs).
 
-**Runs and budget (estimate).** 7 instances x 2 runs x 3 arms = 42 test sessions (G = 2 chains) + 1 learning session: about $25; cap $30.
+**Runs and budget (estimate).** Learning 3 x ~$3 + reconcile ~$2 = ~$11; test 7 instances x 2 runs x 3 arms = 42 sessions ~$25; variant 4 sessions ~$3. About $40; cap $45 (learning phase checked separately: stop if it passes $15).
 
-**Outcomes.** First-answer exact match and cost per arm; for G also learning cost, cost by chain position, patches per session by kind (normalizer / rule / manual), ambiguities, parse coverage before the hook, and whether the decisive lines were parsed correctly.
+**Outcomes.** First-answer exact match and cost per arm; G: learning cost (once), cost per test session, patches by kind, unresolved before the hook, edits to v0 (should be none), answer before vs after the hook; variant: triage accuracy by kind.
 
-**To draft and approve before freezing:** learning-session instruction, test-session (G) instruction, the framework code, and the hook message (as in the D draft).
+**Before freezing.** Zili Luo approves DRAFTS.md (sections 1-5 are new model-facing text) and the budget.

@@ -1,0 +1,1 @@
+{"splitter": "sent_comma_and", "normalizers": ["curly", "bad_drop"], "rules": "all"}

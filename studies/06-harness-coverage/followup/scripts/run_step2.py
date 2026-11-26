@@ -1,7 +1,8 @@
 """Study 06 follow-up, step 2: one run of arm A, B or C with pass/fail feedback (see ../plan.md, Step 2).
 
-Usage: python -I run_step2.py <A|B|C|N|A1|B1|N1|P1|L1|PL1|LC1|D1> <model> <sample> <rep>
-Step 4 arm D: complete-grammar instruction; Stop hook (parse mode) checks parsed.jsonl covers every content line.
+Usage: python -I run_step2.py <A|B|C|N|A1|B1|N1|P1|L1|PL1|LC1|D1|G1> <model> <sample> <rep>
+Step 4 arm G (G1): learned grammar library v0 ($LHB_V0, default step4/libs/v0) + step4/hook.py test mode.
+Step 4 arm D (superseded by G): complete-grammar instruction; Stop hook (parse mode) checks parsed.jsonl covers every content line.
 Step 4 (plan.md): P = plan-first sentence; L = ledger Stop hook showing reader-flagged sentences never shown to the
 agent (needs $LHB_WORK/_reader/<sample>/flagged.json from haiku_reader.py v2); PL = both; LC = hook shows only the
 count of unseen sentences. All step-4 arms are one-pass (trailing 1).
@@ -164,6 +165,23 @@ def main():
         shutil.copy(os.path.join(here, "ledger_hook.py"), hook_py)
         cmd = 'python -I "%s" "%s" %s' % (hook_py.replace("\\", "/"), ledger_dir.replace("\\", "/"), HOOK_MODE[base_arm])
         settings["hooks"] = {"Stop": [{"hooks": [{"type": "command", "command": cmd, "timeout": 120}]}]}
+    if base_arm == "G":
+        # Step 4 arm G: the frozen learning-session library v0 and the gram framework go into the workspace; the
+        # hook (neutral copy, pristine gram beside it) re-parses context.md itself at the first stop.
+        s4 = os.path.join(fdir, "step4")
+        sys.path.insert(0, s4)
+        from run_learn import install_hook
+        from hook import lib_hashes
+        v0 = os.environ.get("LHB_V0") or os.path.join(s4, "libs", "v0")
+        shutil.copytree(os.path.join(s4, "gram"), os.path.join(ws, "gram"))
+        shutil.copytree(v0, os.path.join(ws, "lib"))
+        ledger_dir = os.path.join(work, "_s", run_id)
+        shutil.rmtree(ledger_dir, ignore_errors=True)
+        os.makedirs(ledger_dir)
+        json.dump(lib_hashes(os.path.join(ws, "lib")), open(os.path.join(ledger_dir, "v0_hashes.json"), "w"))
+        hook_py = install_hook(work).replace("\\", "/")
+        cmd = 'python -I "%s" "%s" test' % (hook_py, ledger_dir.replace("\\", "/"))
+        settings["hooks"] = {"Stop": [{"hooks": [{"type": "command", "command": cmd, "timeout": 300}]}]}
     settings_path = os.path.join(work, "_settings", run_id + ".json")
     os.makedirs(os.path.dirname(settings_path), exist_ok=True)
     json.dump(settings, open(settings_path, "w"))
@@ -176,6 +194,9 @@ def main():
     else:
         if base_arm == "D":
             first = TASK + " " + D_INSTR + " " + fmt
+        elif base_arm == "G":
+            import prompts
+            first = TASK + " " + prompts.TEST + "\n\n" + fmt
         else:
             first = TASK + (" " + PLAN_FIRST if base_arm in ("P", "PL") else "") + " Answer the final query. " + fmt
 
@@ -237,6 +258,17 @@ def main():
         pre = extract_answer(ledger_check.get("answer_before_check", ""))
         ledger_check.update(answer_before=pre, pass_before=pre == key)
         shutil.copy(os.path.join(ledger_dir, "ledger_check.json"), os.path.join(out_dir, run_id + "-ledger.json"))
+    if base_arm == "G":
+        log = os.path.join(ledger_dir, "hook_log.jsonl")
+        if os.path.exists(log):
+            ledger_check = json.loads(open(log, encoding="utf-8").readline())
+            pre = extract_answer(ledger_check.pop("answer_text", ""))
+            ledger_check.update(answer_before=pre, pass_before=pre == key)
+            shutil.copy(log, os.path.join(out_dir, run_id + "-hook.jsonl"))
+        shutil.copytree(os.path.join(ws, "lib"), os.path.join(out_dir, run_id + "-lib"), dirs_exist_ok=True)
+        for f in ("manual.jsonl",):
+            if os.path.exists(os.path.join(ws, f)):
+                shutil.copy(os.path.join(ws, f), os.path.join(out_dir, run_id + "-" + f))
     if base_arm == "D" and os.path.exists(os.path.join(ws, "parsed.jsonl")):
         shutil.copy(os.path.join(ws, "parsed.jsonl"), os.path.join(out_dir, run_id + "-parsed.jsonl"))
     summary = {"run": run_id, "arm": arm, "model": model, "sample": s, "rep": rep, "pass": passed,

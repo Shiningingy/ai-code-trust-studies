@@ -25,7 +25,7 @@ attempts = [{"attempt": 1, "pass": ans == key, "answer": ans, "cost": round(p["c
 ledger_check = None
 ldir = os.path.join(work, "_s", run_id)
 log = os.path.join(ldir, "hook_log.jsonl")
-if arm.rstrip("1") == "G" and os.path.exists(log):
+if arm.rstrip("1") in ("G", "GO") and os.path.exists(log):
     ledger_check = json.loads(open(log, encoding="utf-8").readline())
     pre = r.extract_answer(ledger_check.pop("answer_text", ""))
     ledger_check.update(answer_before=pre, pass_before=pre == key)

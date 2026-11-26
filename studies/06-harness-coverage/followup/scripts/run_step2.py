@@ -1,7 +1,8 @@
 """Study 06 follow-up, step 2: one run of arm A, B or C with pass/fail feedback (see ../plan.md, Step 2).
 
-Usage: python -I run_step2.py <A|B|C|N|A1|B1|N1|P1|L1|PL1|LC1|D1|G1> <model> <sample> <rep>
+Usage: python -I run_step2.py <A|B|C|N|A1|B1|N1|P1|L1|PL1|LC1|D1|G1|GO1> <model> <sample> <rep>
 Step 4 arm G (G1): learned grammar library v0 ($LHB_V0, default step4/libs/v0) + step4/hook.py test mode.
+Step 4b arm GO (GO1): as G1 with the library learned by Opus 5.5 (default step4/libs/v0-opus).
 Step 4 arm D (superseded by G): complete-grammar instruction; Stop hook (parse mode) checks parsed.jsonl covers every content line.
 Step 4 (plan.md): P = plan-first sentence; L = ledger Stop hook showing reader-flagged sentences never shown to the
 agent (needs $LHB_WORK/_reader/<sample>/flagged.json from haiku_reader.py v2); PL = both; LC = hook shows only the
@@ -126,6 +127,9 @@ def main():
     tag = tag_of(model)
     one_pass = arm.endswith("1")
     base_arm = arm.rstrip("1")
+    lib_name = "v0"
+    if base_arm == "GO":  # step 4b: arm G with the library learned by Opus 5.5 (libs/v0-opus); same prompt and hook
+        base_arm, lib_name = "G", "v0-opus"
     max_attempts = 1 if one_pass else MAX_ATTEMPTS
     fmt = (ONE_PASS + " " + ANSWER_FMT) if one_pass else ANSWER_FMT
     run_id = "S2%s%s%s%s" % (arm, tag, s, rep)
@@ -174,7 +178,7 @@ def main():
         sys.path.insert(0, s4)
         from run_learn import install_hook
         from hook import lib_hashes
-        v0 = os.environ.get("LHB_V0") or os.path.join(s4, "libs", "v0")
+        v0 = os.environ.get("LHB_V0") or os.path.join(s4, "libs", lib_name)
         shutil.copytree(os.path.join(s4, "gram"), os.path.join(ws, "gram"))
         shutil.copytree(v0, os.path.join(ws, "lib"))
         ledger_dir = os.path.join(work, "_s", run_id)

@@ -85,34 +85,28 @@ In the one-pass arms this is true: there is no feedback and no second attempt.
 
 **Budget guard.** Step-3 spend counted separately (sample 00041 only): stop at $20 for Sonnet, $35 for Opus, or at the first usage-limit error.
 
-# Step 4 (DRAFT 2026-11-25 evening, not frozen; nothing run yet): shaping vs checking on unstudied instances
-Decisions with Zili Luo 2026-11-25: test whether a harness-side coverage check generalises beyond the instances it was designed on; plan-first as a second factor; Sonnet 5.5 only (Opus dropped: both models already showed the silent-drop weakness in steps 2-3; Opus may be added later only if Sonnet's result is positive).
+# Step 4 (DRAFT 2026-11-25 late evening, not frozen; nothing scored run yet): plan-first vs a complete grammar, on unstudied instances
+Decisions with Zili Luo 2026-11-25: test on instances not used in design; Sonnet 5.5 only (Opus dropped: both models showed the silent-drop weakness in steps 2-3; Opus may be added later only if a result is positive).
 
-**Instances.** Hard Constraint 00002, 00014, 00029 (not studied in steps 2-3). Memo later, as a second task type.
+**Arms dropped (Zili Luo, 2026-11-25).** The reader arms L and PL and the count arm LC were built (scripts/ledger_hook.py; runner arms L1, PL1, LC1; tested on a dummy file only) but are **not run**: a reader is a probabilistic check on a probabilistic agent, and the reader tests already show its per-line recall is about two in three at random (results-ledger.md section 7). Note for the record: the ledger result (no miss when the trap line was seen) is an observation across runs, not an intervention; whether showing unseen lines to an agent fixes its answer stays untested.
+
+**Instances.** Hard Constraint 00002, 00014, 00029 (not studied in steps 2-3). Each has its own world and one query, so a grammar cannot be reused across queries here: D's upfront cost is its whole cost in this test.
 
 **Arms** (all one-pass, with the step-3 one-pass sentence; first answer only; clean mode, same tools and limits):
 - **N** task prompt only (runner arm N1).
-- **P** plan-first sentence (below) before the task.
-- **L** ledger hook: before the runs, the Haiku reader (thinking off) flags sentences once per instance; during the run a PostToolUse hook marks sentences SEEN when their text comes back in a tool result; when the agent first tries to finish, a Stop hook blocks once and shows the flagged-but-unseen sentences; the next final answer is scored.
-- **PL** both.
-- **LC** ledger count (added by Zili Luo): same SEEN tracking, no reader; when the agent first tries to finish, the Stop hook blocks once and shows only the number of sentences never shown to it, no content. Tests whether the agent's belief that it covered everything changes with a hard number alone.
-  LC message (Claude's draft, for Zili Luo to confirm before freezing):
-  > Before your answer is final: <U> of the <T> sentences in the context were never shown to you. Check whether any of them matter, then give your final answer.
+- **P** plan-first sentence before the task (runner arm P1):
+  > Before you start, write a plan for solving this. List the ways your approach could miss something, and how you will rule out each one.
+- **D** complete grammar (Zili Luo's idea): the agent builds a grammar of how the sentences are constructed, parses every clause completely into a table, reads its own outlier list, and answers with one query over the table. A Stop hook (code, no model) checks once that every content line of context.md is accounted for in the agent's parse output and names the missing line numbers. Instruction and hook message: Claude's drafts below, for Zili Luo to approve before freezing.
 
-**Plan-first sentence** (Zili Luo chose Claude's tightened version):
-> Before you start, write a plan for solving this. List the ways your approach could miss something, and how you will rule out each one.
+**D instruction (draft)**, placed after the task sentence:
+> Before answering, turn the documents into a table. Work out the grammar of how the sentences are built, and write a parser that parses every clause completely, leaving no word unaccounted for. Any clause your parser cannot parse completely goes on an outlier list; read that list yourself and handle each item. Save the result as parsed.jsonl, one JSON object per non-empty, non-heading line of context.md: {"line": <line number>, "facts": [...]} or {"line": <line number>, "outlier": true}. Then answer the final query with a query over the table.
 
-**Stop-hook message** (agreed), followed by the sentences:
-> Before your answer is final: these lines may be relevant and were never shown to you. Check them, then give your final answer.
+**D hook message (draft)**, shown once if lines are missing:
+> Before your answer is final: these lines of context.md are not in parsed.jsonl: <line numbers>. Parse them or mark them as outliers, then give your final answer.
+(If parsed.jsonl does not exist: "Before your answer is final: parsed.jsonl was not found. Create it as instructed, then give your final answer.")
 
-**Cost accounting.** The reader pass is run once per instance and shared by that instance's L and PL runs, but a real harness would run it for every task. So each L/PL run's reported cost = agent cost + the **full** reader cost for its instance (not divided across runs); the shared spend is reported separately for the budget.
+**Runs and budget.** 3 arms x 3 instances x 3 runs = 27 Sonnet runs, about $20 (estimate; D may cost more per run); cap $25.
 
-**Runs and budget.** 5 arms (N, P, L, PL, LC) x 3 instances x 2 runs = 30 Sonnet runs, about $19 (estimate) plus about $2 for the reader; cap $25.
+**Outcomes.** First-answer exact match and cost per arm; for D also: parse coverage (lines parsed / outliers / missing before the hook), answer before vs after the hook, and whether the outlier list held the decisive lines.
 
-**Implementation (built 2026-11-25 evening; tested on a 61-sentence dummy file with Haiku, not on a benchmark instance).**
-- Runner arms: `N1` (= step-3 N1), `P1`, `L1`, `PL1`, `LC1` in [scripts/run_step2.py](scripts/run_step2.py). P adds the plan-first sentence after the task sentence.
-- [scripts/ledger_hook.py](scripts/ledger_hook.py) is a Stop hook only. The ledger is computed from the transcript when the agent first tries to finish (same SEEN rule as ledger.py), so no PostToolUse hook is needed. It blocks once with Claude Code's JSON form (`{"decision": "block", "reason": ...}`); the agent then sees "Stop hook feedback:" followed by the message. With the exit-2 form the agent also saw the hook's command line, which named the study folder, so that form is not used. The hook runs from a neutral copy (`$LHB_WORK/_h/check.py`, state in `$LHB_WORK/_s/<run>`).
-- Flagged sentences are shown as `line <n>: <sentence>` (line number in context.md).
-- The answer the agent gave before the check is saved too (`runs/step2/<run>-ledger.json`), so each L/PL/LC run gives a before/after pair; the scored answer is the one after.
-- Hooks passed with `--settings` work under `--setting-sources ""` (arm C used this; Stop confirmed in the dummy test).
-- Reader: [scripts/haiku_reader.py](scripts/haiku_reader.py) with `v2` = the hook's sentence splitter (no split after initials such as "D.") and `alwaysThinkingEnabled: false` (thinking tokens 0 in the dummy test). Checked first on 00041 against the thinking-on result before use.
+**Implementation.** Runner arms N1, P1 exist; D1 and the hook's parse-check mode to be added. Hooks via `--settings` work under `--setting-sources ""`; the hook blocks with Claude Code's JSON form, so the agent does not see its command line.

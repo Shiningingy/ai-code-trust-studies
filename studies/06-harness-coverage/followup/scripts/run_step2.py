@@ -1,6 +1,7 @@
 """Study 06 follow-up, step 2: one run of arm A, B or C with pass/fail feedback (see ../plan.md, Step 2).
 
-Usage: python -I run_step2.py <A|B|C|N|A1|B1|N1|P1|L1|PL1|LC1> <model> <sample> <rep>
+Usage: python -I run_step2.py <A|B|C|N|A1|B1|N1|P1|L1|PL1|LC1|D1> <model> <sample> <rep>
+Step 4 arm D: complete-grammar instruction; Stop hook (parse mode) checks parsed.jsonl covers every content line.
 Step 4 (plan.md): P = plan-first sentence; L = ledger Stop hook showing reader-flagged sentences never shown to the
 agent (needs $LHB_WORK/_reader/<sample>/flagged.json from haiku_reader.py v2); PL = both; LC = hook shows only the
 count of unseen sentences. All step-4 arms are one-pass (trailing 1).
@@ -32,7 +33,13 @@ ANSWER_FMT = ('When you are done, end your reply with the final answer as a JSON
               "listing the person IDs, sorted.")
 PLAN_FIRST = ("Before you start, write a plan for solving this. List the ways your approach could miss something, "
               "and how you will rule out each one.")
-HOOK_MODE = {"L": "list", "PL": "list", "LC": "count"}
+D_INSTR = ("Before answering, turn the documents into a table. Work out the grammar of how the sentences are built, "
+           "and write a parser that parses every clause completely, leaving no word unaccounted for. Any clause your "
+           "parser cannot parse completely goes on an outlier list; read that list yourself and handle each item. "
+           "Save the result as parsed.jsonl, one JSON object per non-empty, non-heading line of context.md: "
+           '{"line": <line number>, "facts": [...]} or {"line": <line number>, "outlier": true}. '
+           "Then answer the final query with a query over the table.")
+HOOK_MODE = {"L": "list", "PL": "list", "LC": "count", "D": "parse"}
 
 here = os.path.dirname(os.path.abspath(__file__))
 fdir = os.path.dirname(here)
@@ -167,7 +174,10 @@ def main():
         first = (TASK + " Earlier you looked at it and wrote this plan for answering the query:\n\n----- your plan -----\n"
                  + plan + "\n----- end of plan -----\n\nFollow your plan and answer the query. " + fmt)
     else:
-        first = TASK + (" " + PLAN_FIRST if base_arm in ("P", "PL") else "") + " Answer the final query. " + fmt
+        if base_arm == "D":
+            first = TASK + " " + D_INSTR + " " + fmt
+        else:
+            first = TASK + (" " + PLAN_FIRST if base_arm in ("P", "PL") else "") + " Answer the final query. " + fmt
 
     sid = str(uuid.uuid4())
     base = [CLAUDE_EXE, "-p", None, "--model", model, "--setting-sources", "", "--settings", settings_path,
@@ -227,6 +237,8 @@ def main():
         pre = extract_answer(ledger_check.get("answer_before_check", ""))
         ledger_check.update(answer_before=pre, pass_before=pre == key)
         shutil.copy(os.path.join(ledger_dir, "ledger_check.json"), os.path.join(out_dir, run_id + "-ledger.json"))
+    if base_arm == "D" and os.path.exists(os.path.join(ws, "parsed.jsonl")):
+        shutil.copy(os.path.join(ws, "parsed.jsonl"), os.path.join(out_dir, run_id + "-parsed.jsonl"))
     summary = {"run": run_id, "arm": arm, "model": model, "sample": s, "rep": rep, "pass": passed,
                "first_pass_attempt": next((a["attempt"] for a in attempts if a["pass"]), None),
                "attempts": attempts, "worker_cost": round(sum(a["cost"] for a in attempts), 4),

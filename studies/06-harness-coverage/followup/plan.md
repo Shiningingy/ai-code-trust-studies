@@ -85,28 +85,32 @@ In the one-pass arms this is true: there is no feedback and no second attempt.
 
 **Budget guard.** Step-3 spend counted separately (sample 00041 only): stop at $20 for Sonnet, $35 for Opus, or at the first usage-limit error.
 
-# Step 4 (DRAFT 2026-11-25 late evening, not frozen; nothing scored run yet): plan-first vs a complete grammar, on unstudied instances
-Decisions with Zili Luo 2026-11-25: test on instances not used in design; Sonnet 5.5 only (Opus dropped: both models showed the silent-drop weakness in steps 2-3; Opus may be added later only if a result is positive).
+# Step 4 (DRAFT 2026-11-25 night, not frozen; nothing scored run yet): learn a grammar once, reuse it, patch it
+Decisions with Zili Luo 2026-11-25: train/test split; Sonnet 5.5 only; reader arms L/PL/LC dropped (built, never run on the benchmark; the ledger result is an observation, not an intervention). Arm D-from-scratch replaced by G (Zili Luo's design): a dedicated learning session writes a parser library; later sessions reuse it and add documented patches instead of relearning.
 
-**Arms dropped (Zili Luo, 2026-11-25).** The reader arms L and PL and the count arm LC were built (scripts/ledger_hook.py; runner arms L1, PL1, LC1; tested on a dummy file only) but are **not run**: a reader is a probabilistic check on a probabilistic agent, and the reader tests already show its per-line recall is about two in three at random (results-ledger.md section 7). Note for the record: the ledger result (no miss when the trap line was seen) is an observation across runs, not an intervention; whether showing unseen lines to an agent fixes its answer stays untested.
+**Instances (10).** Train: 00000, 00001 (public examples), 00041 (studied). Test (7, unstudied): five-condition 00002, 00014, 00029; three-condition relation + fruit 00003, 00021, 00039, 00045 (the two groups named in full-suite-hardest-tasks.md). Contexts for 00003/21/39/45 still to be fetched from the HF release. The generator is not released, so the grammar is reverse-engineered from the text only. The grammar covers every statement, not only the query's conditions, so it is query-independent (the test queries include "taught a class this year", which no training query has).
 
-**Instances.** Hard Constraint 00002, 00014, 00029 (not studied in steps 2-3). Each has its own world and one query, so a grammar cannot be reused across queries here: D's upfront cost is its whole cost in this test.
-
-**Arms** (all one-pass, with the step-3 one-pass sentence; first answer only; clean mode, same tools and limits):
+**Arms** (test sessions all one-pass, first answer only, clean mode, same tools and limits):
 - **N** task prompt only (runner arm N1).
-- **P** plan-first sentence before the task (runner arm P1):
-  > Before you start, write a plan for solving this. List the ways your approach could miss something, and how you will rule out each one.
-- **D** complete grammar (Zili Luo's idea): the agent builds a grammar of how the sentences are constructed, parses every clause completely into a table, reads its own outlier list, and answers with one query over the table. A Stop hook (code, no model) checks once that every content line of context.md is accounted for in the agent's parse output and names the missing line numbers. Instruction and hook message: Claude's drafts below, for Zili Luo to approve before freezing.
+- **P** plan-first sentence (runner arm P1): "Before you start, write a plan for solving this. List the ways your approach could miss something, and how you will rule out each one."
+- **G** grammar library. Phase 1, one learning session on the 3 training files, with pass/fail on their 3 queries (labels allowed in training only). Phase 2, test sessions get the current library, run it, triage outliers into patches, answer with one query; Stop hook checks every content line is in parsed.jsonl (code, no model; built and tested offline as the hook's parse mode).
 
-**D instruction (draft)**, placed after the task sentence:
-> Before answering, turn the documents into a table. Work out the grammar of how the sentences are built, and write a parser that parses every clause completely, leaving no word unaccounted for. Any clause your parser cannot parse completely goes on an outlier list; read that list yourself and handle each item. Save the result as parsed.jsonl, one JSON object per non-empty, non-heading line of context.md: {"line": <line number>, "facts": [...]} or {"line": <line number>, "outlier": true}. Then answer the final query with a query over the table.
+**Library framework (harness-provided, task-agnostic; Claude's proposal, Zili Luo to confirm).** Small abstract classes so rules are selectable parts, not branches:
+- `Splitter.split(line) -> clauses`
+- `Normalizer.apply(clause) -> clause` with `name`, `solves`, `examples`: fixes the data's form only. The harness enforces "form only" in code: the normalised clause must keep the same words up to case, punctuation and ID format (no word may be added or removed).
+- `Rule.parse(clause) -> facts | None` with `name`, `solves`, `examples`: one clause template, must consume the whole clause.
+- `Pipeline(config)`: the config lists which splitter, normalizers and rules are used; rules are auto-discovered; every class's examples run as tests; two rules matching one clause is reported as an ambiguity, not resolved silently.
 
-**D hook message (draft)**, shown once if lines are missing:
-> Before your answer is final: these lines of context.md are not in parsed.jsonl: <line numbers>. Parse them or mark them as outliers, then give your final answer.
-(If parsed.jsonl does not exist: "Before your answer is final: parsed.jsonl was not found. Create it as instructed, then give your final answer.")
+**Outlier triage (Zili Luo).** For each clause that no rule parses, the session decides and records which case it is:
+1. the data breaks the grammar's form (case, quotes, spacing, ID format) -> a Normalizer patch (fix the data, original kept);
+2. a valid construction the grammar lacks -> a Rule patch;
+3. free text no grammar fits -> read by the model and recorded as a manual fact with a reason (a reader fallback; none expected in this generated benchmark, so its use is counted).
+Patches only add: new files with a header (kind, what it solves, example before/after, session), plus a test; all tests must pass. Before a library is carried forward the harness rejects patches containing literal person IDs (e.g. "P-104"; regexes such as p-\d+ are fine), so no answers travel between sessions.
 
-**Runs and budget.** 3 arms x 3 instances x 3 runs = 27 Sonnet runs, about $20 (estimate; D may cost more per run); cap $25.
+**Chains.** Each G chain starts from the frozen learning-session library v0 and visits all 7 test instances once, in a rotated order; each chain carries its own patches forward. This measures cost by position (does it get cheaper as patches accumulate?) without an instance ever seeing its own earlier patches.
 
-**Outcomes.** First-answer exact match and cost per arm; for D also: parse coverage (lines parsed / outliers / missing before the hook), answer before vs after the hook, and whether the outlier list held the decisive lines.
+**Runs and budget (estimate).** 7 instances x 2 runs x 3 arms = 42 test sessions (G = 2 chains) + 1 learning session: about $25; cap $30.
 
-**Implementation.** Runner arms N1, P1 exist; D1 and the hook's parse-check mode to be added. Hooks via `--settings` work under `--setting-sources ""`; the hook blocks with Claude Code's JSON form, so the agent does not see its command line.
+**Outcomes.** First-answer exact match and cost per arm; for G also learning cost, cost by chain position, patches per session by kind (normalizer / rule / manual), ambiguities, parse coverage before the hook, and whether the decisive lines were parsed correctly.
+
+**To draft and approve before freezing:** learning-session instruction, test-session (G) instruction, the framework code, and the hook message (as in the D draft).

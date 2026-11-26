@@ -108,6 +108,6 @@ Decisions with Zili Luo 2026-11-25/26: train/test split; Sonnet 5.5 only; reader
 
 **Runs and budget (estimate).** Learning 3 x ~$3 + reconcile ~$2 = ~$11; test 7 instances x 2 runs x 3 arms = 42 sessions ~$25; variant 4 sessions ~$3. About $40; cap $45 (learning phase checked separately: stop if it passes $15).
 
-**Outcomes.** First-answer exact match and cost per arm; G: learning cost (once), cost per test session, patches by kind, unresolved before the hook, edits to v0 (should be none), answer before vs after the hook; variant: triage accuracy by kind.
+**Outcomes.** First-answer exact match and cost per arm; G: learning cost (once), cost per test session, patches by kind, unresolved before the hook, edits to v0 (should be none), answer before vs after the hook; variant: triage accuracy by kind. **Patch consistency (Zili Luo):** test sessions are independent (each starts from v0), so for every clause v0 leaves unresolved, compare across sessions whether it was triaged the same way (normalizer / rule / manual) and resolved to the same facts; compared by behaviour, not code, with merge.py's clause signatures.
 
 **Before freezing.** Zili Luo approves DRAFTS.md (sections 1-5 are new model-facing text) and the budget.

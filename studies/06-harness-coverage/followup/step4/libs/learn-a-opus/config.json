@@ -1,0 +1,1 @@
+{"splitter": "record_splitter", "normalizers": ["straight_quotes", "spacing_repair"], "rules": "all"}

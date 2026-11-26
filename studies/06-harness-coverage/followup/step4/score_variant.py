@@ -4,7 +4,7 @@ For every change in variants/90017-manifest.jsonl, re-parse the variant with the
 manual.jsonl (pristine gram) and record how the changed text was resolved: by a v0 part, by a part the session added
 (normalizer / rule), by manual.jsonl, ignored, or left unresolved; and whether facts came out. Compared with the
 expected kind (1 normalizer, 2 rule, 3 manual, 4 ignored). Also: how v0 alone resolves each change.
-Usage: python -I score_variant.py <runs/step2 dir> <run id> [<run id> ...]
+Usage: [S4_BASE=v0-opus] python -I score_variant.py <runs/step2 dir> <run id> [<run id> ...]
 """
 import collections
 import json
@@ -54,9 +54,9 @@ def main():
     out_dir, runs = sys.argv[1], sys.argv[2:]
     man = [json.loads(l) for l in open(os.path.join(here, "variants", "90017-manifest.jsonl"), encoding="utf-8")]
     text = open(VAR, encoding="utf-8").read()
-    v0 = os.path.join(here, "libs", "v0")
+    v0 = os.path.join(here, "libs", os.environ.get("S4_BASE", "v0"))  # S4_BASE=v0-opus for step 4b
     v0_names = set(load(v0)[3])
-    libs = {"v0 alone": (v0, None)}
+    libs = {os.path.basename(v0) + " alone": (v0, None)}
     for r in runs:
         libs[r] = (os.path.join(out_dir, r + "-lib"), os.path.join(out_dir, r + "-manual.jsonl"))
     table = {}

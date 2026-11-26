@@ -82,3 +82,13 @@ Study 06's Direct arm put the whole file in the prompt: $0.87 per run ($0.74 Son
 - **The plain two-part facts were now flagged:** P-055 8/8, P-057 11/11, P-127 9/9 condition sentences.
 - **But the decisive trap was not:** "youth 104 currently attends evening_pottery" (behind 8 of 14 wrong first answers in step 3) and one of the two "mango in the past" lines were missed; both curly-quote lines were flagged.
 - One run each, so the swap may be partly chance. What the reader adds to scripts is the rare variants, so for step 4 the property that matters is the trap recall, which only the thinking-on pass had.
+
+**Repeat test: thinking or chance?** ([scripts/reader_repeat.py](scripts/reader_repeat.py)): the three v2 chunks holding the key lines, each re-asked 3 times with thinking on and 3 times off, same prompt. $1.31.
+
+| Sentence | Thinking on | Thinking off |
+|---|---|---|
+| "youth 104 currently attends evening_pottery" (the decisive trap) | 0 of 3 | 2 of 3 |
+| "Y127 currently attends evening_language" (two-part fact) | 3 of 3 | 2 of 3 |
+| "O. Avery is the legal guardian of Y055" (two-part fact) | 3 of 3 | 2 of 3 |
+
+The swap between the two full passes was mostly chance and chunking, not thinking. The youth 104 line was flagged by the thinking-on v1 pass, but 0 of 3 times with the v2 chunks (same mode, a different chunk around it). **A single reader pass misses a given key line about one time in three, at random.** Recall per line is the reader's weak point; repeating passes and taking the union is the direct fix (if misses were independent, three passes would miss about 1 in 27; not tested).

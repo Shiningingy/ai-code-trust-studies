@@ -105,6 +105,8 @@ Decisions with Zili Luo 2026-11-25: test whether a harness-side coverage check g
 **Stop-hook message** (agreed), followed by the sentences:
 > Before your answer is final: these lines may be relevant and were never shown to you. Check them, then give your final answer.
 
+**Cost accounting.** The reader pass is run once per instance and shared by that instance's L and PL runs, but a real harness would run it for every task. So each L/PL run's reported cost = agent cost + the **full** reader cost for its instance (not divided across runs); the shared spend is reported separately for the budget.
+
 **Runs and budget.** 5 arms (N, P, L, PL, LC) x 3 instances x 2 runs = 30 Sonnet runs, about $19 (estimate) plus about $2 for the reader; cap $25.
 
 **Implementation (built 2026-11-25 evening; tested on a 61-sentence dummy file with Haiku, not on a benchmark instance).**

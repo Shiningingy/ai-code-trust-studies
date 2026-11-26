@@ -1,6 +1,9 @@
 """Study 06 follow-up, step 2: one run of arm A, B or C with pass/fail feedback (see ../plan.md, Step 2).
 
-Usage: python -I run_step2.py <A|B|C|N|A1|B1|N1> <model> <sample> <rep>
+Usage: python -I run_step2.py <A|B|C|N|A1|B1|N1|P1|L1|PL1|LC1> <model> <sample> <rep>
+Step 4 (plan.md): P = plan-first sentence; L = ledger Stop hook showing reader-flagged sentences never shown to the
+agent (needs $LHB_WORK/_reader/<sample>/flagged.json from haiku_reader.py v2); PL = both; LC = hook shows only the
+count of unseen sentences. All step-4 arms are one-pass (trailing 1).
 Step 3 (plan.md): N = no plan, no critic; a trailing 1 = one-pass (one-pass plan PH1/CV1, the one-pass sentence
 in the prompt, and the run stops after the first answer).
 Env: LHB_DATA (contexts/, answers/), LHB_WORK (neutral working folders).
@@ -27,6 +30,9 @@ TASK = ("The file context.md in the current directory contains a collection of d
 ONE_PASS = "You will give one final answer. It is scored once, by exact match, with no feedback and no second try."
 ANSWER_FMT = ('When you are done, end your reply with the final answer as a JSON object {"matches": [...]} '
               "listing the person IDs, sorted.")
+PLAN_FIRST = ("Before you start, write a plan for solving this. List the ways your approach could miss something, "
+              "and how you will rule out each one.")
+HOOK_MODE = {"L": "list", "PL": "list", "LC": "count"}
 
 here = os.path.dirname(os.path.abspath(__file__))
 fdir = os.path.dirname(here)
@@ -134,6 +140,20 @@ def main():
         cmd = 'python -I "%s" "%s" %s' % (os.path.join(here, "critic_hook.py").replace("\\", "/"),
                                          state_dir.replace("\\", "/"), model)
         settings["hooks"] = {"PreToolUse": [{"matcher": "*", "hooks": [{"type": "command", "command": cmd, "timeout": 200}]}]}
+    ledger_dir = None
+    if base_arm in HOOK_MODE:
+        # Neutral paths: the agent must not see study names (the hook command itself is not shown with the JSON
+        # block form, checked 2026-11-25, but paths can surface in errors).
+        ledger_dir = os.path.join(work, "_s", run_id)
+        shutil.rmtree(ledger_dir, ignore_errors=True)
+        os.makedirs(ledger_dir)
+        if HOOK_MODE[base_arm] == "list":
+            shutil.copy(os.path.join(work, "_reader", s, "flagged.json"), os.path.join(ledger_dir, "flagged.json"))
+        hook_py = os.path.join(work, "_h", "check.py")
+        os.makedirs(os.path.dirname(hook_py), exist_ok=True)
+        shutil.copy(os.path.join(here, "ledger_hook.py"), hook_py)
+        cmd = 'python -I "%s" "%s" %s' % (hook_py.replace("\\", "/"), ledger_dir.replace("\\", "/"), HOOK_MODE[base_arm])
+        settings["hooks"] = {"Stop": [{"hooks": [{"type": "command", "command": cmd, "timeout": 120}]}]}
     settings_path = os.path.join(work, "_settings", run_id + ".json")
     os.makedirs(os.path.dirname(settings_path), exist_ok=True)
     json.dump(settings, open(settings_path, "w"))
@@ -144,7 +164,7 @@ def main():
         first = (TASK + " Earlier you looked at it and wrote this plan for answering the query:\n\n----- your plan -----\n"
                  + plan + "\n----- end of plan -----\n\nFollow your plan and answer the query. " + fmt)
     else:
-        first = TASK + " Answer the final query. " + fmt
+        first = TASK + (" " + PLAN_FIRST if base_arm in ("P", "PL") else "") + " Answer the final query. " + fmt
 
     sid = str(uuid.uuid4())
     base = [CLAUDE_EXE, "-p", None, "--model", model, "--setting-sources", "", "--settings", settings_path,
@@ -197,12 +217,19 @@ def main():
             critic_cost += d.get("cost", 0)
             critic_calls += 1
             challenges += d.get("decision") == "CHALLENGE"
+    ledger_check = None
+    if ledger_dir and os.path.exists(os.path.join(ledger_dir, "ledger_check.json")):
+        ledger_check = json.load(open(os.path.join(ledger_dir, "ledger_check.json"), encoding="utf-8"))
+        pre = extract_answer(ledger_check.get("answer_before_check", ""))
+        ledger_check.update(answer_before=pre, pass_before=pre == key)
+        shutil.copy(os.path.join(ledger_dir, "ledger_check.json"), os.path.join(out_dir, run_id + "-ledger.json"))
     summary = {"run": run_id, "arm": arm, "model": model, "sample": s, "rep": rep, "pass": passed,
                "first_pass_attempt": next((a["attempt"] for a in attempts if a["pass"]), None),
                "attempts": attempts, "worker_cost": round(sum(a["cost"] for a in attempts), 4),
                "critic_cost": round(critic_cost, 4), "critic_calls": critic_calls, "challenges": challenges,
                "total_cost": round(sum(a["cost"] for a in attempts) + critic_cost, 4),
-               "secs": round(time.time() - t_start), "session": sid, "stopped_on_error": stop}
+               "secs": round(time.time() - t_start), "session": sid, "stopped_on_error": stop,
+               "ledger_check": {k: v for k, v in (ledger_check or {}).items() if k != "answer_before_check"} or None}
     with open(os.path.join(fdir, "runs", "step2_summary.jsonl"), "a", encoding="utf-8") as f:
         f.write(json.dumps(summary) + "\n")
     print(json.dumps({k: summary[k] for k in ("run", "pass", "first_pass_attempt", "total_cost", "secs", "stopped_on_error")}))

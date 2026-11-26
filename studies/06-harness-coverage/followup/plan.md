@@ -91,7 +91,7 @@ Decisions with Zili Luo 2026-11-25: test whether a harness-side coverage check g
 **Instances.** Hard Constraint 00002, 00014, 00029 (not studied in steps 2-3). Memo later, as a second task type.
 
 **Arms** (all one-pass, with the step-3 one-pass sentence; first answer only; clean mode, same tools and limits):
-- **N** task prompt only.
+- **N** task prompt only (runner arm N1).
 - **P** plan-first sentence (below) before the task.
 - **L** ledger hook: before the runs, the Haiku reader (thinking off) flags sentences once per instance; during the run a PostToolUse hook marks sentences SEEN when their text comes back in a tool result; when the agent first tries to finish, a Stop hook blocks once and shows the flagged-but-unseen sentences; the next final answer is scored.
 - **PL** both.
@@ -107,4 +107,10 @@ Decisions with Zili Luo 2026-11-25: test whether a harness-side coverage check g
 
 **Runs and budget.** 5 arms (N, P, L, PL, LC) x 3 instances x 2 runs = 30 Sonnet runs, about $19 (estimate) plus about $2 for the reader; cap $25.
 
-**Before freezing.** One tiny test that hooks passed via `--settings` work under `--setting-sources ""`, and find the switch that turns Haiku's thinking off.
+**Implementation (built 2026-11-25 evening; tested on a 61-sentence dummy file with Haiku, not on a benchmark instance).**
+- Runner arms: `N1` (= step-3 N1), `P1`, `L1`, `PL1`, `LC1` in [scripts/run_step2.py](scripts/run_step2.py). P adds the plan-first sentence after the task sentence.
+- [scripts/ledger_hook.py](scripts/ledger_hook.py) is a Stop hook only. The ledger is computed from the transcript when the agent first tries to finish (same SEEN rule as ledger.py), so no PostToolUse hook is needed. It blocks once with Claude Code's JSON form (`{"decision": "block", "reason": ...}`); the agent then sees "Stop hook feedback:" followed by the message. With the exit-2 form the agent also saw the hook's command line, which named the study folder, so that form is not used. The hook runs from a neutral copy (`$LHB_WORK/_h/check.py`, state in `$LHB_WORK/_s/<run>`).
+- Flagged sentences are shown as `line <n>: <sentence>` (line number in context.md).
+- The answer the agent gave before the check is saved too (`runs/step2/<run>-ledger.json`), so each L/PL/LC run gives a before/after pair; the scored answer is the one after.
+- Hooks passed with `--settings` work under `--setting-sources ""` (arm C used this; Stop confirmed in the dummy test).
+- Reader: [scripts/haiku_reader.py](scripts/haiku_reader.py) with `v2` = the hook's sentence splitter (no split after initials such as "D.") and `alwaysThinkingEnabled: false` (thinking tokens 0 in the dummy test). Checked first on 00041 against the thinking-on result before use.

@@ -1,0 +1,54 @@
+how each change was resolved (expected: 1 normalizer, 2 rule, 3 manual, 4 ignored)
+
+kind 1 (normalizer), 40 changes, 35 about answer people
+   v0 alone               {'ignored': 9, 'v0': 25, 'unresolved': 6}
+   S2G1sonnet55900171     {'ignored': 8, 'v0': 25, 'normalizer': 5, 'manual': 2}
+   S2G1sonnet55900172     {'normalizer': 9, 'v0': 25, 'ignored': 4, 'rule': 2}
+   S2G1sonnet55900173     {'ignored': 8, 'v0': 25, 'normalizer': 5, 'rule': 2}
+kind 2 (rule), 22 changes, 4 about answer people
+   v0 alone               {'unresolved': 18, 'ignored': 4}   no facts from 22
+   S2G1sonnet55900171     {'manual': 4, 'rule': 14, 'ignored': 4}   no facts from 4
+   S2G1sonnet55900172     {'manual': 5, 'rule': 17}
+   S2G1sonnet55900173     {'manual': 5, 'rule': 17}
+kind 3 (manual), 6 changes, 6 about answer people
+   v0 alone               {'unresolved': 4, 'ignored': 2}   no facts from 6
+   S2G1sonnet55900171     {'rule': 3, 'ignored': 2, 'manual': 1}   no facts from 2
+   S2G1sonnet55900172     {'rule': 3, 'manual': 2, 'ignored': 1}   no facts from 1
+   S2G1sonnet55900173     {'manual': 3, 'rule': 2, 'ignored': 1}   no facts from 1
+kind 4 (ignored), 8 changes, 0 about answer people
+   v0 alone               {'ignored': 6, 'unresolved': 1, 'line not found': 1}
+   S2G1sonnet55900171     {'ignored': 6, 'manual': 1, 'line not found': 1}
+   S2G1sonnet55900172     {'ignored': 6, 'manual': 1, 'line not found': 1}
+   S2G1sonnet55900173     {'ignored': 6, 'manual': 1, 'line not found': 1}
+
+kind 3 (free text), each change:
+  [volunteered] Talia Reed showed up to help at event-P-080-0 this year, as a volunteer
+     v0 alone               unresolved, facts=False
+     S2G1sonnet55900171     rule, facts=True
+     S2G1sonnet55900172     rule, facts=True
+     S2G1sonnet55900173     manual, facts=True
+  [night_shift] If you call Jia Diaz at noon you will wake them up, because Jia Diaz works nights
+     v0 alone               unresolved, facts=False
+     S2G1sonnet55900171     rule, facts=True
+     S2G1sonnet55900172     rule, facts=True
+     S2G1sonnet55900173     rule, facts=True
+  [taught] The repair class this year was run by Mateo Jones, who stood at the front as its teacher
+     v0 alone               ignored, facts=False
+     S2G1sonnet55900171     ignored, facts=False
+     S2G1sonnet55900172     manual, facts=True
+     S2G1sonnet55900173     manual, facts=True
+  [fruit] Omar Chen never says no to apple; it is a favourite food
+     v0 alone               ignored, facts=False
+     S2G1sonnet55900171     ignored, facts=False
+     S2G1sonnet55900172     ignored, facts=False
+     S2G1sonnet55900173     ignored, facts=False
+  [guardian] M. Jones signs the school forms for Y113, as Y113's legal guardian
+     v0 alone               unresolved, facts=False
+     S2G1sonnet55900171     manual, facts=True
+     S2G1sonnet55900172     manual, facts=True
+     S2G1sonnet55900173     manual, facts=True
+  [course] These days Y140 spends evenings at evening_pottery
+     v0 alone               unresolved, facts=False
+     S2G1sonnet55900171     rule, facts=True
+     S2G1sonnet55900172     rule, facts=True
+     S2G1sonnet55900173     rule, facts=True

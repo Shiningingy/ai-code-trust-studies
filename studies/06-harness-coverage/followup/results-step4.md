@@ -33,6 +33,8 @@ N and P misses vary from run to run (different people missed); G's misses are sy
 
 **00014: a reading rule learned in training, carried by the library's notes.** P-069's train preference is written "I. Usman prefers train to plane when both are available", without "genuinely"; the key counts it. In training document 3 (00041) all five answer people had "genuinely prefers" and the one bare "prefers" belonged to a non-answer person, so learner A concluded that the condition requires the qualifier `genuinely` and wrote it into lib/NOTES.md and lib/tools/query.py. All three test sessions used that reading. The library parsed P-069's facts correctly (checked with each session's final library); the error is in the query, learned from three labelled examples. The library transfers interpretations as well as grammar, including wrong ones.
 
+Checked afterwards (code, no model): the grammar rule `prefers_over` makes "genuinely" optional and records it as a qualifier, so the parse is right and only the query is wrong. The training key could not decide between the two readings: in 00041 the only person with a bare "prefers" (P-016) also fails three other conditions, so the answer is the same either way, and learner A's choice of the strict reading was a guess. Re-running test session 1's own query on its final parse gives its 4 IDs; dropping the `genuinely` check gives exactly the key's 5 (the condition count goes from 50 to 55 people; 00014 has 5 bare "prefers" lines). The benchmark's real near-misses for this condition are "likes train and plane equally" and "chose train over plane only because of a disruption".
+
 **90017: an over-broad ignore-rule.** v0's `no_fact_clause` ignores any clause it does not recognise as a fact. The free-text line "Omar Chen never says no to apple; it is a favourite food" (P-095's fruit fact) was ignored by v0, so the test sessions never saw it as an outlier; all three missed P-095. In one run the free-text teacher line was also left ignored (P-113 lost). The stop hook counts an ignored clause as resolved, so this is the silent drop again, moved from "the regex did not match" to "the ignore-rule took it".
 
 The same rule hides the "took part in X class as the teacher" construction, which never occurs in the training documents: v0 alone ignores all 16 such clauses in 00014. Every G session on 00002 and 00014 noticed the family and added a rule or manual entries for it, so this one did not cost answers here.
@@ -75,3 +77,12 @@ v0 is learner A's library with one word added to a name pattern, plus a query he
 - A learned, query-independent grammar plus a completeness check beat both plain and plan-first agents on unseen instances (18/21 against 15/21 and 9/21), at about 1.75 times N's per-session cost plus a one-time learning cost.
 - Its two failure modes are both **transfer of a wrong judgment**: a too-broad "carries no fact" rule and a too-strict reading rule, each learned from three training documents and then applied consistently. Neither is a coverage failure the current hook can see.
 - Both are checkable. Ignored clauses that mention an entity can be listed by code. Reading rules in NOTES/query helpers could be tested against near-miss variants, or kept out of the library (grammar only, each session interprets the query itself).
+
+## 8. Next to the paper's Constraint results (rough; not a like-for-like comparison)
+
+The paper's Table 2 gives exact accuracy and USD per instance on all 50 Constraint instances, one run each. For example: GLM-5.3 mini-swe-agent 66% ($1.55), the best; GPT-5.6-sol Direct 58% ($0.690), OpenCode 56% ($1.72), mini-swe-agent 42% ($0.320); Gemini 3.8 Flash at most 20%. Here: N 43% ($0.20), P 71% ($0.26), G 86% ($0.35 per session; with learning spread over 50 instances about $0.74, over these 21 sessions about $1.28).
+
+Why it is not like-for-like:
+- **Different model.** Sonnet 5.5 is not in the paper. N (plain Claude Code) at 43% for $0.20 is a model-plus-harness point, not a harness result.
+- **G was supervised.** Its learning sessions saw pass/fail feedback against three training answer keys. The paper's harnesses get no labels.
+- **Sample.** 7 instances × 3 runs against the paper's 50 × 1. Costs here are Claude Code's list-price figures for runs that used a subscription.

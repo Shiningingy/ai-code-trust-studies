@@ -1,1 +1,1 @@
-{}
+{"splitter": "clause_cutter", "normalizers": ["straight_quotes"], "rules": "all"}

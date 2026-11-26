@@ -14,7 +14,7 @@ import run_step2 as r  # noqa: E402
 arm, model, s, rep = sys.argv[1:5]
 work = os.environ.get("LHB_WORK", "E:/r")
 data = os.environ.get("LHB_DATA", "E:/lhb-data-hard")
-run_id = "S2%s%s%s%s" % (arm, r.tag_of(model), s, rep)
+run_id = "%s%s%s%s%s" % (os.environ.get("LHB_RUN_PREFIX", "S2"), arm, r.tag_of(model), s, rep)
 out_dir = os.path.join(r.fdir, "runs", "step2")
 key = sorted(json.load(open(os.path.join(data, "answers", "sample-%s.json" % s), encoding="utf-8"))["matches"])
 p = r.parse_stream(os.path.join(out_dir, run_id + "-a1.jsonl"))

@@ -39,3 +39,35 @@ If clauses are unresolved, handle each one. Read it as the library's grammar doe
 Add new parts as new files in lib/parts/, each with `solves`, `added_by = "test session"` and examples, and add their names to lib/config.json if it lists parts by name. Do not edit the existing parts. `python -m gram test --lib lib` must still pass.
 
 When every clause is resolved, answer the final query from the parsed facts."""
+
+
+# Step 5 (plan.md, Zili Luo 2026-11-26): the same prompts for four training documents. Only the count and the file
+# list change; for n = 3 these return LEARN and RECONCILE unchanged (checked in tests/test_offline.py).
+_WORD = {3: "three", 4: "four"}
+
+
+def _docs(n):
+    names = ["doc%d.md" % i for i in range(1, n + 1)]
+    return ", ".join(names[:-1]) + " and " + names[-1]
+
+
+def _answers(n):
+    return "{" + ", ".join('"doc%d": [...]' % i for i in range(1, n + 1)) + "}"
+
+
+def _for_n(text, n):
+    w = _WORD[n]
+    t = text.replace(_docs(3), _docs(n)).replace(_answers(3), _answers(n))
+    for a in ("The three documents", "the three queries", "the three documents", "the three final queries",
+              "all three answers"):
+        t = t.replace(a, a.replace("three", w))
+    t = t.replace("holds three documents", "holds %s documents" % w)
+    return t
+
+
+def learn_text(n):
+    return _for_n(LEARN, n)
+
+
+def reconcile_text(n):
+    return _for_n(RECONCILE, n)

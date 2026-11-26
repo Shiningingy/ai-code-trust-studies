@@ -62,3 +62,23 @@ ids, md = diff_libraries({"a": os.path.join(here, "toylib"), "b": lb, "c": os.pa
                          {"doc1": docs["doc1"]})
 print("DIFF:", len(ids), "groups")
 print(md[:900])
+
+# step 5: the hook takes the workspace as a third argument, so a session that stopped inside lib/ is still checked
+os.remove(os.path.join(state, "rounds.txt"))
+sub = os.path.join(ws, "lib")
+p = subprocess.run([sys.executable, "-I", os.path.join(s4, "hook.py"), state, "test", ws],
+                   input=json.dumps({"cwd": sub, "transcript_path": ""}), capture_output=True, text=True)
+rec = [json.loads(l) for l in open(os.path.join(state, "hook_log.jsonl"))][-1]
+assert "library_error" not in rec, rec.get("library_error")
+print("WORKSPACE ARG (cwd = lib/): library loads, unresolved =", rec.get("unresolved"))
+os.remove(os.path.join(state, "rounds.txt"))
+p = subprocess.run([sys.executable, "-I", os.path.join(s4, "hook.py"), state, "test"],
+                   input=json.dumps({"cwd": sub, "transcript_path": ""}), capture_output=True, text=True)
+rec = [json.loads(l) for l in open(os.path.join(state, "hook_log.jsonl"))][-1]
+print("NO WORKSPACE ARG (cwd = lib/, the step-4 bug): library_error =", rec.get("library_error"))
+
+# step 5: prompts for four documents; for three they are the frozen step-4 texts
+import prompts  # noqa: E402
+assert prompts.learn_text(3) == prompts.LEARN and prompts.reconcile_text(3) == prompts.RECONCILE
+assert "three" not in prompts.learn_text(4) and "doc4.md" in prompts.learn_text(4)
+print("PROMPTS: n=3 identical to step 4; n=4 has doc4 and no 'three'")

@@ -6,6 +6,9 @@ so a session that edits its own gram/ cannot change what is checked.
   python -I hook.py <state_dir> reconcile   as learn, and lib/RECONCILE.md must name every disagreement group
   python -I hook.py <state_dir> test        test session: blocks once if clauses of context.md are unresolved or the
                                             library's tests fail; names up to 50 clauses
+  An optional third argument gives the workspace. Without it the hook uses the cwd Claude Code reports, which is the
+  agent's current folder and can be a subfolder after a `cd` in Bash (the step-4 "library does not load" runs);
+  step 5 always passes it.
 
 state_dir holds keys.json (learn/reconcile; never in the workspace), groups.json (reconcile), v0_hashes.json (test).
 Every call appends to state_dir/hook_log.jsonl.
@@ -80,7 +83,7 @@ def check_lib(cwd, docs):
 def main():
     state, mode = sys.argv[1], sys.argv[2]
     hook = json.loads(sys.stdin.read() or "{}")
-    cwd = hook.get("cwd") or os.getcwd()
+    cwd = sys.argv[3] if len(sys.argv) > 3 else (hook.get("cwd") or os.getcwd())
     rounds_path = os.path.join(state, "rounds.txt")
     rounds = int(open(rounds_path).read()) if os.path.exists(rounds_path) else 0
     rec = {"mode": mode, "round": rounds + 1, "answer_text": last_text(hook.get("transcript_path", ""))}

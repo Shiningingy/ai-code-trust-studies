@@ -23,6 +23,8 @@ from merge import diff_libraries  # noqa: E402
 
 CLAUDE_EXE = os.environ.get("CLAUDE_EXE") or os.path.join(os.environ.get("APPDATA", ""), "npm", "node_modules", "@anthropic-ai", "claude-code", "bin", "claude.exe")
 TRAIN = [("doc1", "E:/lhb-data", "00000"), ("doc2", "E:/lhb-data", "00001"), ("doc3", "E:/lhb-data-hard", "00041")]
+if os.environ.get("LHB_STEP") == "5":  # step 5 (plan.md): a fourth training document covers the ninth condition
+    TRAIN = TRAIN + [("doc4", "E:/lhb-final", "00020")]
 TIME_LIMIT_S = 75 * 60
 
 
@@ -61,13 +63,13 @@ def main():
                                     {d: os.path.join(ws, "train", d + ".md") for d in keys})
         open(os.path.join(ws, "diff.md"), "w", encoding="utf-8").write(md)
         json.dump(sorted(groups), open(os.path.join(state, "groups.json"), "w"))
-        prompt = prompts.RECONCILE
+        prompt = prompts.reconcile_text(len(TRAIN))
     else:
-        prompt = prompts.LEARN
+        prompt = prompts.learn_text(len(TRAIN))
 
     hook = install_hook(work).replace("\\", "/")
     settings = {"autoMemoryEnabled": False, "hooks": {"Stop": [{"hooks": [{"type": "command", "timeout": 300,
-                "command": 'python -I "%s" "%s" %s' % (hook, state.replace("\\", "/"), mode)}]}]}}
+                "command": 'python -I "%s" "%s" %s "%s"' % (hook, state.replace("\\", "/"), mode, ws.replace("\\", "/"))}]}]}}
     sp = os.path.join(work, "_settings", label + ".json")
     os.makedirs(os.path.dirname(sp), exist_ok=True)
     json.dump(settings, open(sp, "w"))

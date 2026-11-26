@@ -128,3 +128,20 @@ Decisions with Zili Luo 2026-11-25/26: train/test split; Sonnet 5.5 only; reader
 - Outcomes: as in step 4 (exact first answers, precision, recall, cost; triage on 90017 with score_variant.py; patch consistency). Also read off directly: does v0-opus require `genuinely` for the train condition, does it read the bare "avoids dairy products" as a match, and does its ignore-rule take "Omar Chen never says no to apple; it is a favourite food"?
 - Guards (subscription; against runaway only): stop if Opus learning passes $80 or the GO1 tests pass $40 (Claude Code list-price figures). Usage limit: wait 30 minutes and retry, as in step 4.
 - Run order: [step4/run_step4b.sh](step4/run_step4b.sh), one session at a time.
+
+
+# Step 5 (frozen 2026-11-26, before any step-5 run): the whole Constraint task
+
+**Decisions (Zili Luo, 2026-11-26).** This is the last run on this benchmark. Scope is the Constraint task only: the benchmark's other three tasks (memos, program tracing, program pairs) are different kinds of text, and a sentence grammar does not fit at least the pairs task. (1) The learning prompts say "four documents" instead of "three" (agreed). (2) Fix the stop hook to use the workspace (agreed: "add it"). (3) No entity check on ignored clauses: G and GO are measured as designed, so the variant stays a test of whether the ignore-rule failure recurs (agreed).
+
+**Training: 4 documents, all 9 query conditions.** 00000, 00001 and 00041 (as before; together 8 of the 9 conditions) plus **00020**, chosen by a fixed rule: the lowest-numbered instance that has the missing condition ("has personally taught a class this year") and that no run or scan has touched. Not chosen: an instance that would decide the "genuinely" reading (that choice would use what the step-4 tests showed), and 00017 (the variant 90017 is built from it).
+
+**Test: the other 46 instances, one run each** (the paper's protocol), reported in three subsets: 24 untouched by any model session or scan; 14 scanned by code for the "genuinely" count (00005 00008 00010 00011 00019 00023 00026 00028 00031 00032 00038 00043 00046 00049); the 7 step-4 test instances plus 00017. Then the variant 90017, arms G1 and GO1 x 3 (triage and patch consistency, as in steps 4 and 4b). Data: all 50 contexts and keys from the public release, SHA-256-checked against its checksum file.
+
+**Arms (all tested with claude-sonnet-5-5, one pass, first answer):** N1 (task only), P1 (plan-first sentence), G1 (library `v5`: three Sonnet 5.5 learners + Sonnet reconcile on the 4 training documents), GO1 (library `v5-opus`: the same with Opus 5.5). Learning, reconcile and test prompts as in step 4, except the document count ([step4/DRAFTS-step5.md](step4/DRAFTS-step5.md)); hook messages unchanged.
+
+**Hook fix.** The stop hook gets the workspace path as an argument, instead of the folder the agent is in when it stops (the step-4/4b "library does not load" runs; [results-step4b.md](results-step4b.md) section 4). Checked offline: with the agent inside lib/, the old hook reproduces the step-4 error and the fixed one loads the library.
+
+**Outcomes.** Exact first answers, precision, recall, mean cost per session, by arm and by subset; learning cost; the hook's first-stop record (answer before the hook, what it listed); triage and consistency on 90017. Also read off directly from v5 and v5-opus: the "genuinely" and dairy readings, and what each ignore-rule's guard checks.
+
+**Guards and order.** Runs use the subscription; guards are against runaway only: stop if step-5 learning passes $100 or the step-5 tests pass $150 (Claude Code list-price figures). Usage limit: wait 30 minutes and retry, never past the limit. One session at a time ([step4/run_step5.sh](step4/run_step5.sh)): Sonnet learners and reconcile, Opus learners and reconcile, then each test instance with all four arms in a row (untouched, scanned, earlier), then the variant. Run IDs start with S5. Rough estimate: about $115 and 15-20 hours, spread over usage resets.

@@ -127,12 +127,12 @@ def main():
     tag = tag_of(model)
     one_pass = arm.endswith("1")
     base_arm = arm.rstrip("1")
-    lib_name = "v0"
+    lib_name = "v" + os.environ.get("LHB_LIBSET", "0")  # step 5: LHB_LIBSET=5 -> libs/v5, libs/v5-opus
     if base_arm == "GO":  # step 4b: arm G with the library learned by Opus 5.5 (libs/v0-opus); same prompt and hook
-        base_arm, lib_name = "G", "v0-opus"
+        base_arm, lib_name = "G", lib_name + "-opus"
     max_attempts = 1 if one_pass else MAX_ATTEMPTS
     fmt = (ONE_PASS + " " + ANSWER_FMT) if one_pass else ANSWER_FMT
-    run_id = "S2%s%s%s%s" % (arm, tag, s, rep)
+    run_id = "%s%s%s%s%s" % (os.environ.get("LHB_RUN_PREFIX", "S2"), arm, tag, s, rep)  # step 5: S5
     out_dir = os.path.join(fdir, "runs", "step2")
     os.makedirs(out_dir, exist_ok=True)
     key = sorted(json.load(open(os.path.join(data, "answers", "sample-%s.json" % s), encoding="utf-8"))["matches"])
@@ -186,7 +186,7 @@ def main():
         os.makedirs(ledger_dir)
         json.dump(lib_hashes(os.path.join(ws, "lib")), open(os.path.join(ledger_dir, "v0_hashes.json"), "w"))
         hook_py = install_hook(work).replace("\\", "/")
-        cmd = 'python -I "%s" "%s" test' % (hook_py, ledger_dir.replace("\\", "/"))
+        cmd = 'python -I "%s" "%s" test "%s"' % (hook_py, ledger_dir.replace("\\", "/"), ws.replace("\\", "/"))
         settings["hooks"] = {"Stop": [{"hooks": [{"type": "command", "command": cmd, "timeout": 300}]}]}
     settings_path = os.path.join(work, "_settings", run_id + ".json")
     os.makedirs(os.path.dirname(settings_path), exist_ok=True)

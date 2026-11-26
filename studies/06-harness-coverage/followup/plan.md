@@ -95,7 +95,9 @@ Decisions with Zili Luo 2026-11-25: test whether a harness-side coverage check g
 - **P** plan-first sentence (below) before the task.
 - **L** ledger hook: before the runs, the Haiku reader (thinking off) flags sentences once per instance; during the run a PostToolUse hook marks sentences SEEN when their text comes back in a tool result; when the agent first tries to finish, a Stop hook blocks once and shows the flagged-but-unseen sentences; the next final answer is scored.
 - **PL** both.
-- **LC** (optional, Zili Luo to decide): Stop hook shows only the count of unseen sentences, no content.
+- **LC** ledger count (added by Zili Luo): same SEEN tracking, no reader; when the agent first tries to finish, the Stop hook blocks once and shows only the number of sentences never shown to it, no content. Tests whether the agent's belief that it covered everything changes with a hard number alone.
+  LC message (Claude's draft, for Zili Luo to confirm before freezing):
+  > Before your answer is final: <U> of the <T> sentences in the context were never shown to you. Check whether any of them matter, then give your final answer.
 
 **Plan-first sentence** (Zili Luo chose Claude's tightened version):
 > Before you start, write a plan for solving this. List the ways your approach could miss something, and how you will rule out each one.
@@ -103,6 +105,6 @@ Decisions with Zili Luo 2026-11-25: test whether a harness-side coverage check g
 **Stop-hook message** (agreed), followed by the sentences:
 > Before your answer is final: these lines may be relevant and were never shown to you. Check them, then give your final answer.
 
-**Runs and budget.** 4 arms x 3 instances x 2 runs = 24 Sonnet runs, about $15 (estimate) plus about $2 for the reader; cap $20.
+**Runs and budget.** 5 arms (N, P, L, PL, LC) x 3 instances x 2 runs = 30 Sonnet runs, about $19 (estimate) plus about $2 for the reader; cap $25.
 
 **Before freezing.** One tiny test that hooks passed via `--settings` work under `--setting-sources ""`, and find the switch that turns Haiku's thinking off.

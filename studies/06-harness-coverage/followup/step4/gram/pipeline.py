@@ -9,6 +9,7 @@ import importlib.util
 import json
 import os
 import re
+import sys
 
 from .base import Normalizer, Rule, Splitter, check_fact, same_meaning_form, words
 
@@ -26,10 +27,35 @@ def content_lines(text):
     return [(n, l) for n, l in enumerate(lines, 1) if l.strip() and not l.strip().startswith("#")]
 
 
+def _drop(names):
+    """Remove library helper modules (files inside a parts/ folder) with these names from sys.modules."""
+    for m in list(sys.modules):
+        f = getattr(sys.modules[m], "__file__", None) or ""
+        if m.split(".")[0] in names and "parts" in os.path.normpath(f).split(os.sep):
+            del sys.modules[m]
+
+
 def load(lib_dir):
     """Return (splitter, [normalizers], [rules], all_parts) as selected by lib_dir/config.json."""
     parts = {}
     root = os.path.join(lib_dir, "parts")
+    # Libraries import their own helper modules by plain name (e.g. "common"). Drop same-named modules left by an
+    # earlier library in this process before loading, and remove this library's afterwards, so two libraries never
+    # share a helper (found 2026-11-26: library b picked up library a's common.py).
+    own = {os.path.splitext(f)[0] for _, _, fs in os.walk(root) for f in fs if f.endswith(".py")}
+    _drop(own)
+    path_before = list(sys.path)
+    try:
+        _load_parts(root, lib_dir, parts)
+    finally:
+        sys.path[:] = path_before
+        _drop(own)
+    cfg_path = os.path.join(lib_dir, "config.json")
+    cfg = json.load(open(cfg_path, encoding="utf-8")) if os.path.exists(cfg_path) else {}
+    return _select(parts, cfg)
+
+
+def _load_parts(root, lib_dir, parts):
     for dirpath, _, files in os.walk(root):
         for f in sorted(files):
             if not f.endswith(".py"):
@@ -52,9 +78,9 @@ def load(lib_dir):
                     inst = obj()
                     inst._file = os.path.relpath(path, lib_dir)
                     parts[obj.name] = inst
-    cfg_path = os.path.join(lib_dir, "config.json")
-    cfg = json.load(open(cfg_path, encoding="utf-8")) if os.path.exists(cfg_path) else {}
 
+
+def _select(parts, cfg):
     def pick(names, kind):
         if names in (None, "all"):
             return [p for p in parts.values() if p.kind == kind]

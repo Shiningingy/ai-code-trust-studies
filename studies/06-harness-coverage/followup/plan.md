@@ -84,3 +84,25 @@ In the one-pass arms this is true: there is no feedback and no second attempt.
 **Outcomes.** First-answer exact match, cost and time to first answer, method level of the first attempt (L0-L3/G/K, same codes), and for the retry arms the attempt of first pass and cost to first correct answer. The comparison of interest is X vs X1 on attempt 1. Plans are also scored FULL / PARTIAL / NO with the 1b/1c rule, and whether a plan is staged as an escalation ladder is noted.
 
 **Budget guard.** Step-3 spend counted separately (sample 00041 only): stop at $20 for Sonnet, $35 for Opus, or at the first usage-limit error.
+
+# Step 4 (DRAFT 2026-11-25 evening, not frozen; nothing run yet): shaping vs checking on unstudied instances
+Decisions with Zili Luo 2026-11-25: test whether a harness-side coverage check generalises beyond the instances it was designed on; plan-first as a second factor; Sonnet 5.5 only (Opus dropped: both models already showed the silent-drop weakness in steps 2-3; Opus may be added later only if Sonnet's result is positive).
+
+**Instances.** Hard Constraint 00002, 00014, 00029 (not studied in steps 2-3). Memo later, as a second task type.
+
+**Arms** (all one-pass, with the step-3 one-pass sentence; first answer only; clean mode, same tools and limits):
+- **N** task prompt only.
+- **P** plan-first sentence (below) before the task.
+- **L** ledger hook: before the runs, the Haiku reader (thinking off) flags sentences once per instance; during the run a PostToolUse hook marks sentences SEEN when their text comes back in a tool result; when the agent first tries to finish, a Stop hook blocks once and shows the flagged-but-unseen sentences; the next final answer is scored.
+- **PL** both.
+- **LC** (optional, Zili Luo to decide): Stop hook shows only the count of unseen sentences, no content.
+
+**Plan-first sentence** (Zili Luo chose Claude's tightened version):
+> Before you start, write a plan for solving this. List the ways your approach could miss something, and how you will rule out each one.
+
+**Stop-hook message** (agreed), followed by the sentences:
+> Before your answer is final: these lines may be relevant and were never shown to you. Check them, then give your final answer.
+
+**Runs and budget.** 4 arms x 3 instances x 2 runs = 24 Sonnet runs, about $15 (estimate) plus about $2 for the reader; cap $20.
+
+**Before freezing.** One tiny test that hooks passed via `--settings` work under `--setting-sources ""`, and find the switch that turns Haiku's thinking off.

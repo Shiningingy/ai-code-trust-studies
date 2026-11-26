@@ -85,7 +85,7 @@ In the one-pass arms this is true: there is no feedback and no second attempt.
 
 **Budget guard.** Step-3 spend counted separately (sample 00041 only): stop at $20 for Sonnet, $35 for Opus, or at the first usage-limit error.
 
-# Step 4 (DRAFT 2026-11-26, not frozen; nothing scored run yet): learn a grammar once, reuse it, patch it
+# Step 4 (frozen 2026-11-26, before any step-4 run): learn a grammar once, reuse it, patch it
 Decisions with Zili Luo 2026-11-25/26: train/test split; Sonnet 5.5 only; reader arms L/PL/LC dropped (built, never run on the benchmark; the ledger result is an observation, not an intervention); D-from-scratch replaced by G (Zili Luo's design): learning sessions write a grammar library once, test sessions reuse it and patch it. All model-facing texts are in [step4/DRAFTS.md](step4/DRAFTS.md) (generated from the code) for Zili Luo's approval.
 
 **Instances (10 + 1 variant).** Train: 00000, 00001 (public examples), 00041 (studied), shown as train/doc1-3.md. Test (7, unstudied): five-condition 00002, 00014, 00029; three-condition relation + fruit 00003, 00021, 00039, 00045. All fetched from the HF release and checked against its manifest (SHA-256). The generator is not released, so the grammar is reverse-engineered from the text. The grammar covers every statement, not only the query's conditions, so it is query-independent (test queries 00002 and 00014 ask about "taught a class this year", which no training query does).
@@ -110,4 +110,4 @@ Decisions with Zili Luo 2026-11-25/26: train/test split; Sonnet 5.5 only; reader
 
 **Outcomes.** First-answer exact match and cost per arm; G: learning cost (once), cost per test session, patches by kind, unresolved before the hook, edits to v0 (should be none), answer before vs after the hook; variant: triage accuracy by kind. **Patch consistency (Zili Luo):** test sessions are independent (each starts from v0), so for every clause v0 leaves unresolved, compare across sessions whether it was triaged the same way (normalizer / rule / manual) and resolved to the same facts; compared by behaviour, not code, with merge.py's clause signatures.
 
-**Before freezing.** Zili Luo approves DRAFTS.md (sections 1-5 are new model-facing text).
+**Frozen.** Zili Luo approved the drafts and said to start the runs (2026-11-26). Run order ([step4/run_step4.sh](step4/run_step4.sh)): learners a, b, c one at a time, then reconcile (v0), then the test sessions rep by rep (each rep: every instance, arms N1, P1, G1), then the variant (G1, N1 x 3). One session at a time, because parallel sessions share Git Bash's /tmp. On a usage-limit error the batch waits 30 minutes and retries the same session (Zili Luo: never exceed the session limit, wait for the reset); a retried session leaves an extra summary line, and the last line per run ID counts. The batch stops if a learning session ends in a non-limit error or produces no parts, if learning passes $15, or if step 4 passes $60.

@@ -3,7 +3,7 @@
 # On a usage-limit error (exit 3) wait 30 minutes and retry the same session, up to 20 times.
 set -u
 cd "$(dirname "$0")"
-S4="$(pwd)"
+S4="$(pwd -W)"  # Windows form (G:/...): native Python cannot open /g/... paths
 SCR="$S4/../scripts"
 MODEL=claude-sonnet-5-5
 export LHB_WORK=E:/r LHB_DATA=E:/lhb-data-hard
@@ -56,7 +56,7 @@ for L in learn-a learn-b learn-c; do
   retry python -I run_learn.py learn "$L" "$MODEL" || { echo "learning session $L failed"; exit 1; }
   [ -n "$(find "libs/$L/parts" -name '*.py' 2>/dev/null)" ] || { echo "$L produced no parts; stopping for review"; exit 1; }
   c=$(learn_cost); echo "learning cost so far \$$c"
-  python -I -c "import sys; sys.exit(0 if $c <= 15 else 1)" || { echo "learning passed \$15; stopping"; exit 1; }
+  python -I -c "import sys; sys.exit(0 if $c <= 25 else 1)" || { echo "learning passed \$25; stopping"; exit 1; }
 done
 if [ ! -d libs/v0/parts ] || [ -z "$(ls libs/v0/parts 2>/dev/null)" ]; then
   retry python -I run_learn.py reconcile v0 "$MODEL" libs/learn-a libs/learn-b libs/learn-c || { echo "reconcile failed"; exit 1; }
@@ -70,7 +70,7 @@ for rep in 1 2 3; do
       done_run "$run" && { echo "skip $run"; continue; }
       retry python -I "$SCR/run_step2.py" "$arm" "$MODEL" "$s" "$rep"
       c=$(cost4); echo "step 4 cost so far \$$c"
-      python -I -c "import sys; sys.exit(0 if $c <= 60 else 1)" || { echo "step 4 passed \$60; stopping"; exit 1; }
+      python -I -c "import sys; sys.exit(0 if $c <= 75 else 1)" || { echo "step 4 passed \$75; stopping"; exit 1; }
     done
   done
 done

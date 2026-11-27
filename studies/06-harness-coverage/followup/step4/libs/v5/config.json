@@ -1,0 +1,1 @@
+{"splitter": "sentence_clause", "normalizers": ["straight_quotes", "name_case", "id_case", "sentence_initial_case"], "rules": "all"}

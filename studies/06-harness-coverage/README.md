@@ -4,6 +4,8 @@ A small check on LongHarness Bench (Pham, Nguyen, Chen and Ye, arXiv 2609.38137,
 
 **Status: small check, done 2026-11-20, not peer reviewed.** 16 scored runs and 2 plan-only runs, all with Claude Sonnet 5.5 (`claude-sonnet-5-5`) in Claude Code 2.1.289. Three runs per example for the two main arms; one run for the others. The results describe patterns, not rates. **Report: [report.pdf](report.pdf)** (question, design, results, discussion, limits, conclusion, open directions).
 
+> **Follow-up (2026-11-25 to 11-27): [followup/](followup/README.md), report [followup/report.pdf](followup/report.pdf).** It extends this check to the benchmark's full Constraint set: plans and execution with Opus 5.5, a step-by-step critic, a record of which lines the model actually saw, and a learned grammar library tested on 46 instances. This README describes the original check only.
+
 ## The task
 
 Each example is one Markdown file of about 470 KB (~120K tokens). It holds roughly 2,400 short passages about 160 people, ending with a query of three to five conditions ("works for an organization based in a coastal city", "ordinarily travels using public transportation", …). Exactly five people qualify. Facts are scattered across passages and written with traps:

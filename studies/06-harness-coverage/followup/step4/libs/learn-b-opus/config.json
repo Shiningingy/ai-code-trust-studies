@@ -1,0 +1,1 @@
+{"splitter": "sentence_clause", "normalizers": ["straight_quotes", "collapse_spaces", "base_verb_after_to"], "rules": "all"}

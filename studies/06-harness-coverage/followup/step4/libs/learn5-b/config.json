@@ -1,0 +1,1 @@
+{"splitter": "comma_and", "normalizers": ["subject_case", "roster_case", "id_case", "bare_verb_past"], "rules": "all"}

@@ -1,6 +1,6 @@
 # Study 06 follow-up: from a coverage check to a learned grammar (2026-11-25 to 11-27)
 
-Follow-up to [Study 06](../README.md), on LongHarness Bench (Pham, Nguyen, Chen and Ye, 2026), Constraint Solving Search. Zili Luo designed the steps and made every decision; Claude Code ran the sessions and drafted the analysis. Each step's design was frozen in [plan.md](plan.md) before its runs. All runs: Claude Code 2.1.289, clean mode, tools Read/Grep/Glob/Bash, on a subscription (costs are Claude Code's list-price figures). **Not peer reviewed; one person's study.**
+Follow-up to [Study 06](../README.md), on LongHarness Bench (Pham, Nguyen, Chen and Ye, 2026), Constraint Solving Search. Zili Luo designed the steps and made every decision; Claude Code ran the sessions and drafted the analysis. Each step's design was frozen in [plan.md](plan.md) before its runs. All runs: Claude Code 2.1.289, clean mode, tools Read/Grep/Glob/Bash, on a subscription (costs are Claude Code's list-price figures). **Not peer reviewed; one person's study.** **Report: [report.pdf](report.pdf)** (question, setup, results, discussion, limits, conclusion, open directions).
 
 ## The question
 

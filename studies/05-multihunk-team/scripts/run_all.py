@@ -43,7 +43,7 @@ def schedule():
 
 
 def schedule_l():
-    """Amendment 2 (Allen, 2026-11-18): arm L after the frozen 18 runs; Astropy first (cheap, it shakes out the
+    """Amendment 2 (Zili Luo, 2026-11-18): arm L after the frozen 18 runs; Astropy first (cheap, it shakes out the
     harness), then Closure. Slots continue after the frozen schedule's last one (Sonnet 4.5: r39-r44)."""
     rows, slot = [], BASE + 18
     for bug in BUG_ORDER:
@@ -54,13 +54,13 @@ def schedule_l():
 
 
 def schedule_h():
-    """Amendment 3 (Allen, 2026-11-18): arm H (S + read RenamePrototypes.java first), Closure only, 3 runs,
+    """Amendment 3 (Zili Luo, 2026-11-18): arm H (S + read RenamePrototypes.java first), Closure only, 3 runs,
     after arm L. Slots r45-r47 (Sonnet 4.5)."""
     return [{"k": k, "bug": CLOSURE, "arm": "H", "slot": BASE + 24 + k} for k in (1, 2, 3)]
 
 
 def schedule_f():
-    """Amendment 4 (Allen, 2026-11-18): arm F (S + the full suite takes about 13 minutes), Closure only, 3 runs,
+    """Amendment 4 (Zili Luo, 2026-11-18): arm F (S + the full suite takes about 13 minutes), Closure only, 3 runs,
     after arm H. Slots r48-r50 (Sonnet 4.5)."""
     return [{"k": k, "bug": CLOSURE, "arm": "F", "slot": BASE + 27 + k} for k in (1, 2, 3)]
 

@@ -1,8 +1,8 @@
 # Study 05 plan: do sub-agents help on multi-hunk bugs that no single agent fixed?
 
-**Status: frozen 2026-11-18.** Allen settled all eight decisions on 2026-11-18 (listed under "Decisions (settled 2026-11-18)"; source: the Study 05 handoff in the workspace). The commit that adds this text is the freeze; its hash goes in the Launch log. Changes after it go under Amendments, with a date and a reason. Pre-run checks made before the freeze are under "Pre-run checks".
+**Status: frozen 2026-11-18.** Zili Luo settled all eight decisions on 2026-11-18 (listed under "Decisions (settled 2026-11-18)"; source: the Study 05 handoff in the workspace). The commit that adds this text is the freeze; its hash goes in the Launch log. Changes after it go under Amendments, with a date and a reason. Pre-run checks made before the freeze are under "Pre-run checks".
 
-Set up on 2026-11-18 (Claude Code 2.1.289, model `claude-sonnet-5-5`). The first night runs in overnight mode: pre-checks, the class_graph tool test, one smoke run, the 9 Astropy runs, then ONE Closure run (arm S), then stop; Allen decides the other Closure runs after seeing that run's real cost.
+Set up on 2026-11-18 (Claude Code 2.1.289, model `claude-sonnet-5-5`). The first night runs in overnight mode: pre-checks, the class_graph tool test, one smoke run, the 9 Astropy runs, then ONE Closure run (arm S), then stop; Zili Luo decides the other Closure runs after seeing that run's real cost.
 
 ## Source
 
@@ -12,7 +12,7 @@ Set up on 2026-11-18 (Claude Code 2.1.289, model `claude-sonnet-5-5`). The first
 
 On two multi-hunk bugs that none of the paper's four agents repaired, does a leader that delegates to sub-agents, each returning a short written handoff, do better than one agent working alone? And does giving that leader a static UML class graph of the code help it further?
 
-The comparison Allen cares about most is **U vs T** (graph vs no graph, same delegation design). **S** is the single-agent control. With 3 runs per cell this is a case study: it can show a large, consistent difference or the shape of the failures, not a small effect. A null result is still a result.
+The comparison Zili Luo cares about most is **U vs T** (graph vs no graph, same delegation design). **S** is the single-agent control. With 3 runs per cell this is a case study: it can show a large, consistent difference or the shape of the failures, not a small effect. A null result is still a result.
 
 ## The two bugs
 
@@ -43,7 +43,7 @@ The leader's "do not edit source files yourself" is an instruction, not a tool r
 
 ## Arm U: the class_graph tool (D7, 2026-11-18)
 
-Replaces the setup draft's pre-placed, pre-scoped `class-graph.puml` (that draft, its 50k-token tier rule and the files in `uml/<bug>/graph.puml` are kept for the record but are **not used**). Allen's decision: a Maple-style tool, so the agent chooses the scope; no pre-scoping, no stubs.
+Replaces the setup draft's pre-placed, pre-scoped `class-graph.puml` (that draft, its 50k-token tier rule and the files in `uml/<bug>/graph.puml` are kept for the record but are **not used**). Zili Luo's decision: a Maple-style tool, so the agent chooses the scope; no pre-scoping, no stubs.
 
 1. **Index, built before any run, statically, from the buggy base tree only** (`scripts/uml/build_index.py`, the same parsers as before: `uml_py.py` with the standard-library `ast`; `uml_java.py` with `javalang` 0.13.0). Never from the fixed version or the gold patch, never by a model. The index is the whole main source tree, tests excluded. Re-running gives byte-identical files (`--check`).
 
@@ -63,7 +63,7 @@ Replaces the setup draft's pre-placed, pre-scoped `class-graph.puml` (that draft
 
 2 bugs × 3 arms × 3 runs = **18 runs**, one at a time. Within a bug, the arm order rotates per round: k=1 **S T U**, k=2 **T U S**, k=3 **U S T**. Slots: `E:\w\r00` = the smoke run (Astropy, arm S; checks the harness and measures time and quota; **not counted**), `r01`-`r09` Astropy, `r10`-`r18` Closure (`run_all.py --plan`). Each run folder is kept for hand coding.
 
-Steps: (1) pre-checks; (2) build and test the class_graph tool, no model call; (3) the smoke run, then a self-check (prompt arrived as rendered, agent ran only in the workspace and container, both verdicts graded, tokens/time/five-hour reading logged, leak grep clean); (4) the 9 Astropy runs; (5) checkpoint: Allen reads 1-2 Astropy trajectories and tries the coding scheme; (6) Closure: ONE run first (arm S, slot r10), measure its real cost, then Allen decides how many more and which arms. On the first night steps 1-4 and the one Closure run run unattended (`run_all.py --smoke`, then `--overnight`); step 5 moves to the morning.
+Steps: (1) pre-checks; (2) build and test the class_graph tool, no model call; (3) the smoke run, then a self-check (prompt arrived as rendered, agent ran only in the workspace and container, both verdicts graded, tokens/time/five-hour reading logged, leak grep clean); (4) the 9 Astropy runs; (5) checkpoint: Zili Luo reads 1-2 Astropy trajectories and tries the coding scheme; (6) Closure: ONE run first (arm S, slot r10), measure its real cost, then Zili Luo decides how many more and which arms. On the first night steps 1-4 and the one Closure run run unattended (`run_all.py --smoke`, then `--overnight`); step 5 moves to the morning.
 
 No replacements: a run that times out or refuses is scored as it stands. A run cut off by a usage limit is logged as interrupted and repeated whole from a fresh tree (never resumed, never counted); an infrastructure error is repeated up to twice.
 
@@ -97,7 +97,7 @@ Paper's own (Section 2.2; equation numbers as in v3 HTML, where regression reduc
 
 Also recorded: changed files, new untracked files (not part of the patch, as in the paper's `git diff HEAD`), trigger tests still failing, new failures, number of turns, every `run` command (`box.jsonl`).
 
-**Hand coding** (Allen, per trajectory, scheme in `coding-scheme.md`, defined before any transcript exists): first open and first edit of each developer-modified file (step index), direction of the first edit, reverts of a correct change, where the failure arose, and for T/U the number of sub-agents, handoff information loss and leader compliance; for U, graph use.
+**Hand coding** (Zili Luo, per trajectory, scheme in `coding-scheme.md`, defined before any transcript exists): first open and first edit of each developer-modified file (step index), direction of the first edit, reverts of a correct change, where the failure arose, and for T/U the number of sub-agents, handoff information loss and leader compliance; for U, graph use.
 
 **Analysis:** descriptive. Per-run table (18 rows) and per-cell counts out of 3 for repair, localization and compilation; medians of RR, tokens and runtime. A difference is called "consistent" only if it holds in at least 2 of 3 runs per bug; no significance tests at n = 3.
 
@@ -109,7 +109,7 @@ Also recorded: changed files, new untracked files (not part of the patch, as in 
 
 - **Disk (measured 2026-11-18):** see README "Disk". All data on E: (Docker images, clone, base trees, run folders); G: holds only this folder.
 - **Time per run:** Astropy, paper's Claude 170 s; expect 5-15 min for S and 10-30 min for T/U. Closure, paper's Claude 17 min with a native filesystem; here one full suite takes about 13 min and the trigger script about 3 min (compile included), so expect 30-60 min for S and up to the 90-min limit for T/U. All 18 runs: roughly 12-20 hours, spread over several five-hour windows.
-- **Quota:** from Study 04's ledger, a Sonnet 5.5 agent run used about 4.4% of the five-hour window per million total tokens. Paper-sized runs: Astropy ~0.9M tokens → ~4% of a five-hour window; Closure ~15M tokens → up to ~60% of a five-hour window and ~6% of the week per run. **Guard (Allen 2026-11-18): the five-hour window only, checked between runs, never inside one.** Before each run the harness reads the last five-hour reading and starts only below 80% (Astropy) or 35% (Closure); otherwise it waits for the reset + 2 min, so nothing is lost. The weekly stop is set at 0.99 only to catch a real limit (weekly is not a concern: a whole five-hour session is about 9% of the week). No hard stop time is set.
+- **Quota:** from Study 04's ledger, a Sonnet 5.5 agent run used about 4.4% of the five-hour window per million total tokens. Paper-sized runs: Astropy ~0.9M tokens → ~4% of a five-hour window; Closure ~15M tokens → up to ~60% of a five-hour window and ~6% of the week per run. **Guard (Zili Luo 2026-11-18): the five-hour window only, checked between runs, never inside one.** Before each run the harness reads the last five-hour reading and starts only below 80% (Astropy) or 35% (Closure); otherwise it waits for the reset + 2 min, so nothing is lost. The weekly stop is set at 0.99 only to catch a real limit (weekly is not a concern: a whole five-hour session is about 9% of the week). No hard stop time is set.
 
 ## Decisions (settled 2026-11-18)
 
@@ -120,7 +120,7 @@ Also recorded: changed files, new untracked files (not part of the patch, as in 
 5. **D5** Time limit as the paper: Astropy 30 min, Closure no cap, every arm.
 6. **D6** Remove the class-name hint in `defects4j.build.properties` during the run, restore it before grading, every arm (implemented as blanked keys, see the harness table).
 7. **D7** Arm U = team + a Maple-style class_graph tool (section "Arm U").
-8. **D8** Order: pre-checks → tool test → smoke run → 9 Astropy runs (rotated) → checkpoint → ONE Closure run, then Allen decides.
+8. **D8** Order: pre-checks → tool test → smoke run → 9 Astropy runs (rotated) → checkpoint → ONE Closure run, then Zili Luo decides.
 
 ## Pre-run checks (2026-11-18, before the freeze)
 
@@ -134,7 +134,7 @@ The overnight rule said: swap to **Astropy-8707** if it reproduces within about 
 
 ## Amendments
 
-### Amendment 1 (Allen, 2026-11-18, night): Sonnet 4.5 for the counted runs; hide the fix data in the Defects4J container
+### Amendment 1 (Zili Luo, 2026-11-18, night): Sonnet 4.5 for the counted runs; hide the fix data in the Defects4J container
 
 **Why.** After the first Sonnet 5.5 runs, three training-exposure checks were made (results.md, "Training-data exposure"): (1) every 5.5 Astropy patch was compared with the gold patch; (2) a memory probe asked each model, with no repository and no tools, what the developer's fix was; (3) the Defects4J image was searched for fix-revealing data. Sonnet 5.5 reproduced the Astropy-7606 gold patch almost line for line from memory (`return NotImplemented`, `isinstance(other, type(self))`) and guessed 2 of Closure_157's 3 files; Sonnet 4.5 recalled neither fix. Sonnet 4.5 (`claude-sonnet-4-5-20250929`, the paper's model) is still available on this account (checked by a one-word call). The 5.5 probe also pointed at `defects4j info`, which exposed that the agent's container held the developer's fix.
 
@@ -143,13 +143,13 @@ The overnight rule said: swap to **Astropy-8707** if it reproduces within about 
 2. **The Sonnet 5.5 runs already made are kept as a labelled pilot, not counted:** smoke + 9 Astropy runs (slots r00-r09) and one Closure_157 arm-S run (slot r10). Sonnet 5.5 is not used for any further Closure run.
 3. **Hidden in the agent's container (Closure only; the grading container unchanged):** `framework/projects/Closure/patches/` (the developer's fix and test patches), `modified_classes/` and `loaded_classes/` (class lists, as the blanked properties keys), `project_repos/closure-compiler.git` (the upstream history, fix commit `41acde3e` included) and `project_repos/defects4j-repos.zip`, by empty read-only mounts (`env.start_box(hide=True)`). Defects4J's startup check needs only `project_repos/README`, which stays. Checked 2026-11-18: `defects4j compile`, `test -t`, `export -p tests.trigger`/`cp.test` and the paper's trigger script work, same 12 failures; `defects4j info` shows no bug details. The 5.5 pilot's Closure run had these files readable; its command log is checked for any access (coding row H7).
 4. **Harness:** the five-hour readings file is read and written retry-safe (two runner processes overlapped once, the 4.5 runs starting while the 5.5 Closure pilot finished); token columns use the CLI's `modelUsage` (whole run, sub-agents included) instead of the result event's final-turn `usage`.
-5. **First-night scope with 4.5 (Allen):** smoke run, the 9 Astropy runs, ONE Closure run (arm S); then Allen decides the remaining Closure runs.
+5. **First-night scope with 4.5 (Zili Luo):** smoke run, the 9 Astropy runs, ONE Closure run (arm S); then Zili Luo decides the remaining Closure runs.
 
 **Not changed:** prompts, arms, measures, coding scheme, time limits, run order.
 
-### Amendment 2 (Allen, 2026-11-18, morning): arm L = U with file locations in the class_graph answers
+### Amendment 2 (Zili Luo, 2026-11-18, morning): arm L = U with file locations in the class_graph answers
 
-**Why.** Allen meant the class graph to give structure context like the paper's MAPLE, whose class lookups return the file (and line range) where a class is defined. The D7 index had class names, members and relations only, no file locations. In the frozen U runs so far (3 Astropy, Closure U1) the tool was never called, so no agent ever saw its content; those runs show only that a described, unused tool without locations is ignored.
+**Why.** Zili Luo meant the class graph to give structure context like the paper's MAPLE, whose class lookups return the file (and line range) where a class is defined. The D7 index had class names, members and relations only, no file locations. In the frozen U runs so far (3 Astropy, Closure U1) the tool was never called, so no agent ever saw its content; those runs show only that a described, unused tool without locations is ignored.
 
 **Changes.**
 1. **Location table** (`scripts/uml/build_locations.py`): for every class in the index, its file (path from the project root, as the agent sees it) and first-last line, from the buggy base tree only; Java ranges by javalang's tokenizer (declaration to closing brace), Python by `ast` (first decorator to `end_lineno`); module-function boxes give the file only. All 887 Closure and 1,226 Astropy index types have an entry; deterministic (`--check`); spot-checked against the source; no leak-check word. Stored at `E:\study05\uml\<bug>\locations.json`, stats in `uml/<bug>/locations-stats.json` (SHA-256 Closure `673173b2…c421`, Astropy `a6ff7ff3…5eba`).
@@ -159,7 +159,7 @@ The overnight rule said: swap to **Astropy-8707** if it reproduces within about 
 
 **Not changed:** the frozen 18 runs, their prompts, tool behaviour and order; measures; time limits.
 
-### Amendment 3 (Allen, 2026-11-18, afternoon): arm H = S + "read RenamePrototypes.java first" (Closure only)
+### Amendment 3 (Zili Luo, 2026-11-18, afternoon): arm H = S + "read RenamePrototypes.java first" (Closure only)
 
 **Why.** Of the first 7 Sonnet 4.5 Closure runs only T1 repaired the bug. Every run fixed the 12 trigger tests in `CodeGenerator`/`IRFactory`; the developer fix also changes `RenamePrototypes.java` (2 of its 7 hunks), and without that change two `RenamePrototypesTest` tests fail. Those failures show only in the full suite (about 13 min in this container). T1's leader was the only one to run it with the `run` tool's maximum timeout (1800 s); every other full-suite attempt (timeouts 60-650 s or the 300 s default) was cut off, and no other run opened `RenamePrototypes.java`. Arm H asks whether naming that file at the start is enough.
 
@@ -170,9 +170,9 @@ The overnight rule said: swap to **Astropy-8707** if it reproduces within about 
 
 **Not changed:** the frozen 18 runs, arm L, measures, time limits.
 
-### Amendment 4 (Allen, 2026-11-18, afternoon): arm F = S + "the full suite takes about 30 minutes" (Closure only)
+### Amendment 4 (Zili Luo, 2026-11-18, afternoon): arm F = S + "the full suite takes about 30 minutes" (Closure only)
 
-**Why.** Every frozen Closure run tried the full suite at least once, but only T1 gave the `run` tool a timeout long enough (1800 s, the maximum) for a suite that takes 777-790 s here; all other attempts (default 300 s, or 60-650 s) were cut off, and three of the failed runs (S1, U1, U2) ended with exactly the two `RenamePrototypesTest` failures T1 saw and then fixed. Allen: full suites of large projects commonly take 20-30 minutes, so a 13-minute suite is not unusual; arm F asks whether stating the duration is enough for the agent to wait for the result. **Wording change (Allen, 2026-11-18 22:50, before any F run):** the block first said "about 13 minutes" (the measured figure); Allen changed it to "about 30 minutes", the usual duration for a large project's suite. It overstates the measured time here (777-790 s alone, 869-1,044 s under load), so the stated duration is a generous budget, not a measurement; 30 minutes is also the `run` tool's maximum timeout (1800 s). The old `--extra` chain had loaded the 13-minute text, so it was stopped after H3 by a placeholder file at F's output path (before any F model call), and F was started again with `--arm-f`.
+**Why.** Every frozen Closure run tried the full suite at least once, but only T1 gave the `run` tool a timeout long enough (1800 s, the maximum) for a suite that takes 777-790 s here; all other attempts (default 300 s, or 60-650 s) were cut off, and three of the failed runs (S1, U1, U2) ended with exactly the two `RenamePrototypesTest` failures T1 saw and then fixed. Zili Luo: full suites of large projects commonly take 20-30 minutes, so a 13-minute suite is not unusual; arm F asks whether stating the duration is enough for the agent to wait for the result. **Wording change (Zili Luo, 2026-11-18 22:50, before any F run):** the block first said "about 13 minutes" (the measured figure); Zili Luo changed it to "about 30 minutes", the usual duration for a large project's suite. It overstates the measured time here (777-790 s alone, 869-1,044 s under load), so the stated duration is a generous budget, not a measurement; 30 minutes is also the `run` tool's maximum timeout (1800 s). The old `--extra` chain had loaded the 13-minute text, so it was stopped after H3 by a placeholder file at F's output path (before any F model call), and F was started again with `--arm-f`.
 
 **Changes.**
 1. **Arm F** = S's prompt + one block: "### Test durations — In this environment the full test suite (`defects4j test`) takes about 30 minutes to run; `./run_bug_exposing_tests.sh` takes about 30 seconds." (`prompts.SUITE_NOTE`; rendered `prompts/rendered/Closure_157_F.txt`). Durations only: it does not mention the timeout parameter, whose default (300 s) and maximum (1800 s) the `run` tool's own description already gives. Single agent, base S.

@@ -2,7 +2,7 @@
 
 **Status: frozen 2026-11-07, before the pilot's first agent run. The commit that adds this file is the freeze; its hash goes in the Launch log at the end. Changes after that are listed under Amendments with a date and a reason.**
 
-Designed with Allen Luo on 2026-11-06/07. The data and the question come from "Human-AI Synergy in Agentic Code Review" (arXiv 2603.15911 v2), which published AgentReviewChat (Hugging Face `Suzhen/AgentReviewChat`, MIT): inline review conversations on GitHub PRs, each started by a human or by an AI review agent.
+Designed with Zili Luo Luo on 2026-11-06/07. The data and the question come from "Human-AI Synergy in Agentic Code Review" (arXiv 2603.15911 v2), which published AgentReviewChat (Hugging Face `Suzhen/AgentReviewChat`, MIT): inline review conversations on GitHub PRs, each started by a human or by an AI review agent.
 
 ## Question
 
@@ -64,7 +64,7 @@ The draw (`selection/scripts/draw.py`, run 2026-11-07 before this plan was froze
 
 ## Agent run
 
-- **Model:** Sonnet 5.5 (`claude-sonnet-5-5`), `--effort medium`, through `claude -p` on Allen's Claude subscription. Model, flags and Claude Code version are logged per run.
+- **Model:** Sonnet 5.5 (`claude-sonnet-5-5`), `--effort medium`, through `claude -p` on Zili Luo's Claude subscription. Model, flags and Claude Code version are logged per run.
 - **Tools:** Read, Edit, Write, Glob, Grep, and one MCP tool, `run`, that executes a shell command inside the PR's Docker container (`scripts/box_mcp.py`). The container has no network. No host shell, no web tools, no subagents.
 - **Isolation:** no user, project or local Claude Code settings; the user-level CLAUDE.md is excluded and auto-memory is off; project instruction files inside the checked-out repository load as they would for any developer. The checkout sits in a neutral folder named after the repository, with a fresh one-commit git history, so later commits do not exist anywhere the agent can reach.
 - **Prompt:** the same text in every arm, with the review block present only in B and C. It asks the agent to resolve the issue, to use `run` for commands, not to commit, and not to refer to the task or its instructions in code, comments or docs.
@@ -118,7 +118,7 @@ For each comparison:
 
 Anything else is exploratory and labelled so.
 
-**Human checking.** Allen had no time to label a sample. After the experiment he spot-checks one or two rubrics and their inspections. The report says: "Rubrics and inspections were not validated against human labels; two were spot-checked by the author."
+**Human checking.** Zili Luo had no time to label a sample. After the experiment he spot-checks one or two rubrics and their inspections. The report says: "Rubrics and inspections were not validated against human labels; two were spot-checked by the author."
 
 ## Pilot
 
@@ -126,7 +126,7 @@ Ten PRs, not counted in the results and removed from the main draw: drawn with s
 
 The pilot runs all three arms with Sonnet 5.5, and arm A once more with Opus 5.5 medium as the agent.
 
-**What the pilot may look at:** whether every PR builds and has F2P tests; plumbing (empty runs, crashes, timeouts, leak hits, scrubs); every summary, read by hand for how-level content; usage per role and model per PR, which Allen uses to set the main run's pace; and for the ceiling check, arm A alone, Sonnet against Opus. **Arm B and C scores are computed (to test the pipeline) but not printed or read.** No comparison between arms is made on pilot data.
+**What the pilot may look at:** whether every PR builds and has F2P tests; plumbing (empty runs, crashes, timeouts, leak hits, scrubs); every summary, read by hand for how-level content; usage per role and model per PR, which Zili Luo uses to set the main run's pace; and for the ceiling check, arm A alone, Sonnet against Opus. **Arm B and C scores are computed (to test the pipeline) but not printed or read.** No comparison between arms is made on pilot data.
 
 **Ceiling rule.** If Sonnet in arm A is resolved on at least 8 of 10 PRs and its mean rubric score is at least 0.9, there is little room for B to beat A. Then, before the main draw, the selection is tightened (for example, a minimum number of changed non-test lines), written in Amendments with the numbers that triggered it.
 

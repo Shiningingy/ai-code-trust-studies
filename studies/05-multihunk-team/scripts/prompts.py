@@ -24,11 +24,11 @@ GRAPH_NOTE = """### Reference material
 
 The `class_graph` tool returns a UML class graph (PlantUML text) of this project's main source code, produced by a static parser from the code as checked out at the start of the session. Give it a class name or a package/module name, and optionally a number of hops: it shows the matching classes with their fields and method signatures, plus the classes related to them within that many steps (inheritance, field types, uses), with the relationships between them."""
 
-# Amendment 2 (Allen, 2026-11-18): arm L = U whose tool also gives each class's file and line range; one sentence
+# Amendment 2 (Zili Luo, 2026-11-18): arm L = U whose tool also gives each class's file and line range; one sentence
 # added, the same neutral wording otherwise (no instruction to use the tool).
 GRAPH_NOTE_LOC = GRAPH_NOTE + " Every class shown also comes with the file (path from the project root) and the line range where it is defined."
 
-# Amendment 3 (Allen, 2026-11-18): arm H = S + a starting instruction naming the third developer-modified file,
+# Amendment 3 (Zili Luo, 2026-11-18): arm H = S + a starting instruction naming the third developer-modified file,
 # the one no frozen run except T1 found (its two RenamePrototypesTest failures show only in the full suite).
 # Closure_157 only. It names the file, not the change.
 HINT = {"Closure_157": "src/com/google/javascript/jscomp/RenamePrototypes.java"}
@@ -36,7 +36,7 @@ HINT_NOTE = """### Starting point
 
 Before you start, read `{path}`: it is relevant to this defect."""
 
-# Amendment 4 (Allen, 2026-11-18): arm F = S + how long the full suite takes. Allen's wording (changed before any
+# Amendment 4 (Zili Luo, 2026-11-18): arm F = S + how long the full suite takes. Zili Luo's wording (changed before any
 # F run, 22:50): "about 30 minutes", the usual duration for a large project's suite, not the measured figure
 # (grading runs of the 4.5 Closure runs: 777-790 s alone, 869-1,044 s under load). It states the duration only;
 # the `run` tool's own description already gives its timeout default (300 s) and maximum (1800 s). Closure_157 only.

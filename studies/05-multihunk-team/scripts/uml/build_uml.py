@@ -169,7 +169,7 @@ def main(bug_id, out, check=False):
     tiers = java_tiers(bug) if bug["kind"] == "d4j" else py_tiers(bug)
     chosen = next((t for t in tiers if tokens(t[2]) <= BUDGET), None)
     if chosen is None:
-        raise SystemExit("no tier fits the budget; the rule says stop and ask Allen")
+        raise SystemExit("no tier fits the budget; the rule says stop and ask Zili Luo")
     text = header(chosen[2], chosen[1]).rstrip("\n") + "\n"
     stats = {"bug": bug_id, "budget_tokens": BUDGET, "chosen_tier": chosen[0], "scope": chosen[1],
              "tiers": [{"tier": n, "scope": d, "lines": t.count("\n") + 1, "chars": len(t),

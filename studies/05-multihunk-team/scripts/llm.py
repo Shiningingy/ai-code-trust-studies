@@ -30,7 +30,7 @@ ISOLATION = {"claudeMdExcludes": [(Path.home() / ".claude" / "CLAUDE.md").as_pos
              "autoMemoryEnabled": False}
 LIMIT_WORDS = ("usage limit", "rate limit", "limit reached", "limit will reset", "out of extra usage", "overloaded")
 
-# Amendment 1 (Allen, 2026-11-18): counted runs use the paper's model, Sonnet 4.5 (the 5.5 memory probe recalled
+# Amendment 1 (Zili Luo, 2026-11-18): counted runs use the paper's model, Sonnet 4.5 (the 5.5 memory probe recalled
 # the Astropy-7606 gold patch; 4.5 recalled neither fix). The first night's Sonnet 5.5 runs are kept as a pilot.
 PILOT_MODEL = "claude-sonnet-5-5"
 SONNET = os.environ.get("STUDY_MODEL", "claude-sonnet-4-5-20250929")

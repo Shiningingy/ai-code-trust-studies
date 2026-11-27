@@ -1,4 +1,4 @@
-"""EXPLORATORY, added by Allen after labels were seen, not in analysis-plan.md.
+"""EXPLORATORY, added by Zili Luo after labels were seen, not in analysis-plan.md.
 
 RQ4: when the baseline test T0 is far from T1 and T2, are T1 and T2 correct?
 Uses the frozen scorer, the frozen median split and each arm's own harness label.

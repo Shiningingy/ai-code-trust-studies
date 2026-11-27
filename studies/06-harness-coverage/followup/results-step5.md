@@ -53,6 +53,8 @@ Variant 90017: **G1 3/3, GO1 3/3** (steps 4 and 4b: 0/3 each). Section 4.
 
 Learning total $53.28; tests $69.22 (190 sessions); step 5 total $122.50. No usage-limit waits, errors, time-outs or recovered runs.
 
+**How learning went (transcripts and hook logs).** Every learner started from an empty library and worked through the parser's list of unresolved clauses until none was left; the first parse summaries in the transcripts show up to 87% of clauses unresolved (learn5-a), and every session ended at 0. All eight sessions had all four training answers right at their first stop; the only block was the Sonnet reconcile session, which had not yet recorded five disagreement groups (R20-R24). Coverage in learning was complete and enforced by the hook (it re-parses with a pristine framework), not self-certified. The open route is the ignore rule: an ignored clause counts as resolved, and the only check on it is that the training answers stay right. Share of training clauses ignored (final libraries): learn5-a 3.1%, learn5-b 5.8%, learn5-c 3.1%, v5 3.1%; learn5-a-opus 3.2%, learn5-b-opus 3.2%, learn5-c-opus 11.2%, v5-opus 3.2%. Manual entries: 2 to 114 per library (learn5-b 114). Without its manual entries, v5 still leaves 0 training clauses unresolved; v5-opus leaves 1 in each of two documents.
+
 ## 3. Why the library arms failed
 
 For each failed G1/GO1 run: re-parse with the session's final library and manual.jsonl, evaluate each query condition separately with the base library's own condition code, and list which condition each missed person fails ([step4/why_missed.py](step4/why_missed.py)). In 19 of 21 failed runs, that code on the session's final parse gives exactly the session's answer, so the session followed the library's reading.
